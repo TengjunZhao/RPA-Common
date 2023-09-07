@@ -49,3 +49,4 @@ if __name__ == "__main__":
     # adjust_hitems_download(file_path=r'D:\Python\RPA Common\ztj.xlsx')
     print(start_time_in_prime('db_primeyieldet', 'date_val'))
 
+
