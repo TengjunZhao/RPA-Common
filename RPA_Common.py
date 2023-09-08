@@ -40,7 +40,7 @@ def start_time_in_prime(table:str, field:str):
     res = cursor.fetchone()
     cursor.close()
     connection.close()
-    date_obj = datetime.strptime(res[0], "%Y-%m-%d")
+    date_obj = datetime.strptime(str(res[0]), "%Y-%m-%d")
     new_date = date_obj + timedelta(days=1)
     new_date_string = new_date.strftime("%Y-%m-%d")
     return new_date_string
