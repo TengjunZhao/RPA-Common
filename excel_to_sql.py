@@ -53,8 +53,9 @@ def main():
                 max_bid = str(max_bid_int + 1).zfill(3)
                 new_bid = f"{current_date}{max_bid}"
             else:
-                max_bid_int = int(max_bid)
-                new_bid = str(max_bid_int + 1)
+                max_bid_int = int(max_bid[8:11])
+                new_bid = str(max_bid_int + 1).zfill(3)
+                new_bid = f"{current_date}{new_bid}{0}"
 
 
             # 写入db_pgm表格
