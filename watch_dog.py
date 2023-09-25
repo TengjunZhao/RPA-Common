@@ -11,9 +11,9 @@ class Watch_Dog():
 
     def check_mission(self, mission_category):
         if mission_category == 'prime':
-            self.sql = "SELECT * FROM modulemte.db_watchdog_mission_list WHERE category = '0';"
+            self.sql = "SELECT * FROM modulemte.db_watchdog_mission_list WHERE category = '0' AND STATUS = '1';"
         else:
-            self.sql = "SELECT * FROM modulemte.db_watchdog_mission_list WHERE category <> '0';"
+            self.sql = "SELECT * FROM modulemte.db_watchdog_mission_list WHERE category <> '0' AND STATUS = '1';"
         # 执行查询并获取结果
         with self.connection.cursor() as cursor:
             cursor.execute(self.sql)
@@ -22,23 +22,104 @@ class Watch_Dog():
         return results
 
     def mission(self, para):
-        if para['status'] == '1':
-            if para['spec_desc'] == 'Max':
-                self.sql = f"SELECT Max({para['indicator']}) FROM {para['db_name']};"
-                with self.connection.cursor() as cursor:
-                    cursor.execute(self.sql)
-                    results = cursor.fetchone()
-                    result = results[0]
-                    if para['spec'] == 'yestoday':
-                        # 获取系统时间相对昨天的日期
-                        today = datetime.now()
-                        yesterday = today - timedelta(days=1)
-                        new_date_string = yesterday.strftime("%Y-%m-%d")
-                        # 比较result代表的日期是否小于new_date_string
-                        if result < new_date_string:
-                            return (result, False)
-                        else:
-                            return (result, True)
+        # 获取系统时间相对昨天的日期
+        today = datetime.now()
+        yesterday = today - timedelta(days=1)
+        date_formats = ["%Y%m%d", "%Y-%m-%d", "%Y/%m/%d"]  # 支持的日期格式列表
+        self.sql = (f"SELECT `indicator` FROM modulemte.db_watchdog_mission_list "
+                    f"WHERE type = '{para['type']}' AND category = '0';")
+        with self.connection.cursor() as cursor:
+            cursor.execute(self.sql)
+            indicator = cursor.fetchone()[0]
+        self.sql = (f"SELECT MIN(id) FROM modulemte.db_watchdog_mission_list WHERE type = '{para['type']}';")
+        with self.connection.cursor() as cursor:
+            cursor.execute(self.sql)
+            prime_watch_id = cursor.fetchone()[0]
+        self.sql = (f"SELECT `judgement` FROM modulemte.db_watchdog_record "
+                    f"WHERE watch_id = {prime_watch_id} AND DATE(id) = CURDATE() ORDER BY id DESC LIMIT 1")
+        with self.connection.cursor() as cursor:
+            cursor.execute(self.sql)
+            try:
+                prime_result = cursor.fetchone()[0]
+            except TypeError:
+                prime_result = '1'
+        if para['spec_desc'] == 'Max':
+            self.sql = f"SELECT Max({para['indicator']}) FROM {para['db_name']};"
+            with self.connection.cursor() as cursor:
+                cursor.execute(self.sql)
+                results = cursor.fetchone()
+                result = results[0]
+                if para['spec'] == 'yestoday':
+                    for date_format in date_formats:
+                        try:
+                            result_date = datetime.strptime(str(result), date_format)
+                            # 检查result是否是昨天的日期
+                            if result_date.date() == yesterday.date():
+                                return (result, True)
+                            else:
+                                return (result, False)
+                        except ValueError:
+                            continue  # 如果解析失败，尝试下一个日期格式
+        elif para['spec_desc'] in ['>','<', '>=', '<='] and prime_result == '0':
+            desc_mapping = {
+                '>': '<=',
+                '<': '>=',
+                '>=': '<',
+                '<=': '>',
+            }
+            spec_desc = desc_mapping.get(para['spec_desc'], para['spec_desc'])
+
+            if indicator == 'workdt':
+                searchDate = yesterday.strftime("%Y%m%d")
+            self.sql = (f"SELECT COUNT(*) FROM {para['db_name']} "
+                        f"WHERE {indicator} = '{searchDate}' AND {para['indicator']} {spec_desc} {para['spec']};")
+            with self.connection.cursor() as cursor:
+                cursor.execute(self.sql)
+                results = cursor.fetchone()[0]
+                # 判断results是否为空
+                if results == 0:
+                    return (results, True)
+                else:
+                    return (results, False)
+        elif  para['spec_desc'] == 'P_Chart' and prime_result == '0':
+            if indicator == 'workdt':
+                search_end = yesterday.strftime("%Y%m%d")
+                search_start = (yesterday - timedelta(days=30)).strftime("%Y%m%d")
+            elif indicator == 'date_val' or indicator == 'date':
+                search_end = yesterday.strftime("%Y-%m-%d")
+                search_start = (yesterday - timedelta(days=30)).strftime("%Y-%m-%d")
+            indicator_list = para['indicator'].split(',')
+            groupSizeField = indicator_list[0]
+            sampleField =  indicator_list[1]
+            self.sql = (f"SELECT {indicator},SUM({groupSizeField}), SUM({sampleField}) FROM {para['db_name']} "
+                        f"WHERE {indicator} BETWEEN '{search_start}' AND '{search_end}' "
+                        f"GROUP BY {indicator} ORDER BY {indicator} ASC;")
+            with self.connection.cursor() as cursor:
+                cursor.execute(self.sql)
+                results = cursor.fetchall()
+            fields = []
+            group_size = []
+            sample = []
+            for item in results:
+                fields.append(item[0])
+                group_size.append(item[1])
+                sample.append(item[2])
+            p = P_Chart(fields, sample, group_size )
+            result = p.p_chart_judge()
+            if result:
+                result_string = "["
+                for item in result:
+                    result_string += "{"
+                    for key, value in item.items():
+                        result_string += f"{key}: {value}, "
+                    result_string = result_string.rstrip(", ")  # 去除末尾的逗号和空格
+                    result_string += "}, "
+
+                result_string = result_string.rstrip(", ")  # 去除最后一个逗号和空格
+                result_string += "]"
+                return (result_string, False)
+            else:
+                return ('-', True)
 
     def record(self, para, res):
         # 获取当前系统时间
@@ -47,7 +128,38 @@ class Watch_Dog():
             self.sql = (f"INSERT INTO modulemte.db_watchdog_record "
                         f"(id, watch_id, spec, observe, judgement, analysis_run, charger) VALUES"
                         f"('{now}', '{para['id']}', '{para['spec']}','{res[0]}','0','-','auto')")
-            print(self.sql)
+            with self.connection.cursor() as cursor:
+                cursor.execute(self.sql)
+                self.connection.commit()
+        else:
+            self.sql = (f"INSERT INTO modulemte.db_watchdog_record "
+                        f"(id, watch_id, spec, observe, judgement, analysis_run, charger) VALUES"
+                        f"('{now}', '{para['id']}', '{para['spec']}','{res[0]}','1','0','z130090')")
+            with self.connection.cursor() as cursor:
+                cursor.execute(self.sql)
+                self.connection.commit()
+            # 插入日常任务
+            self.sql = "SELECT MAX(B_id) FROM modulemte.bus_detail"
+            with self.connection.cursor() as cursor:
+                cursor.execute(self.sql)
+                maxB_id = cursor.fetchone()[0]
+            self.sql = f"SELECT type FROM modulemte.db_watchdog_mission_list WHERE id = '{para['id']}'"
+            with self.connection.cursor() as cursor:
+                cursor.execute(self.sql)
+                desc = cursor.fetchone()[0]
+            # 计算新的 B_id
+            str_id = str(maxB_id)[8:11]
+            id = int(str_id) + 1
+            if id < 100:
+                if id < 10:
+                    id = '00' + str(id)
+                else:
+                    id = '0' + str(id)
+            today = datetime.now().strftime("%Y%m%d")
+            B_id = today + str(id) + '5'
+            self.sql = (f"INSERT INTO modulemte.bus_detail "
+                        f"(B_id, P_id, B_Category, Occur_Time, Close_Time, Description, Solution, user_id, B_Status) VALUES"
+                        f"('{B_id}', '', '4','{now}','', '{desc}','','z130090', '1')")
             with self.connection.cursor() as cursor:
                 cursor.execute(self.sql)
                 self.connection.commit()
@@ -58,22 +170,42 @@ class Watch_Dog():
             self.connection.close()
 
 class P_Chart():
-    def __init__(self, observe, sample_size):
+    def __init__(self, field, observe, sample_size):
         self.observe = observe
         self.sample_size = sample_size
+        self.field = field
 
     def p_chart_judge(self):
-        p_values = [obs / sample_size for obs, sample_size in zip(self.observe, self.sample_size)]
+        p_values = [float(obs) / float(sample_size) for obs, sample_size in zip(self.observe, self.sample_size)]
         # 计算总体P值均值和标准差
         mean_p = np.mean(p_values)
         std_p = np.std(p_values)
         # 设置控制限
-        n = len(observations)
-        UCL = mean_p + 3 * (std_p / np.sqrt(n))
-        LCL = mean_p - 3 * (std_p / np.sqrt(n))
+        n = len(self.observe)
+        control_limits = []
+        for obs, sample_size in zip(self.observe, self.sample_size):
+            p = float(obs) / float(sample_size)
+            n = float(sample_size)
+            UCL = mean_p + 3 * np.sqrt((p * (1 - p)) / n)
+            LCL = mean_p - 3 * np.sqrt((p * (1 - p)) / n)
+            control_limits.append((UCL, LCL))
         # 判异结果
-        out_of_control = any(p > UCL or p < LCL for p in p_values)
-        return out_of_control
+        out_of_control = any(p > UCL or p < LCL for p, (UCL, LCL) in zip(p_values, control_limits))
+        if out_of_control:
+            # 找出异常点的信息
+            abnormal_points = []
+            for i, p in enumerate(p_values):
+                if p > UCL or p < LCL:
+                    abnormal_points.append({
+                        'field': self.field[i],  # 异常点的field
+                        'p_value': round(p * 1000000),  # 异常点的p_value
+                        'UCL': round(UCL * 1000000),  # 控制限的UCL
+                        'LCL': round(LCL * 1000000),  # 控制限的LCL
+                        'result': out_of_control  # 结果为异常
+                    })
+            return abnormal_points
+        else:
+            return False  # 无异常
 
 def main():
     db_config = {
@@ -85,6 +217,7 @@ def main():
     missionList = watch_dog.check_mission('prime')
     for mission in missionList:
         missionPara = {'id': mission[0],
+                    'type':mission[1],
                     'db_name': mission[4],
                     'indicator': mission[3],
                     'spec': mission[6],
@@ -93,6 +226,20 @@ def main():
                     'category': mission[2]}
         mission_result = watch_dog.mission(missionPara)
         watch_dog.record(missionPara, mission_result)
+
+    missionList = watch_dog.check_mission('daily')
+    for mission in missionList:
+        missionPara = {'id': mission[0],
+                       'type': mission[1],
+                       'db_name': mission[4],
+                       'indicator': mission[3],
+                       'spec': mission[6],
+                       'spec_desc': mission[5],
+                       'status': mission[7],
+                       'category': mission[2]}
+        mission_result = watch_dog.mission(missionPara)
+        watch_dog.record(missionPara, mission_result)
+
     watch_dog.close_connection()
 
 
