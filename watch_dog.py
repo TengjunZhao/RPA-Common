@@ -104,16 +104,46 @@ class Watch_Dog():
                 fields.append(item[0])
                 group_size.append(item[1])
                 sample.append(item[2])
-            p = P_Chart(fields, sample, group_size )
+            p = P_Chart(fields, sample, group_size, para['spec'])
             result = p.p_chart_judge()
             if result:
                 result_string = "["
                 for item in result:
-                    result_string += "{"
+                    result_string += "("
                     for key, value in item.items():
-                        result_string += f"{key}: {value}, "
+                        result_string += f"{value}, "
                     result_string = result_string.rstrip(", ")  # 去除末尾的逗号和空格
-                    result_string += "}, "
+                    result_string += "), "
+
+                result_string = result_string.rstrip(", ")  # 去除最后一个逗号和空格
+                result_string += "]"
+                return (result_string, False)
+            else:
+                return ('-', True)
+        elif para['spec_desc'] == 'Obsolete' and prime_result == '0':
+            indicator_list = para['indicator'].split(',')
+            searchDate = yesterday.strftime("%Y-%m-%d")
+            self.sql = (f"SELECT {indicator_list[0]},{indicator_list[1]} FROM {para['db_name']} WHERE {indicator} = '{searchDate}';")
+            with self.connection.cursor() as cursor:
+                cursor.execute(self.sql)
+                results = cursor.fetchall()
+            fields = []
+            group_size = []
+            sample = []
+            for item in results:
+                fields.append(item[0])
+                group_size.append('')
+                sample.append(item[1])
+            p = P_Chart(fields, sample, group_size, para['spec'])
+            result = p.obsolete()
+            if result:
+                result_string = "["
+                for item in result:
+                    result_string += "("
+                    for key, value in item.items():
+                        result_string += f"{value}, "
+                    result_string = result_string.rstrip(", ")  # 去除末尾的逗号和空格
+                    result_string += "), "
 
                 result_string = result_string.rstrip(", ")  # 去除最后一个逗号和空格
                 result_string += "]"
@@ -132,6 +162,15 @@ class Watch_Dog():
                 cursor.execute(self.sql)
                 self.connection.commit()
         else:
+            self.sql = (f"SELECT COUNT(*) from modulemte.db_watchdog_record WHERE observe = '{res[0]}';")
+            with self.connection.cursor() as cursor:
+                cursor.execute(self.sql)
+                try:
+                    exist = cursor.fetchone()[0]
+                except:
+                    exist = 0
+            if exist != 0:
+                return
             self.sql = (f"INSERT INTO modulemte.db_watchdog_record "
                         f"(id, watch_id, spec, observe, judgement, analysis_run, charger) VALUES"
                         f"('{now}', '{para['id']}', '{para['spec']}','{res[0]}','1','0','z130090')")
@@ -170,10 +209,11 @@ class Watch_Dog():
             self.connection.close()
 
 class P_Chart():
-    def __init__(self, field, observe, sample_size):
+    def __init__(self, field, observe, sample_size, sigma):
         self.observe = observe
         self.sample_size = sample_size
         self.field = field
+        self.sigma = float(sigma)
 
     def p_chart_judge(self):
         p_values = [float(obs) / float(sample_size) for obs, sample_size in zip(self.observe, self.sample_size)]
@@ -186,8 +226,8 @@ class P_Chart():
         for obs, sample_size in zip(self.observe, self.sample_size):
             p = float(obs) / float(sample_size)
             n = float(sample_size)
-            UCL = mean_p + 3 * np.sqrt((p * (1 - p)) / n)
-            LCL = mean_p - 3 * np.sqrt((p * (1 - p)) / n)
+            UCL = mean_p + self.sigma * np.sqrt((p * (1 - p)) / n)
+            LCL = mean_p - self.sigma * np.sqrt((p * (1 - p)) / n)
             control_limits.append((UCL, LCL))
         # 判异结果
         out_of_control = any(p > UCL or p < LCL for p, (UCL, LCL) in zip(p_values, control_limits))
@@ -206,6 +246,23 @@ class P_Chart():
             return abnormal_points
         else:
             return False  # 无异常
+    def obsolete(self):
+        outliers = []  # 用于存储离群点信息的列表
+        mean_obs = float(np.mean(self.observe))
+        std_obs = float(np.std(self.observe))
+
+        for i, obs in enumerate(self.observe):
+            z_score = (float(obs) - mean_obs) / (self.sigma * std_obs)
+            if abs(z_score) > 3:  # 判断是否为离群点，可以根据需要调整阈值
+                outliers.append({
+                    'field': self.field[i],
+                    'observe': obs,
+                    'result': True  # 表示是离群点
+                })
+        if not outliers:  # 如果离群点列表为空，返回 False
+            return False
+        else:
+            return outliers
 
 def main():
     db_config = {
