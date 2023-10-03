@@ -81,7 +81,7 @@ class Watch_Dog():
                     return (results, True)
                 else:
                     return (results, False)
-        elif  para['spec_desc'] == 'P_Chart' and prime_result == '0':
+        elif para['spec_desc'] == 'P_Chart' and prime_result == '0':
             if indicator == 'workdt':
                 search_end = yesterday.strftime("%Y%m%d")
                 search_start = (yesterday - timedelta(days=30)).strftime("%Y%m%d")
@@ -208,6 +208,7 @@ class Watch_Dog():
         if self.connection:
             self.connection.close()
 
+
 class P_Chart():
     def __init__(self, field, observe, sample_size, sigma):
         self.observe = observe
@@ -220,32 +221,26 @@ class P_Chart():
         # 计算总体P值均值和标准差
         mean_p = np.mean(p_values)
         std_p = np.std(p_values)
-        # 设置控制限
-        n = len(self.observe)
-        control_limits = []
-        for obs, sample_size in zip(self.observe, self.sample_size):
+        # 判异结果
+        abnormal_points = []
+        for i, (obs, sample_size) in enumerate(zip(self.observe, self.sample_size)):
             p = float(obs) / float(sample_size)
             n = float(sample_size)
             UCL = mean_p + self.sigma * np.sqrt((p * (1 - p)) / n)
             LCL = mean_p - self.sigma * np.sqrt((p * (1 - p)) / n)
-            control_limits.append((UCL, LCL))
-        # 判异结果
-        out_of_control = any(p > UCL or p < LCL for p, (UCL, LCL) in zip(p_values, control_limits))
-        if out_of_control:
-            # 找出异常点的信息
-            abnormal_points = []
-            for i, p in enumerate(p_values):
-                if p > UCL or p < LCL:
-                    abnormal_points.append({
-                        'field': self.field[i],  # 异常点的field
-                        'p_value': round(p * 1000000),  # 异常点的p_value
-                        'UCL': round(UCL * 1000000),  # 控制限的UCL
-                        'LCL': round(LCL * 1000000),  # 控制限的LCL
-                        'result': out_of_control  # 结果为异常
-                    })
+            if p > UCL or p < LCL:
+                abnormal_points.append({
+                    'field': self.field[i],  # 异常点的field
+                    'p_value': round(p * 1000000),  # 异常点的p_value
+                    'UCL': round(UCL * 1000000),  # 控制限的UCL
+                    'LCL': round(LCL * 1000000),  # 控制限的LCL
+                    'result': True  # 结果为异常
+                })
+        if abnormal_points:
             return abnormal_points
         else:
             return False  # 无异常
+
     def obsolete(self):
         outliers = []  # 用于存储离群点信息的列表
         mean_obs = float(np.mean(self.observe))
@@ -263,6 +258,7 @@ class P_Chart():
             return False
         else:
             return outliers
+
 
 def main():
     db_config = {
@@ -295,7 +291,8 @@ def main():
                        'status': mission[7],
                        'category': mission[2]}
         mission_result = watch_dog.mission(missionPara)
-        watch_dog.record(missionPara, mission_result)
+        if mission_result:
+            watch_dog.record(missionPara, mission_result)
 
     watch_dog.close_connection()
 
