@@ -1,7 +1,6 @@
 import pymysql
 import time
 import os
-import subprocess
 import zipfile
 import datetime
 
