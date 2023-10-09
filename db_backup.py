@@ -11,28 +11,46 @@ def Backup_db(backup_dir, info, db, time_str):
     user = info['user']
     password = info['password']
 
-    backup_cmd = f'mysqldump -h {host} -u {user} -p{password} {db} > "{os.path.join(backup_dir, f"{db}_{time_str}.sql")}"'
     # 数据库连接
     try:
-        subprocess.run(backup_cmd, shell=True, check=True)
-        print("数据库导出成功!")
+        # 使用with语句自动管理数据库连接的打开和关闭
+        with pymysql.connect(host=host, user=user, password=password, database=db) as con, con.cursor() as cursor:
+            # 获取所有数据表
+            cursor.execute("SHOW TABLES")
+            tables = [table[0] for table in cursor.fetchall()]
 
-    except Exception as e:
+            # 创建备份文件
+            backup_file_path = os.path.join(backup_dir, f'{db}_{time_str}.sql')
+            with open(backup_file_path, 'w', encoding='utf-8') as backup_file:
+                # 添加DROP TABLE语句和CREATE TABLE语句
+                for table in tables:
+                    cursor.execute(f"SHOW CREATE TABLE {table}")
+                    create_table_sql = cursor.fetchone()[1]
+                    backup_file.write(f"DROP TABLE IF EXISTS `{table}`;\n")
+                    backup_file.write(f"{create_table_sql};\n")
+                    cursor.execute(f"SELECT * FROM {table}")
+                    table_data = cursor.fetchall()
+                    if table_data:
+                        for row in table_data:
+                            # 修正 values 列表生成式
+                            values = [f"'{value}'" if isinstance(value, str) or isinstance(value, datetime.datetime)
+                                      else 'NULL' if value is None else str(value) for value in row]
+                            backup_file.write(f"INSERT INTO {table} VALUES ({', '.join(values)});\n")
+            print("数据库导出成功!")
+
+    except pymysql.Error as e:
         print(f"数据库备份失败: {str(e)}")
-
-    finally:
-        pass
 
 def compress(backup_dir, db, time_str):
     backup_file = os.path.join(backup_dir, f'{db}_{time_str}.sql')
     compressed_file = os.path.join(backup_dir, f'{db}_{time_str}.zip')
     # 创建zip文件并添加备份文件
     with zipfile.ZipFile(compressed_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        zipf.write(backup_file)
-    try:
+        zipf.write(backup_file, os.path.basename(backup_file))
+    if os.path.exists(backup_file):
         os.remove(backup_file)
-    finally:
-        pass
+    else:
+        print(f"File {backup_file} does not exist.")
     print("备份文件压缩完成!")
 
 
@@ -69,7 +87,7 @@ def main():
         'password': 'password'
     }
     # 备份保存路径
-    dir = r'D:\Sync\临时存放'
+    dir = r'D:/'
     db_list = ['cmsalpha', 'modulemte']
     timestamp = time.strftime('%Y%m%d')
     for db in db_list:
