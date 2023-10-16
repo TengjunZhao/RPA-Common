@@ -31,9 +31,10 @@ def Backup_db(backup_dir, info, db, time_str):
                     table_data = cursor.fetchall()
                     if table_data:
                         for row in table_data:
-                            # 修正 values 列表生成式
-                            values = [f"'{value}'" if isinstance(value, str) or isinstance(value, datetime.datetime)
-                                      else 'NULL' if value is None else str(value) for value in row]
+                            values = [f"'{value}'" if isinstance(value, (str, datetime.datetime))
+                                      else 'NULL' if value is None
+                            else f"'{value}'" if isinstance(value, datetime.date)
+                            else str(value) for value in row]
                             backup_file.write(f"INSERT INTO {table} VALUES ({', '.join(values)});\n")
             print("数据库导出成功!")
 
