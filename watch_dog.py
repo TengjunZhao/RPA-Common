@@ -198,7 +198,7 @@ class Watch_Dog():
             B_id = today + str(id) + '5'
             self.sql = (f"INSERT INTO modulemte.bus_detail "
                         f"(B_id, P_id, B_Category, Occur_Time, Close_Time, Description, Solution, user_id, B_Status) VALUES"
-                        f"('{B_id}', '', '4','{now}','', '{desc}','','z130090', '1')")
+                        f"('{B_id}', '', '4','{now}',NULL, '{desc}','','z130090', '1')")
             with self.connection.cursor() as cursor:
                 cursor.execute(self.sql)
                 self.connection.commit()
