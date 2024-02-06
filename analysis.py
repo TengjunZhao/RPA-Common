@@ -5,6 +5,7 @@ from openpyxl import load_workbook
 import re
 import time
 import logging
+import datetime
 
 
 class CustomLogger:
@@ -53,15 +54,16 @@ class CustomLogger:
                 handler.stream.truncate(0)  # 清空日志文件
 
 
-class Analysis:
+class Data:
     def __init__(self, info, host, host_r, log):
         self.info = info
         self.host = host
         self.host_r = host_r
         self.log = log
 
+    # 区分Watch任务种类，1为单Lot任务；2为指数监控
     def get_analysis_category(self):
-        return 1 if self.info['watch_id'] in (6, 12) else 2
+        return 1 if int(self.info['watch_id']) in (6, 12) else 2
 
     def single(self, observe):
         lot_id = self.extract_lot_id(observe)
@@ -113,6 +115,19 @@ class Analysis:
                  ON p.lot_id = c.lot_id;"""
         return self.execute_sql(con, sql, lot_id)
 
+    def getOneFactorData(self, table, factor, eventQty, caseQty, conditionField, condition):
+        con = self.connect_to_database('cmsalpha')
+        sql = f"""SELECT {factor} AS factor,
+                        SUM({eventQty}) AS inQty,
+                        SUM({caseQty}) AS outQty,
+                        SUM({caseQty}) / SUM({eventQty}) AS new_yield
+                 FROM {table} 
+                 WHERE {conditionField} = %s
+                 GROUP BY factor;"""
+        print(condition)
+        result = self.execute_sql(con, sql, (condition,))
+        print(result)
+        return result
 
 
 def get_watch_issue(host):
@@ -179,10 +194,25 @@ def main():
         custom_logger.log_header('info')
         custom_logger.log_info(issue_info['time'])
         custom_logger.log_info(issue_info['remark'])
-        custom_logger.log_info(issue_info['observe'])
-        a = Analysis(issue_info, local_host, ali_host, custom_logger)
+        custom_logger.log_info('观测值：' + issue_info['observe'])
+        a = Data(issue_info, local_host, ali_host, custom_logger)
+        # 单独Lot Issue分析
         if a.get_analysis_category() == 1:
             a.single(issue_info['observe'])
+        # 统计指数异常分析
+        elif a.get_analysis_category() == 2:
+            # 获取日期数据的字符串列表
+            date_strings = [item[0] for item in issue[2]]
+            # 解析日期字符串为 datetime 对象，并找到最大日期
+            dates = [datetime.datetime.strptime(date_str, "%Y%m%d") for date_str in date_strings]
+            searchDate = max(dates)
+            # ET Retest
+            if issue_info['watch_id'] == 8:
+                pass
+            # Daily Yield
+            elif issue_info['watch_id'] == 9:
+                a.getOneFactorData('db_yielddetail', 'oper_old', 'in_qty', 'out_qty',
+                                   'workdt', searchDate)
 
 
 if __name__ == '__main__':
