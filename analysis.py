@@ -6,6 +6,7 @@ import re
 import time
 import logging
 import datetime
+import ast
 
 
 class CustomLogger:
@@ -201,17 +202,16 @@ def main():
             a.single(issue_info['observe'])
         # 统计指数异常分析
         elif a.get_analysis_category() == 2:
-            # 获取日期数据的字符串列表
-            date_strings = [item[0] for item in issue[2]]
-            # 解析日期字符串为 datetime 对象，并找到最大日期
-            dates = [datetime.datetime.strptime(date_str, "%Y%m%d") for date_str in date_strings]
-            searchDate = max(dates)
+            observe_str = re.sub(r'(\d{4}-\d{2}-\d{2})', r"'\1'", issue_info['observe'])
+            observe_list = ast.literal_eval(observe_str)
+            searchDate = str(observe_list[-1][0]).replace('-', '')
+            print(searchDate)
             # ET Retest
             if issue_info['watch_id'] == 8:
                 pass
             # Daily Yield
             elif issue_info['watch_id'] == 9:
-                a.getOneFactorData('db_yielddetail', 'oper_old', 'in_qty', 'out_qty',
+                oneFactorInput = a.getOneFactorData('db_yielddetail', 'oper_old', 'in_qty', 'out_qty',
                                    'workdt', searchDate)
 
 
