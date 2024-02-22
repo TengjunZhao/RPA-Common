@@ -7,6 +7,7 @@ import time
 import logging
 import datetime
 import ast
+import scipy.stats as stats
 
 
 class CustomLogger:
@@ -125,10 +126,19 @@ class Data:
                  FROM {table} 
                  WHERE {conditionField} = %s
                  GROUP BY factor;"""
-        print(condition)
         result = self.execute_sql(con, sql, (condition,))
-        print(result)
-        return result
+        processed_data = {}
+        for row in result:
+            factor = row[0]
+            in_qty = int(row[1])
+            out_qty = int(row[2])
+            new_yield = float(row[3])
+            processed_data[factor] = {'in_qty': in_qty, 'out_qty': out_qty, 'new_yield': new_yield}
+        # 卡方独立性检验
+        contingency_table = [[data['in_qty'], data['out_qty']] for data in processed_data.values()]
+        chi2_stat, p_val, dof, expected = stats.chi2_contingency(contingency_table)
+        # 返回处理后的数据以及相关性分析结果
+        return processed_data, chi2_stat, p_val, dof, expected
 
 
 def get_watch_issue(host):
@@ -147,6 +157,31 @@ def get_watch_issue(host):
           "WHERE r.judgement = '1' AND l.category = '1') AS sub WHERE sub.rn = 1;"
     cur.execute(sql)
     return cur.fetchall()
+
+
+def log_factor_analysis(a, factor_name, searchDate, custom_logger, DB):
+    """
+    对指定因素进行分析，并记录相关统计数据。
+
+    参数:
+    - a: 数据处理对象，拥有getOneFactorData方法。
+    - factor_name: 要分析的因素名称（如'oper_old', 'device_cmf7', 'grade'）。
+    - searchDate: 查询日期。
+    - custom_logger: 自定义日志记录器，用于输出日志信息。
+    - DB: 目标数据库
+    """
+    if DB == 'db_yielddetail':
+        in_field = 'in_qty'
+        out_field = 'out_qty'
+        condition_field = 'workdt'
+    data, chi2_stat, p_val, dof, expected = (
+        a.getOneFactorData(DB, factor_name, in_field, out_field, condition_field, searchDate))
+    judge = ''
+    if float(p_val) <= 0.05:
+        judge = '*'
+    custom_logger.log_info(f'{factor_name}别P值：{p_val}{judge}')
+    custom_logger.log_info(f'{factor_name}别数据：{data}')
+    custom_logger.log_info(f'{factor_name}别期望：{expected}')
 
 
 def main():
@@ -211,8 +246,10 @@ def main():
                 pass
             # Daily Yield
             elif issue_info['watch_id'] == 9:
-                oneFactorInput = a.getOneFactorData('db_yielddetail', 'oper_old', 'in_qty', 'out_qty',
-                                   'workdt', searchDate)
+                # 以下是使用定义好的函数的示例
+                factor_names = ['oper_old', 'device_cmf7', 'grade', 'Device']
+                for factor_name in factor_names:
+                    log_factor_analysis(a, factor_name, searchDate, custom_logger, 'db_yielddetail')
 
 
 if __name__ == '__main__':
