@@ -184,6 +184,16 @@ def log_factor_analysis(a, factor_name, searchDate, custom_logger, DB):
     custom_logger.log_info(f'{factor_name}别期望：{expected}')
 
 
+# 标记watch_dog表中analysis字段为已分析
+def mark_issue(host, time, id):
+    con = pymysql.connect(host=host['host'], user=host['user'], password=host['password'], database='modulemte')
+    with con.cursor() as cur:
+        sql = "UPDATE db_watchdog_record SET analysis_run = '1' WHERE id = %s and watch_id = %s"
+        cur.execute(sql, (time, id))
+        con.commit()
+        cur.close()
+    return
+
 def main():
     log_path = r'C:\Users\Tengjun Zhao\Desktop\test'
     local_host = {
@@ -215,12 +225,18 @@ def main():
         issue_info['indicator'] = issue[7]
         issue_info['time'] = issue[0].strftime("%Y-%m-%d %H:%M:%S")
         issue_info['remark'] = issue[10]
+        issue_info['judgement'] = issue[3]
         # 提取Issue的事项
         pattern = r"\((.*?)\)"
         matches = re.findall(pattern, issue_info['observe'])
         extracted_data = [match.split(", ")[0:2] for match in matches]
-        item = extracted_data[0][0].replace("-", "")
-        value = extracted_data[0][1]
+        if len(matches) > 0:
+            item = extracted_data[0][0].replace("-", "")
+            value = extracted_data[0][1]
+        else:
+            item = issue_info['observe']
+            value = issue_info['observe']
+
         # 创建Log
         log_name = f"{issue[0].strftime('%Y%m%d%H%M%S')}_{issue_info['remark']}_{item}_{value}.log"
         log_dir = os.path.join(log_path, log_name)
@@ -250,7 +266,8 @@ def main():
                 factor_names = ['oper_old', 'device_cmf7', 'grade', 'Device']
                 for factor_name in factor_names:
                     log_factor_analysis(a, factor_name, searchDate, custom_logger, 'db_yielddetail')
-
+        # 向数据库Watch列表中标记该事项已完成分析
+        mark_issue(local_host, issue_info['time'], issue_info['watch_id'])
 
 if __name__ == '__main__':
     main()
