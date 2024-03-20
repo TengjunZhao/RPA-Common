@@ -245,7 +245,9 @@ class P_Chart():
         outliers = []  # 用于存储离群点信息的列表
         mean_obs = float(np.mean(self.observe))
         std_obs = float(np.std(self.observe))
-
+        # 标准差是0情况特殊处理
+        if std_obs == 0:
+            return False
         for i, obs in enumerate(self.observe):
             z_score = (float(obs) - mean_obs) / (self.sigma * std_obs)
             if abs(z_score) > 3:  # 判断是否为离群点，可以根据需要调整阈值
