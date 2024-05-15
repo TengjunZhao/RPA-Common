@@ -82,10 +82,11 @@ def import_data(df):
 
 def main():
     # Excel文件路径
-    file_path = r'D:\Python\RPA Common\14. ET Event Status'
+    file_path = r'C:\Users\Tengjun Zhao\Desktop\新建文件夹'
     # 获取路径下所有的 .xlsx 文件
     xlsx_files = glob.glob(os.path.join(file_path, '*.xlsx'))
     for xlsx in xlsx_files:
+        print(xlsx)
         data = read_xls(xlsx)
         import_data(data)
         os.remove(xlsx)
