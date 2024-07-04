@@ -96,13 +96,16 @@ def import_data(df):
             try:
                 # 循环插入每行数据
                 for record in records:
-                    cursor.execute(sql, record)
+                    if has_none(record):
+                        cursor.execute(sql, record)
                     # print(sql)
                 connection.commit()  # 提交事务
                 print("数据成功插入或更新到MySQL数据库。")
             except Exception as e:
                 print(f"插入数据时发生错误: {e}")
 
+def has_none(tup):
+    return not any(element is None for element in tup)
 
 def main():
     # Excel文件路径
@@ -113,7 +116,7 @@ def main():
             file_path = os.path.join(target_dir, file)
             data = read_xls(file_path)
             import_data(data)
-            os.remove(file_path)
+            # os.remove(file_path)
 
 if __name__ == '__main__':
     main()
