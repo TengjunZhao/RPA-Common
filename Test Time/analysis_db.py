@@ -13,7 +13,6 @@ db_config = {
     'database': 'cmsalpha'
 }
 
-
 def get_lot_ids():
     # 连接到数据库
     connection = pymysql.connect(**db_config)
@@ -39,8 +38,7 @@ def get_lot_ids():
     cursor.close()
     connection.close()
 
-    return lot_ids
-
+    return lot_ids, max_workdt
 
 def analyze_test_time(lot_ids):
     # 连接到数据库
@@ -79,7 +77,7 @@ def analyze_test_time(lot_ids):
         print(f"Analyzing {product_mode} {tech_name} {die_density} {product_density} {module_type} {oper}")
 
         # 统计描述
-        desc = group.groupby('m_table')['test_time'].describe()
+        desc = group.groupby('m_table')['test_time'].describe().to_dict()
         print(desc)
 
         # 正态性检验
@@ -110,9 +108,10 @@ def analyze_test_time(lot_ids):
             'Product_Density': product_density,
             'Module_Type': module_type,
             'oper': oper,
-            'description': desc.to_dict(),
+            'description': desc,
             'normality': normality,
-            'cpk_values': cpk_values
+            'cpk_values': cpk_values,
+            'sample_size': group['m_table'].value_counts().to_dict()
         })
 
     # 关闭数据库连接
@@ -120,23 +119,24 @@ def analyze_test_time(lot_ids):
 
     return results
 
-
-def save_results_to_db(results):
+def save_results_to_db(results, workdt):
     # 连接到数据库
     connection = pymysql.connect(**db_config)
     cursor = connection.cursor()
 
     for result in results:
-        for m_table in result['description']:
+        for m_table in result['description']['mean']:
             sql = """
-            INSERT INTO analysis_results (product_mode, tech_name, die_density, product_density, module_type, oper, m_table, avg_test_time, stddev_test_time, cpk, normality_p_value, analysis_date)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            INSERT INTO cmsalpha.db_testtime_analysis (product_mode, tech_name, die_density, product_density, module_type, oper, m_table, avg_test_time, stddev_test_time, cpk, normality_p_value, sample_size, workdt, analysis_date)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
             ON DUPLICATE KEY UPDATE
                 avg_test_time = VALUES(avg_test_time),
                 stddev_test_time = VALUES(stddev_test_time),
                 cpk = VALUES(cpk),
                 normality_p_value = VALUES(normality_p_value),
-                analysis_date = VALUES(NOW())
+                sample_size = VALUES(sample_size),
+                workdt = VALUES(workdt),
+                analysis_date = NOW()
             """
             cursor.execute(sql, (
                 result['Product_Mode'],
@@ -146,10 +146,12 @@ def save_results_to_db(results):
                 result['Module_Type'],
                 result['oper'],
                 m_table,
-                result['description'][m_table]['mean'],
-                result['description'][m_table]['std'],
+                result['description']['mean'][m_table],
+                result['description']['std'][m_table],
                 result['cpk_values'][m_table],
-                result['normality'][m_table]
+                result['normality'][m_table],
+                result['sample_size'][m_table],
+                workdt
             ))
 
     connection.commit()
@@ -158,12 +160,10 @@ def save_results_to_db(results):
     cursor.close()
     connection.close()
 
-
 def main():
-    lot_ids = get_lot_ids()
+    lot_ids, workdt = get_lot_ids()
     results = analyze_test_time(lot_ids)
-    # save_results_to_db(results)
-
+    save_results_to_db(results, workdt)
 
 if __name__ == '__main__':
     main()
