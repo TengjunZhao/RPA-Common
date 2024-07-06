@@ -54,6 +54,7 @@ def analyze_test_time(lot_ids):
         dd.Product_Density,
         dd.Module_Type,
         dts.oper,
+        dts.model,
         SUBSTRING(dts.table_id, 1, 5) AS m_table,
         dts.serial_no,
         dts.test_time
@@ -63,18 +64,20 @@ def analyze_test_time(lot_ids):
         modulemte.db_deviceinfo dd ON dts.device = dd.Device 
     WHERE  
         dts.lot_id IN ({lot_id_str}) 
-        AND dts.oper IN ('5600','5700', '5710');
+        AND dts.oper IN ('5600','5700', '5710')
+        AND dts.result = 'P';
     """
 
     df = pd.read_sql(query, connection)
 
     # 逐个产品类别和工序进行分析
-    product_groups = df.groupby(['Product_Mode', 'Tech_Name', 'Die_Density', 'Product_Density', 'Module_Type', 'oper'])
+    product_groups = df.groupby(['Product_Mode', 'Tech_Name', 'Die_Density',
+                                 'Product_Density', 'Module_Type', 'oper', 'model'])
 
     results = []
 
-    for (product_mode, tech_name, die_density, product_density, module_type, oper), group in product_groups:
-        print(f"Analyzing {product_mode} {tech_name} {die_density} {product_density} {module_type} {oper}")
+    for (product_mode, tech_name, die_density, product_density, module_type, oper, model), group in product_groups:
+        print(f"Analyzing {product_mode} {tech_name} {die_density} {product_density} {module_type} {oper} {model}")
 
         # 统计描述
         desc = group.groupby('m_table')['test_time'].describe().to_dict()
@@ -108,6 +111,7 @@ def analyze_test_time(lot_ids):
             'Product_Density': product_density,
             'Module_Type': module_type,
             'oper': oper,
+            'model': model,
             'description': desc,
             'normality': normality,
             'cpk_values': cpk_values,
@@ -127,15 +131,24 @@ def save_results_to_db(results, workdt):
     for result in results:
         for m_table in result['description']['mean']:
             sql = """
-            INSERT INTO cmsalpha.db_testtime_analysis (product_mode, tech_name, die_density, product_density, module_type, oper, m_table, avg_test_time, stddev_test_time, cpk, normality_p_value, sample_size, workdt, analysis_date)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            INSERT INTO cmsalpha.db_testtime_analysis (product_mode, tech_name, die_density, product_density, 
+            module_type, oper, model,  m_table, avg_test_time, stddev_test_time, min,max,quater1, quater2,quater3, cpk, normality_p_value, 
+            sample_size, workdt, analysis_date)
+            VALUES (%s, %s, %s, %s, %s, %s, 
+            %s, %s, %s, %s, %s, %s, %s, %s,
+            %s, %s, %s, %s, %s, NOW())
             ON DUPLICATE KEY UPDATE
                 avg_test_time = VALUES(avg_test_time),
                 stddev_test_time = VALUES(stddev_test_time),
+                min = VALUES(min),
+                max = VALUES(max),
+                quater1 = VALUES(quater1),
+                quater2 = VALUES(quater1),
+                quater3 = VALUES(quater3),
                 cpk = VALUES(cpk),
                 normality_p_value = VALUES(normality_p_value),
                 sample_size = VALUES(sample_size),
-                workdt = VALUES(workdt),
+                model = VALUES(model),
                 analysis_date = NOW()
             """
             cursor.execute(sql, (
@@ -145,9 +158,15 @@ def save_results_to_db(results, workdt):
                 result['Product_Density'],
                 result['Module_Type'],
                 result['oper'],
+                result['model'],
                 m_table,
                 result['description']['mean'][m_table],
                 result['description']['std'][m_table],
+                result['description']['min'][m_table],
+                result['description']['max'][m_table],
+                result['description']['25%'][m_table],
+                result['description']['50%'][m_table],
+                result['description']['75%'][m_table],
                 result['cpk_values'][m_table],
                 result['normality'][m_table],
                 result['sample_size'][m_table],
