@@ -94,6 +94,7 @@ def analyze_test_time(lot_ids):
             q3 = desc.get('75%', None)
             mean_val = desc.get('mean', None)
             stddev_val = desc.get('std', None)
+            if pd.isna(stddev_val): stddev_val = None
         except Exception as e:
             print(f"Error in describe: {e}")
             min_val = max_val = q1 = q2 = q3 = mean_val = stddev_val = None
