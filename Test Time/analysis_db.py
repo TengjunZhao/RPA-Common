@@ -60,6 +60,7 @@ def analyze_test_time(lot_ids):
         dts.oper,
         dts.model,
         SUBSTRING(dts.table_id, 1, 5) AS m_table,
+        dts.pgm,
         dts.serial_no,
         dts.test_time
     FROM 
@@ -76,12 +77,12 @@ def analyze_test_time(lot_ids):
 
     # 逐个产品类别和工序进行分析
     product_groups = df.groupby(['Product_Mode', 'Tech_Name', 'Die_Density',
-                                 'Product_Density', 'Module_Type', 'oper', 'model', 'm_table'])
+                                 'Product_Density', 'Module_Type', 'oper', 'model', 'm_table', 'pgm'])
 
     results = []
 
-    for (product_mode, tech_name, die_density, product_density, module_type, oper, model, m_table), group in product_groups:
-        print(f"Analyzing {product_mode} {tech_name} {die_density} {product_density} {module_type} {oper} {model} {m_table}")
+    for (product_mode, tech_name, die_density, product_density, module_type, oper, model, m_table, pgm), group in product_groups:
+        print(f"Analyzing {product_mode} {tech_name} {die_density} {product_density} {module_type} {oper} {model} {m_table} {pgm}")
 
         # 统计描述
         try:
@@ -137,6 +138,7 @@ def analyze_test_time(lot_ids):
             'oper': oper,
             'model': model,
             'm_table': m_table,
+            'pgm': pgm,
             'avg_test_time': mean_val,
             'stddev_test_time': stddev_val,
             'min': min_val,
@@ -163,13 +165,14 @@ def save_results_to_db(results, workdt):
         print(result)  # 调试用，打印每个结果
         sql = """
         INSERT INTO cmsalpha.db_testtime_analysis (product_mode, tech_name, die_density, product_density, 
-        module_type, oper, model, m_table, avg_test_time, stddev_test_time, min, max, quater1, quater2, quater3, cpk, normality_p_value, 
+        module_type, oper, model, m_table, pgm, avg_test_time, stddev_test_time, min, max, quater1, quater2, quater3, cpk, normality_p_value, 
         sample_size, workdt, analysis_date)
         VALUES (%s, %s, %s, %s, %s, %s, 
         %s, %s, %s, %s, %s, %s, %s, %s,
-        %s, %s, %s, %s, %s, NOW())
+        %s, %s, %s, %s, %s, %s, NOW())
         ON DUPLICATE KEY UPDATE
             model = VALUES(model),
+            pgm = VALUES(pgm),
             avg_test_time = VALUES(avg_test_time),
             stddev_test_time = VALUES(stddev_test_time),
             min = VALUES(min),
@@ -191,6 +194,7 @@ def save_results_to_db(results, workdt):
             result['oper'],
             result['model'],
             result['m_table'],
+            result['pgm'],
             result['avg_test_time'] if result['avg_test_time'] is not None else -1,
             result['stddev_test_time'] if result['stddev_test_time'] is not None else -1,
             result['min'] if result['min'] is not None else -1,
