@@ -69,7 +69,7 @@ def analyze_test_time(lot_ids):
         modulemte.db_deviceinfo dd ON dts.device = dd.Device 
     WHERE  
         dts.lot_id IN ({lot_id_str}) 
-        AND dts.oper IN ('5600','5700', '5710')
+        AND dts.oper IN ('5600','5700', '5710','5780')
         AND dts.result = 'P';
     """
 
