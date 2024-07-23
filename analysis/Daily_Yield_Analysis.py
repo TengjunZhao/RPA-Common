@@ -8,6 +8,9 @@ import logging
 import datetime
 import ast
 import scipy.stats as stats
+from scipy.stats import shapiro
+import numpy as np
+
 
 class DBInfo:
     def __init__(self, host):
@@ -47,6 +50,21 @@ class DBInfo:
             conditions.extend(additional_conditions)
         sql = f"SELECT DISTINCT {column} FROM {table} WHERE {' AND '.join(conditions)}"
         return [item[0] for item in self.execute_sql(sql)]
+
+    def insert_data(self, table, data):
+        cur = self.con.cursor()
+        for row in data:
+            placeholders = ', '.join(['%s'] * len(row))
+            columns = ', '.join(row.keys())
+            update_clause = ', '.join([f"{col}=VALUES({col})" for col in row.keys()])
+            sql = f"""
+                INSERT INTO {table} ({columns}) 
+                VALUES ({placeholders})
+                ON DUPLICATE KEY UPDATE {update_clause}
+            """
+            cur.execute(sql, list(row.values()))
+        self.con.commit()
+        cur.close()
 
 
     def close(self):
@@ -125,46 +143,35 @@ def combine_data(yield_data, prime_yield_data,qty_data):
             }
     return combined_data
 
-def analyze_data(data):
-    c_yields = [float(item['c_yield']) for item in data.values()]
-    p_yields = [float(item['p_yield']) for item in data.values()]
-    qtys = [float(item['qty']) for item in data.values()]
-
-    # Kruskal-Wallis H Test for c_yield
-    c_yield_stat, c_yield_p = stats.kruskal(*[float(item['c_yield']) for item in data.values()])
-    if c_yield_p < 0.05:
-        c_yield_diff = True
-        worst_c_yield_equip = min(data.items(), key=lambda x: x[1]['c_yield'])[0]
-    else:
-        c_yield_diff = False
-        worst_c_yield_equip = None
-
-    # Kruskal-Wallis H Test for p_yield
-    p_yield_stat, p_yield_p = stats.kruskal(*[float(item['p_yield']) for item in data.values()])
-    if p_yield_p < 0.05:
-        p_yield_diff = True
-        worst_p_yield_equip = min(data.items(), key=lambda x: x[1]['p_yield'])[0]
-    else:
-        p_yield_diff = False
-        worst_p_yield_equip = None
-
-    # Kruskal-Wallis H Test for qty
-    qty_stat, qty_p = stats.kruskal(*[float(item['qty']) for item in data.values()])
-    if qty_p < 0.05:
-        qty_diff = True
-        lowest_qty_equip = min(data.items(), key=lambda x: x[1]['qty'])[0]
-    else:
-        qty_diff = False
-        lowest_qty_equip = None
-
-    results = {
-        'c_yield_diff': c_yield_diff,
-        'worst_c_yield_equip': worst_c_yield_equip,
-        'p_yield_diff': p_yield_diff,
-        'worst_p_yield_equip': worst_p_yield_equip,
-        'qty_diff': qty_diff,
-        'lowest_qty_equip': lowest_qty_equip
-    }
+def describe_data(data, workdt):
+    c_yields = {device: float(item['c_yield']) for device, item in data.items()}
+    p_yields = {device: float(item['p_yield']) for device, item in data.items()}
+    qtys = {device: float(item['qty']) for device, item in data.items()}
+    results = []
+    for metric, values in zip(['c_yield', 'p_yield', 'qty'], [c_yields, p_yields, qtys]):
+        values_list = list(values.values())
+        # 1. 判断是否正态
+        stat, p_value = shapiro(values_list)
+        is_normal = p_value > 0.05
+        # 2. 计算max-min值
+        max_min = np.max(values_list) - np.min(values_list)
+        # 3. 计算标准差
+        std_dev = np.std(values_list, ddof=1)  # ddof=1 用于样本标准差
+        # 4. 计算(max-min)/std
+        max_min_std_ratio = max_min / std_dev
+        # 5. 计算最小值及其对应设备
+        min_value = np.min(values_list)
+        min_device = [device for device, value in values.items() if value == min_value][0]
+        results.append({
+            'workdt': workdt,
+            'data_type': metric,
+            'normal': int(is_normal),
+            'tolerence': round(max_min, 2),
+            'stdv': round(std_dev, 2),
+            'sigma': round(max_min_std_ratio, 2),
+            'min_value': round(min_value, 2),
+            'min_name': min_device
+        })
     return results
 
 
@@ -179,6 +186,7 @@ def main():
 
     try:
         # 获取昨天以及三天前的日期，格式是YYYYMMDD/YYYY-MM-DD
+        workdt = (datetime.datetime.now()).strftime('%Y%m%d')
         workdtEnd = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y%m%d')
         workdtStart = (datetime.datetime.now() - datetime.timedelta(days=3)).strftime('%Y%m%d')
         dateValEnd = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
@@ -186,11 +194,11 @@ def main():
         mydb = DBInfo(host)
         myAnalyzer = Analyzer(mydb)
         etData = myAnalyzer.ETRawData(workdtStart, workdtEnd, dateValStart, dateValEnd)
-        print(etData)
-
+        etData.pop('2MTV01', None)
         # 对数据进行分析
-        analysis_results = analyze_data(etData)
-        print(analysis_results)
+        data_form = describe_data(etData, workdt)
+        mydb.insert_data('db_kpi_describe', data_form)
+        print(data_form)
     except Exception as e:
         logging.error("Error occurred", exc_info=True)
     finally:
