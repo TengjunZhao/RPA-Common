@@ -218,7 +218,12 @@ def save_results_to_db(results, workdt):
 def main():
     lot_ids, workdt = get_lot_ids()
     results = analyze_test_time(lot_ids)
-    save_results_to_db(results, workdt)
+    try:
+        save_results_to_db(results, workdt)
+        return 'pass'
+    except Exception as e:
+        return e
+
 
 if __name__ == '__main__':
     main()
