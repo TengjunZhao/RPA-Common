@@ -34,7 +34,8 @@ def mark_db(db_config, lots):
                 # 更新表格信息
                 update_sql = f"""
                     UPDATE db_fgs_request SET 
-                    status = '1'
+                    status = '1',
+                    set_time = NOW()
                     WHERE lot_id = '{lot_id}'
                     """
                 cursor.execute(update_sql)
