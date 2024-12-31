@@ -218,9 +218,14 @@ def Exporter(config, directory):
         df = pd.DataFrame(processed_data)
 
         # Export to Excel
-        output_file = os.path.join(directory, "FGSOST.xlsx")
-        df.to_excel(output_file, index=False, engine='openpyxl')
-        print(f"Data exported successfully to {output_file}.")
+        if df.empty:
+            print(f"Empty Data")
+        else:
+            output_file = os.path.join(directory, "FGSOST.xlsx")
+            if os.path.exists(output_file):
+                os.remove(path)
+            df.to_excel(output_file, index=False, engine='openpyxl')
+            print(f"Data exported successfully to {output_file}.")
 
     finally:
         ex.disconnect()
