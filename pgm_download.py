@@ -100,7 +100,7 @@ class OMS:
 
     def logIn(self):
         headers = {'Content-Type': 'application/json'}  # 设置请求头为JSON格式
-        data = {"id": "Z130157", "password": "hz86LMFzeBVcjbfgIVU9Ow=="}
+        data = {"id": "Z130157", "password": "qAC9WtGDgt5v6rfU/KmBFg=="}
         response = requests.post(self.loginUrl, data=json.dumps(data), headers=headers)
         if response.status_code == 200:
             response_data = response.json()
