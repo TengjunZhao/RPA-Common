@@ -47,7 +47,7 @@ def process_fail_items(data, fail_item_start, fail_item_end):
     fail_item_columns = data.columns[fail_item_start:fail_item_end]  # Dynamically determined range
 
     def extract_fail_items(row):
-        fail_items = [col for col, value in zip(fail_item_columns, row) if value == 1]
+        fail_items = [str(col) for col, value in zip(fail_item_columns, row) if value == 1]
         return ", ".join(fail_items)
 
     # Process fail_item field
