@@ -1,64 +1,17 @@
+import os
+
 import pymysql
 import pandas as pd
-
-
-def read_excel(file_path):
-    """Read raw Excel content and process headers."""
-    # Load the raw data
-    raw_data = pd.read_excel(file_path, header=None)
-
-    # Extract headers from the first three rows
-    main_header = raw_data.iloc[0]  # First row for most headers
-    merged_header = raw_data.iloc[1]  # Second row for W-CP merged headers
-
-    # Combine headers: Use merged_header for columns 22-93, fallback to main_header if NaN
-    headers = [
-        merged_header[i] if 21 <= i <= 94 and pd.notna(merged_header[i]) else main_header[i]
-        for i in range(len(main_header))
-    ]
-
-    # Assign headers to the data
-    data = raw_data[3:]  # Skip first three rows
-    data.columns = headers
-    data.reset_index(drop=True, inplace=True)
-
-    return data
-
-
-def process_fail_items(data):
-    """Process columns 22nd to 93rd to generate the fail_item field and fail_qty."""
-    # Extract column names for 22nd to 93rd columns
-    fail_item_columns = data.columns[21:93]  # Adjusting index for Python's 0-based indexing
-
-    def extract_fail_items(row):
-        fail_items = [col for col, value in zip(fail_item_columns, row) if value == 1]
-        return ", ".join(fail_items)
-
-    # Process fail_item field
-    fail_data = data.iloc[:, 21:93]
-    data['fail_item'] = fail_data.apply(extract_fail_items, axis=1)
-
-    # Drop original fail item columns (22nd to 93rd)
-    data.drop(columns=fail_item_columns, inplace=True)
-
-    return data
 
 
 def clean_data(data):
-    return data.fillna('')
+    # Replace NaN values with empty strings
+    data = data.fillna('')
+    # Filter rows where OPER is not 5710, 5700, or 5780
+    if 'OPER' in data.columns:
+        data = data[data['OPER'].isin(['5710', '5700', '5780'])]
+    return data
 
-
-import pymysql
-import pandas as pd
-
-# MySQL Database Configuration
-db_config = {
-    'host': 'localhost',
-    'user': 'your_user',
-    'password': 'your_password',
-    'database': 'your_database',
-    'charset': 'utf8mb4'
-}
 
 def read_excel(file_path):
     """Read raw Excel content and process headers."""
@@ -69,9 +22,14 @@ def read_excel(file_path):
     main_header = raw_data.iloc[0]  # First row for most headers
     merged_header = raw_data.iloc[1]  # Second row for W-CP merged headers
 
-    # Combine headers: Use merged_header for columns 22-93, fallback to main_header if NaN
+    # Dynamically determine the range of FAIL ITEM columns
+    fail_item_start = 22  # Index for column W (0-based indexing)
+    fail_item_end = len(merged_header) - 1  # Find last column based on merged headers
+    while fail_item_end > fail_item_start and pd.isna(merged_header[fail_item_end]):
+        fail_item_end -= 1
+    # Combine headers: Use merged_header for FAIL ITEM columns, fallback to main_header if NaN
     headers = [
-        merged_header[i] if 20 <= i <= 94 and pd.notna(merged_header[i]) else main_header[i]
+        merged_header[i] if fail_item_start <= i <= fail_item_end and pd.notna(merged_header[i]) else main_header[i]
         for i in range(len(main_header))
     ]
 
@@ -80,27 +38,26 @@ def read_excel(file_path):
     data.columns = headers
     data.reset_index(drop=True, inplace=True)
 
-    return data
+    return data, fail_item_start, fail_item_end
 
-def clean_data(data):
-    """Clean data by replacing all NaN values with empty strings."""
-    return data.fillna('')
 
-def process_fail_items(data):
+def process_fail_items(data, fail_item_start, fail_item_end):
     """Process columns 22nd to 93rd to generate the fail_item field and fail_qty."""
-    # Extract column names for 22nd to 93rd columns
-    fail_item_columns = data.columns[22:94]  # Adjusting index for Python's 0-based indexing
+    # Extract column names for the FAIL ITEM range
+    fail_item_columns = data.columns[fail_item_start:fail_item_end]  # Dynamically determined range
 
     def extract_fail_items(row):
         fail_items = [col for col, value in zip(fail_item_columns, row) if value == 1]
         return ", ".join(fail_items)
 
     # Process fail_item field
-    fail_data = data.iloc[:, 22:94]
+    fail_data = data.iloc[:, fail_item_start:fail_item_end]
+    print(fail_data)
     data['fail_item'] = fail_data.apply(extract_fail_items, axis=1)
 
-    # Add fail_qty column (column 94)
-    data['fail_qty'] = data.iloc[:, 95]
+    # Add fail_qty column (last column in FAIL ITEM range)
+    fail_qty_column = data.columns[fail_item_end]
+    data['fail_qty'] = data[fail_qty_column]
 
     # Drop original fail item columns (22nd to 93rd)
     data.drop(columns=fail_item_columns, inplace=True)
@@ -228,7 +185,7 @@ def main(mode):
             'database': 'cmsalpha'
         }
     else:
-        sourceDir = r'\\172.27.7.188\Mod_testE\18. Abnormal\source.xlsx'
+        sourceDir = r'\\172.27.7.188\Mod_TestE\19. AT Abnormal Fail\source.xlsx'
         host = {
             'host': '172.27.154.57',
             'user':'remoteuser',
@@ -236,16 +193,18 @@ def main(mode):
             'database': 'cmsalpha'
         }
     # Step 1: Read raw Excel content
-    data = read_excel(sourceDir)
+    data, fail_item_start, fail_item_end = read_excel(sourceDir)
 
     # Step 2: Process fail items (22nd to 93rd columns) and fail_qty
-    processed_data = process_fail_items(data)
+    processed_data = process_fail_items(data, fail_item_start, fail_item_end)
 
     # Step 3: Clean data
     cleaned_data = clean_data(processed_data)
 
     # Step 4: Write to (update) database
     insert_or_update_data(cleaned_data, host)
+
+    # os.remove(sourceDir)
 
 
 if __name__ == '__main__':
