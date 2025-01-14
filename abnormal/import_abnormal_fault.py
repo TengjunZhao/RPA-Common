@@ -1,7 +1,33 @@
 import os
-
 import pymysql
 import pandas as pd
+from datetime import datetime, timedelta
+
+
+def calculate_year(week, reference_date):
+    """
+    Calculate the year of the given ISO week number based on a reference date.
+    Handles edge cases for weeks that belong to the previous or next year.
+    """
+    try:
+        # Convert reference date to datetime
+        reference_date = datetime.strptime(reference_date, '%Y-%m-%d')
+
+        # Construct the first day of the given ISO week
+        year = reference_date.year
+        first_day_of_week = datetime.strptime(f'{year}-W{int(week)}-1', "%Y-W%U-%w")
+
+        # Adjust for the first week of the next year
+        if week == '01' and reference_date.month == 12:
+            year += 1
+        # Adjust for the last weeks of the previous year
+        elif week in ['52', '53'] and first_day_of_week.month == 1:
+            year -= 1
+
+        return str(year)
+    except Exception as e:
+        print(f"Error calculating year for week {week}: {e}")
+        return None
 
 
 def clean_data(data):
@@ -10,6 +36,9 @@ def clean_data(data):
     # Filter rows where OPER is not 5710, 5700, or 5780
     if 'OPER' in data.columns:
         data = data[data['OPER'].isin(['5710', '5700', '5780'])]
+    if 'WW' in data.columns:
+        reference_date = datetime.now().strftime('%Y-%m-%d')  # Use today's date as a reference
+        data['year'] = data['WW'].apply(lambda ww: calculate_year(ww, reference_date))
     return data
 
 
@@ -101,7 +130,8 @@ def map_columns(row):
         'Batch Code': 'batch_code',
         '종료일시': 'end_time',
         'WW': 'ww',
-        'fail_item': 'item'
+        'fail_item': 'item',
+        'year': 'w_year'
     }
     # 创建映射后的字典
     mapped_row = {column_mapping.get(k, k): v for k, v in row.items() if column_mapping.get(k, k)}
@@ -118,13 +148,13 @@ def insert_or_update_data(data, host):
         d_id, device, lot_id, system_name, table_name, fix, fix_sn, sequence, program, 
         dimm, m_rank, dq, spd_lot, sn, run, wafer, x, y, bank, f_row, f_col, fail_type, item, stage,
         oper, fab, vdd, speed, type, grade, owner, batch_code, 
-        end_time, ww
+        end_time, ww, w_year
     ) VALUES (
          %(d_id)s, %(device)s, %(lot_id)s, %(system_name)s, %(table_name)s, %(fix)s, %(fix_sn)s, 
         %(sequence)s, %(program)s, %(dimm)s, %(m_rank)s, %(dq)s, %(spd_lot)s, %(sn)s, 
         %(run)s, %(wafer)s, %(x)s, %(y)s, %(bank)s, %(f_row)s, %(f_col)s, %(fail_type)s,
         %(item)s, %(stage)s, %(oper)s, %(fab)s, %(vdd)s, %(speed)s, %(type)s, 
-        %(grade)s, %(owner)s, %(batch_code)s, %(end_time)s, %(ww)s
+        %(grade)s, %(owner)s, %(batch_code)s, %(end_time)s, %(ww)s, %(w_year)s
     )
     ON DUPLICATE KEY UPDATE
         device = VALUES(device),
@@ -157,7 +187,8 @@ def insert_or_update_data(data, host):
         grade = VALUES(grade),
         owner = VALUES(owner),
         batch_code = VALUES(batch_code),
-        ww = VALUES(ww);
+        ww = VALUES(ww),
+        w_year = VALUES(w_year);
     """
     for _, row in data.iterrows():
         mapped_row = map_columns(row.to_dict())
