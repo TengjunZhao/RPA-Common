@@ -370,29 +370,31 @@ def update_table_in_ppt(ppt_file, data, table_slide_index=0, table_index=2):
     for row_idx, (index, row) in enumerate(transposed_data.iterrows()):
         for col_idx, value in enumerate(row):
             # Adjust the target cell positions
-            table_row_idx = row_idx   # Data rows start from the second row in the table
+            table_row_idx = row_idx  # Data rows start from the second row in the table
             table_col_idx = col_idx + 1  # Data columns start from the third column in the table
 
             # Format the value
             if pd.isna(value):
                 value = ""
-            elif "Fail" in transposed_data.iloc[0, col_idx]:  # Format fail rates
-                value = f"{value * 100:.2f}%"
-            elif isinstance(value, (int, float)):  # Format in and out values
-                value = f"{int(value):,}"
+            elif "Fail" in transposed_data.iloc[row_idx, 0] and col_idx > 0:  # Format fail rates
+                value = f"{value:.2f}%"  # Multiply by 100, format to 2 decimals, and add %
+            elif ("In" in transposed_data.iloc[row_idx, 0] or  "Out" in transposed_data.iloc[row_idx, 0]) and col_idx > 0:  # Format in and out values
+                value = f"{int(value):,}"  # Add thousand separators
 
-            # Write to table cell
-            print(f"Writing {value} to cell ({table_row_idx}, {table_col_idx})")
-            cell = table.cell(table_row_idx, table_col_idx)
-            cell.text = str(value)
+            if col_idx > 0:
+                # Write to table cell
+                print(f"Writing {value} to cell ({table_row_idx}, {table_col_idx})")
+                cell = table.cell(table_row_idx, table_col_idx)
+                cell.text = str(value)
 
-            # Apply formatting
-            paragraph = cell.text_frame.paragraphs[0]
-            paragraph.font.size = Pt(10)  # Adjust font size
-            paragraph.alignment = PP_ALIGN.CENTER  # Center align
+                # Apply formatting
+                paragraph = cell.text_frame.paragraphs[0]
+                paragraph.font.size = Pt(10)  # Adjust font size
+                paragraph.alignment = PP_ALIGN.CENTER  # Center align
 
-            if "Fail" in transposed_data.iloc[0, col_idx]:  # Bold fail rates
-                paragraph.font.bold = True
+                # Bold formatting for fail rates and In/Out values
+                if ("Fail" in transposed_data.iloc[row_idx, 0]):
+                    paragraph.font.bold = True
 
     # Save the updated presentation
     updated_file = ppt_file
