@@ -4,6 +4,15 @@ from sqlalchemy import create_engine, text
 from datetime import datetime, timedelta
 import calendar
 from sqlalchemy.exc import SQLAlchemyError
+from pptx.util import Inches
+from pptx import Presentation
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
+from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pptx.enum.text import PP_ALIGN
+from decimal import Decimal
+from pptx.util import Pt
+
 
 
 def get_first_and_last_day_of_month(month_str):
@@ -26,7 +35,6 @@ def get_first_and_last_day_of_month(month_str):
 def fetch_data_from_db(connection, query):
     """Fetch data from the database using the provided query."""
     return pd.read_sql(query, connection)
-
 
 def process_data_from_db(db_config, month_str):
     """Process data from the database and compute the required metrics."""
@@ -120,7 +128,6 @@ def process_data_from_db(db_config, month_str):
         print(f"Error processing data: {e}")
         return None
 
-
 def get_max_month(db_config):
     """Fetch the maximum month from the database."""
     # 创建 SQLAlchemy 引擎
@@ -143,7 +150,6 @@ def increment_month(current_month):
         return (year + 1) * 100 + 1  # Next year, January
     else:
         return current_month + 1  # Same year, next month
-
 
 def Insert_data(result_df, db_config):
     """
@@ -279,16 +285,150 @@ def generate_report_data(db_config, current_date):
         # Return the report data as a dictionary
         report_dict = report_data.to_dict(orient='records')
 
-        return report_dict
+        # Convert report data into a DataFrame
+        df = pd.DataFrame(report_data)
+
+        # Combine 'year' and 'workmt' into a single column 'period'
+        df['period'] = df['workmt'].combine_first(df['year'].apply(lambda x: f"{int(x):04}" if pd.notna(x) else None))
+
+        # Drop the original 'year' and 'workmt' columns
+        df = df.drop(columns=['year', 'workmt'])
+
+        # Reorder columns to place 'period' at the front
+        cols = ['period'] + [col for col in df.columns if col != 'period']
+        df = df[cols]
+
+        return df
 
     except Exception as e:
         print(f"Error generating report data: {e}")
         return None
 
 
-def write_report_data(result, current_date):
-    pass
+def update_chart_in_ppt(ppt_file, chart_slide_index, chart_index, categories, values):
+    """
+    Update chart data in a specific slide of a PowerPoint presentation.
 
+    :param ppt_file: str, path to the PowerPoint file.
+    :param chart_slide_index: int, index of the slide containing the chart.
+    :param chart_index: int, index of the chart within the slide.
+    :param categories: list, categories for the chart (e.g., months or years).
+    :param values: list, values corresponding to the categories.
+    """
+    # Load the presentation
+    prs = Presentation(ppt_file)
+
+    # Access the slide containing the chart
+    slide = prs.slides[chart_slide_index]
+
+    # Get the chart
+    chart = slide.shapes[chart_index].chart
+
+    # Update the chart with new data
+    chart_data = CategoryChartData()
+    chart_data.categories = categories
+    chart_data.add_series('Series 1', values)
+
+    # Replace the existing chart
+    x, y, cx, cy = chart.shape.left, chart.shape.top, chart.shape.width, chart.shape.height
+    slide.shapes._spTree.remove(chart._element)  # Remove the old chart
+    slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data)
+
+    # Save changes
+    prs.save("updated_" + ppt_file)
+    print(f"Updated chart data saved to updated_{ppt_file}")
+
+
+def update_table_in_ppt(ppt_file, data, table_slide_index=0, table_index=2):
+    """
+    Update table data in a specific slide of a PowerPoint presentation (transposed format).
+    :param ppt_file: str, path to the PowerPoint file.
+    :param data: list of lists, data to be written into the table.
+                 Each sublist represents a column, as the data is transposed.
+    :param table_slide_index: int, index of the slide containing the table.
+    :param table_index: int, index of the table within the slide.
+    """
+    # Load the presentation
+    prs = Presentation(ppt_file)
+
+    # Access the slide containing the table
+    slide = prs.slides[table_slide_index]
+
+    # Get the table shape by index
+    table_shape = slide.shapes[table_index]
+    if table_shape.shape_type != MSO_SHAPE_TYPE.TABLE:
+        raise ValueError(f"The shape at index {table_index} is not a table.")
+
+    # Access the table
+    table = table_shape.table
+
+    data = pd.DataFrame(data)
+    # Transpose the DataFrame to align rows and columns for the table
+    transposed_data = data.transpose()
+
+    # Iterate over rows in the transposed data
+    for row_idx, (index, row) in enumerate(transposed_data.iterrows()):
+        for col_idx, value in enumerate(row):
+            # Adjust the target cell positions
+            table_row_idx = row_idx   # Data rows start from the second row in the table
+            table_col_idx = col_idx + 1  # Data columns start from the third column in the table
+
+            # Format the value
+            if pd.isna(value):
+                value = ""
+            elif "Fail" in transposed_data.iloc[0, col_idx]:  # Format fail rates
+                value = f"{value * 100:.2f}%"
+            elif isinstance(value, (int, float)):  # Format in and out values
+                value = f"{int(value):,}"
+
+            # Write to table cell
+            print(f"Writing {value} to cell ({table_row_idx}, {table_col_idx})")
+            cell = table.cell(table_row_idx, table_col_idx)
+            cell.text = str(value)
+
+            # Apply formatting
+            paragraph = cell.text_frame.paragraphs[0]
+            paragraph.font.size = Pt(10)  # Adjust font size
+            paragraph.alignment = PP_ALIGN.CENTER  # Center align
+
+            if "Fail" in transposed_data.iloc[0, col_idx]:  # Bold fail rates
+                paragraph.font.bold = True
+
+    # Save the updated presentation
+    updated_file = ppt_file
+    prs.save(updated_file)
+    print(f"Updated table saved to {updated_file}")
+
+
+def write_to_ppt(result, reportDir):
+    # Convert result data to table format
+    table_data = [['Period', 'TTL Fail', 'ET In', 'ET Out', 'ET Fail', 'AT In', 'AT Out', 'AT Fail']]
+    for _, row in result.iterrows():
+        table_data.append([
+            row['period'] if 'period' in row else '',
+            row['ttl_fail'] if 'ttl_fail' in row else 0,
+            row['et_in'] if 'et_in' in row else 0,
+            row['et_out'] if 'et_out' in row else 0,
+            row['et_fail'] if 'et_fail' in row else 0,
+            row['at_in'] if 'at_in' in row else 0,
+            row['at_out'] if 'at_out' in row else 0,
+            row['at_fail'] if 'at_fail' in row else 0,
+        ])
+
+    # Update table in slide 0, table index 0
+    update_table_in_ppt(reportDir, table_data, table_slide_index=0, table_index=2)
+
+    # Update chart in slide 1, chart index 1 (e.g., only last 12 months)
+    # categories = [record['workmt'] for record in result[-12:]]
+    # values = [record['ttl_fail'] for record in result[-12:]]
+    # update_chart_in_ppt(reportDir, chart_slide_index=1, chart_index=0, categories=categories, values=values)
+
+def list_shapes_in_slide(ppt_file, slide_index):
+    """List all shapes and their types in a slide."""
+    prs = Presentation(ppt_file)
+    slide = prs.slides[slide_index]
+    for idx, shape in enumerate(slide.shapes):
+        print(f"Index: {idx}, Type: {shape.shape_type}, Name: {shape.name}")
 
 def main(mode):
     # 确定数据库配置
@@ -340,6 +480,7 @@ def main(mode):
             result = generate_report_data(db_config, current_date)
             print("Report data:", result)
             # 写入PPT
+            list_shapes_in_slide(reportDir, 0)
             write_to_ppt(result, reportDir)
     else:
         print("No new months to process.")
