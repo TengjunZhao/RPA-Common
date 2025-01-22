@@ -456,6 +456,19 @@ def list_shapes_in_slide(ppt_file, slide_index):
         print(f"Index: {idx}, Type: {shape.shape_type}, Name: {shape.name}")
 
 def copy_and_save_report(src_path, target_dir, report_month):
+    threshold_date = datetime.strptime(report_month, '%Y%m')  # Convert report month to datetime
+    threshold_month = (threshold_date.replace(year=threshold_date.year - 1)).strftime('%Y%m')
+    for folder_name in os.listdir(target_dir):
+        folder_path = os.path.join(target_dir, folder_name)
+        if os.path.isdir(folder_path):  # Check if it's a directory
+            try:
+                # Check if folder name is a valid YYYYMM format and compare
+                if folder_name.isdigit() and len(folder_name) == 6:
+                    if folder_name < threshold_month:
+                        shutil.rmtree(folder_path)  # Delete the folder and its contents
+                        print(f"Deleted old report folder: {folder_path}")
+            except Exception as e:
+                print(f"Error deleting folder {folder_path}: {e}")
     # Create the new target directory
     new_dir = os.path.join(target_dir, report_month)  # Combine base directory with YYYYMM
     os.makedirs(new_dir, exist_ok=True)  # Create the directory if it doesn't exist
