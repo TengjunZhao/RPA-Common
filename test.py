@@ -1,33 +1,24 @@
-from datetime import datetime, timedelta
+import os
+import shutil
+from datetime import datetime
 
 
-def calculate_year(week, reference_date):
-    """
-    Calculate the year of the given ISO week number based on a reference date.
-    Handles edge cases for weeks that belong to the previous or next year.
-    """
-    try:
-        # Convert reference date to datetime
-        reference_date = datetime.strptime(reference_date, '%Y-%m-%d')
+def copy_and_save_report(src_path, target_dir, report_month):
+    # Create the new target directory
+    new_dir = os.path.join(target_dir, report_month)  # Combine base directory with YYYYMM
+    os.makedirs(new_dir, exist_ok=True)  # Create the directory if it doesn't exist
 
-        # Construct the first day of the given ISO week
-        year = reference_date.year
-        first_day_of_week = datetime.strptime(f'{year}-W{int(week)}-1', "%Y-W%U-%w")
+    # Construct the new file path
+    new_file_path = os.path.join(new_dir, os.path.basename(src_path))
 
-        # Adjust for the first week of the next year
-        if week == '01' and reference_date.month == 12:
-            year += 1
-        # Adjust for the last weeks of the previous year
-        elif week in ['52', '53'] and first_day_of_week.month == 1:
-            year -= 1
+    # Copy the file to the new location (overwrite if exists)
+    # shutil.copy2(src_path, new_file_path)
 
-        return year
-    except Exception as e:
-        print(f"Error calculating year for week {week}: {e}")
-        return None
+    print(f"Report successfully copied to: {new_file_path}")
 
 
 if __name__ == '__main__':
-     reference_date = datetime.now().strftime('%Y-%m-%d')  # Use today's date as a reference
-     year = calculate_year('01', '2024-12-31')
-     print(year)
+    reportDir = r'D:\Sync\业务报告\1on1\不良Status.pptx'
+    report_month = datetime.now().strftime('%Y%m')
+    target_base_dir = r'D:\Sync\业务报告\1on1'
+    copy_and_save_report(reportDir, target_base_dir, report_month)

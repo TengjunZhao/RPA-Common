@@ -12,6 +12,8 @@ from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.enum.text import PP_ALIGN
 from decimal import Decimal
 from pptx.util import Pt
+import shutil
+import os
 
 
 
@@ -232,7 +234,7 @@ def generate_report_data(db_config, current_date):
                     (1 - SUM(et_out) / NULLIF(SUM(et_in), 0) * SUM(at_out) / NULLIF(SUM(at_in), 0)) * 100 AS ttl_fail,
                     SUM(et_in) AS et_in,
                     SUM(et_out) AS et_out,
-                    (1 - SUM(at_out) / NULLIF(SUM(at_in), 0)) * 100 AS et_fail,
+                    (1 - SUM(et_out) / NULLIF(SUM(et_in), 0)) * 100 AS et_fail,
                     SUM(at_in) AS at_in,
                     SUM(at_out) AS at_out,
                     (1 - SUM(at_out) / NULLIF(SUM(at_in), 0)) * 100 AS at_fail
@@ -305,15 +307,13 @@ def generate_report_data(db_config, current_date):
         return None
 
 
-def update_chart_in_ppt(ppt_file, chart_slide_index, chart_index, categories, values):
+def update_chart_in_ppt(ppt_file, result, chart_slide_index=0, chart_index=1):
     """
     Update chart data in a specific slide of a PowerPoint presentation.
-
     :param ppt_file: str, path to the PowerPoint file.
+    :param result: pandas DataFrame, result data for the chart.
     :param chart_slide_index: int, index of the slide containing the chart.
     :param chart_index: int, index of the chart within the slide.
-    :param categories: list, categories for the chart (e.g., months or years).
-    :param values: list, values corresponding to the categories.
     """
     # Load the presentation
     prs = Presentation(ppt_file)
@@ -321,22 +321,40 @@ def update_chart_in_ppt(ppt_file, chart_slide_index, chart_index, categories, va
     # Access the slide containing the chart
     slide = prs.slides[chart_slide_index]
 
-    # Get the chart
-    chart = slide.shapes[chart_index].chart
+    # Get the chart shape by index
+    chart_shape = slide.shapes[chart_index]
+    if chart_shape.shape_type != MSO_SHAPE_TYPE.CHART:
+        raise ValueError(f"The shape at index {chart_index} is not a chart.")
 
-    # Update the chart with new data
+    # Access the chart
+    chart = chart_shape.chart
+
+    # Prepare data for the chart (e.g., TTL Fail for the last 12 months)
+    # Extracting the last 12 periods and TTL Fail values
+    months = result['period'].tail(15).tolist()  # Last 12 periods
+    formatted_months = [f"{year[2:4]}년 Total" for year in months[:3]]
+    formatted_months += [f"{month[2:4]}년 {month[4:]}월" for month in months[3:]]
+    ttl_fail = result['ttl_fail'].tail(15).round(2).tolist()  # Last 15 TTL Fail values rounded to 2 decimals
+    ttl_fail = [round(value, 2) for value in ttl_fail]
+    et_fail = result['et_fail'].tail(15).round(2).tolist()  # Last 15 ET Fail values rounded to 2 decimals
+    et_fail = [round(value, 2) for value in et_fail]
+    at_fail = result['at_fail'].tail(15).round(2).tolist()  # Last 15 AT Fail values rounded to 2 decimals
+    at_fail = [round(value, 2) for value in at_fail]
+
+    # Prepare chart data
     chart_data = CategoryChartData()
-    chart_data.categories = categories
-    chart_data.add_series('Series 1', values)
+    chart_data.categories = formatted_months  # Set categories (x-axis labels)
+    chart_data.add_series('ET', et_fail)  # Add series for ET Fail
+    chart_data.add_series('AT', at_fail)  # Add series for AT Fail
+    chart_data.add_series('TTL', ttl_fail)  # Add series for TTL Fail
 
-    # Replace the existing chart
-    x, y, cx, cy = chart.shape.left, chart.shape.top, chart.shape.width, chart.shape.height
-    slide.shapes._spTree.remove(chart._element)  # Remove the old chart
-    slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data)
+    # Replace the existing data with the new chart_data
+    chart.replace_data(chart_data)
 
-    # Save changes
-    prs.save("updated_" + ppt_file)
-    print(f"Updated chart data saved to updated_{ppt_file}")
+    # Save the updated presentation
+    updated_file = ppt_file
+    prs.save(updated_file)
+    print(f"Updated chart data saved to {updated_file}")
 
 
 def update_table_in_ppt(ppt_file, data, table_slide_index=0, table_index=2):
@@ -376,6 +394,12 @@ def update_table_in_ppt(ppt_file, data, table_slide_index=0, table_index=2):
             # Format the value
             if pd.isna(value):
                 value = ""
+            elif row_idx == 0 and col_idx > 3:  # Format period (change to month format)
+                year = str(value)[2:4]  # Extract the year part
+                month = int(str(value)[4:])  # Extract the month part
+                month_name = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                # Format as "XX-Jan", "XX-Feb", etc.
+                value = f"{year}-{month_name[month - 1]}"  # Format period as "2024-Jan"
             elif "Fail" in transposed_data.iloc[row_idx, 0] and col_idx > 0:  # Format fail rates
                 value = f"{value:.2f}%"  # Multiply by 100, format to 2 decimals, and add %
             elif ("In" in transposed_data.iloc[row_idx, 0] or  "Out" in transposed_data.iloc[row_idx, 0]) and col_idx > 0:  # Format in and out values
@@ -421,9 +445,8 @@ def write_to_ppt(result, reportDir):
     update_table_in_ppt(reportDir, table_data, table_slide_index=0, table_index=2)
 
     # Update chart in slide 1, chart index 1 (e.g., only last 12 months)
-    # categories = [record['workmt'] for record in result[-12:]]
-    # values = [record['ttl_fail'] for record in result[-12:]]
-    # update_chart_in_ppt(reportDir, chart_slide_index=1, chart_index=0, categories=categories, values=values)
+    update_chart_in_ppt(reportDir, result, chart_slide_index=0, chart_index=1)
+
 
 def list_shapes_in_slide(ppt_file, slide_index):
     """List all shapes and their types in a slide."""
@@ -431,6 +454,20 @@ def list_shapes_in_slide(ppt_file, slide_index):
     slide = prs.slides[slide_index]
     for idx, shape in enumerate(slide.shapes):
         print(f"Index: {idx}, Type: {shape.shape_type}, Name: {shape.name}")
+
+def copy_and_save_report(src_path, target_dir, report_month):
+    # Create the new target directory
+    new_dir = os.path.join(target_dir, report_month)  # Combine base directory with YYYYMM
+    os.makedirs(new_dir, exist_ok=True)  # Create the directory if it doesn't exist
+
+    # Construct the new file path
+    new_file_path = os.path.join(new_dir, os.path.basename(src_path))
+
+    # Copy the file to the new location (overwrite if exists)
+    shutil.copy2(src_path, new_file_path)
+
+    print(f"Report successfully copied to: {new_file_path}")
+
 
 def main(mode):
     # 确定数据库配置
@@ -443,7 +480,8 @@ def main(mode):
         'charset': 'utf8mb4',
         'port': 3306,
         }
-        reportDir = r'D:\Sync\业务报告\1on1\2025\1月\不良Status.pptx'
+        reportDir = r'D:\Sync\业务报告\1on1\不良Status.pptx'
+        target_base_dir = r'D:\Sync\业务报告\1on1'
     else:
         db_config = {
             'host': '172.27.154.57',
@@ -453,7 +491,8 @@ def main(mode):
             'charset': 'utf8mb4',
             'port': 3306,
         }
-        reportDir = r'\\172.27.7.199\Mod_TestE\20. Fail Status\不良Status.pptx'
+        reportDir = r'\\172.27.7.188\Mod_TestE\20. Fail Status\不良Status.pptx'
+        target_base_dir = r'\\172.27.7.188\Mod_TestE\20. Fail Status'
     # 确定数据库最大月份
     max_month = get_max_month(db_config)
     # print(f"Max month in the database: {max_month}")
@@ -484,6 +523,9 @@ def main(mode):
             # 写入PPT
             list_shapes_in_slide(reportDir, 0)
             write_to_ppt(result, reportDir)
+            # 复制文件到指定位置
+            report_month = datetime.now().strftime('%Y%m')
+            copy_and_save_report(reportDir, target_base_dir, report_month)
     else:
         print("No new months to process.")
 
