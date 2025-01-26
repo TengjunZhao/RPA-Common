@@ -1,9 +1,8 @@
 import pandas as pd
 import numpy as np
-from sqlalchemy import create_engine, text
+import pymysql
 from datetime import datetime, timedelta
 import calendar
-from sqlalchemy.exc import SQLAlchemyError
 from pptx.util import Inches
 from pptx import Presentation
 from pptx.chart.data import CategoryChartData
@@ -42,11 +41,14 @@ def process_data_from_db(db_config, month_str):
     """Process data from the database and compute the required metrics."""
     first_day, last_day = get_first_and_last_day_of_month(month_str)
     try:
-        # Establish SQLAlchemy connection
-        engine = create_engine(
-            f"mysql+pymysql://{db_config['user']}:"
-            f"{db_config['password']}@{db_config['host']}:"
-            f"{db_config['port']}/{db_config['database']}"
+        # Connect to the database using pymysql
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            database=db_config['database'],
+            port=db_config['port'],
+            charset=db_config['charset']
         )
 
         # Query to fetch required data
@@ -64,7 +66,7 @@ def process_data_from_db(db_config, month_str):
             device, oper_old
         """
         # Fetch data
-        data = fetch_data_from_db(engine, query)
+        data = fetch_data_from_db(connection, query)
 
         # Pivot table for calculations
         pivot_df = data.pivot_table(index='device', columns='oper_old', values=['m_In', 'm_Out'], aggfunc='sum')
@@ -74,12 +76,10 @@ def process_data_from_db(db_config, month_str):
             if operator not in pivot_df.columns.get_level_values(1):  # Check if the operator exists in columns
                 pivot_df[('m_In', operator)] = np.nan  # Add missing operator column with NaN values
                 pivot_df[('m_Out', operator)] = np.nan  # Add missing operator column with NaN values
-                # Calculate Yield
+
+        # Calculate Yield
         yield_df = pivot_df['m_Out'] / pivot_df['m_In']
-        # 如果 yield_df 的列索引是多级索引，需要通过元组形式访问列
-        # Calculate Yield_5700_5710_5780, ignoring NaN and 0 values
         def calculate_yield(row):
-            # Filter out NaN and 0 values from the row
             valid_values = row[row != 0].dropna()
             if len(valid_values) > 0:
                 return valid_values.prod()  # Multiply all valid values together
@@ -88,14 +88,11 @@ def process_data_from_db(db_config, month_str):
 
         # Apply the function to calculate the Yield for each row
         yield_df['Yield_5700_5710_5780'] = yield_df[valid_operators].apply(calculate_yield, axis=1)
-        # Calculate input quantities
         input_df = pivot_df['m_In'][['5700', '5710', '5780']].max(axis=1)
         input_ttl = input_df.sum()
 
         # Calculate weight
         weight_df = input_df / input_ttl
-
-        # Weighted yield
         weight_yield = yield_df['Yield_5700_5710_5780'] * weight_df
 
         # Calculate AT yield and output
@@ -130,16 +127,35 @@ def process_data_from_db(db_config, month_str):
         print(f"Error processing data: {e}")
         return None
 
+    finally:
+        # Close the connection after use
+        if connection:
+            connection.close()
+
 def get_max_month(db_config):
     """Fetch the maximum month from the database."""
-    # 创建 SQLAlchemy 引擎
-    engine = create_engine(
-        f"mysql+pymysql://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database']}"
-    )
-    # 查询数据库
-    query = "SELECT MAX(workmt) AS max_month FROM cmsalpha.db_fail_status"
-    result = pd.read_sql(query, con=engine)
-    return result.iloc[0, 0]
+    connection = None  # Ensure connection is initialized
+    try:
+        # Connect to the database using pymysql
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            database=db_config['database'],
+            port=db_config['port'],
+            charset=db_config['charset']
+        )
+
+        query = "SELECT MAX(workmt) AS max_month FROM cmsalpha.db_fail_status"
+        result = pd.read_sql(query, con=connection)
+        return result.iloc[0, 0]
+
+    except Exception as e:
+        print(f"Error fetching max month: {e}")
+        return None
+    finally:
+        if connection:
+            connection.close()
 
 def increment_month(current_month):
     """
@@ -154,19 +170,19 @@ def increment_month(current_month):
         return current_month + 1  # Same year, next month
 
 def Insert_data(result_df, db_config):
-    """
-    Insert data into the database, and update if the data already exists.
-    :param result_df: DataFrame, the data to be inserted.
-    :param db_config: dict, database configuration.
-    """
+    """Insert data into the database, and update if the data already exists."""
     try:
-        # 创建 SQLAlchemy 引擎
-        engine = create_engine(
-            f"mysql+pymysql://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database']}"
+        # Connect to the database using pymysql
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            database=db_config['database'],
+            port=db_config['port'],
+            charset=db_config['charset']
         )
 
-        # Prepare the connection
-        with engine.begin() as conn:
+        with connection.cursor() as cursor:
             for _, row in result_df.iterrows():
                 # Ensure workmt is formatted as a 6-character string (e.g., '202202')
                 workmt = str(row['Month']).zfill(6)
@@ -193,44 +209,48 @@ def Insert_data(result_df, db_config):
                     at_out = VALUES(at_out),
                     at_fail = VALUES(at_fail);
                 """
+                cursor.execute(sql)
 
-                # Ensure that the SQL string is correct
-                # print("Executing SQL query: ", sql)  # Debugging line
+            connection.commit()
+            print("Data inserted or updated successfully.")
 
-                # Use text() to ensure the query is a valid executable object
-                conn.execute(text(sql))
-
-        print("Data inserted or updated successfully.")
-
-    except SQLAlchemyError as e:
+    except pymysql.MySQLError as e:
         print(f"Error inserting or updating data: {e}")
 
+    finally:
+        if connection:
+            connection.close()
 
 def generate_report_data(db_config, current_date):
-    """Generate report data from db_fail_status."""
+    """Generate report data from db_fail_status using pymysql."""
     try:
-        # Connect to the database
-        engine = create_engine(
-            f"mysql+pymysql://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database']}"
+        # 连接到数据库
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            database=db_config['database'],
+            port=db_config['port']
         )
 
-        # Calculate the years and months for the report
+        # 计算报告的年份和月份
         current_year = current_date.year
         current_month = current_date.month
 
-        # Generate a list of the last 3 years
+        # 获取过去3年的年份
         years = [current_year - 1, current_year - 2, current_year - 3]
 
-        # Get the last 12 months
+        # 获取过去12个月的月份
         months = [
             (current_year, current_month - i) if current_month - i > 0 else (current_year - 1, 12 + (current_month - i))
-            for i in range(1, 13)]
+            for i in range(1, 13)
+        ]
 
-        # Generate the query to get the data
-        # Query for the last 3 years
+        # 年份数据的查询
+        # 将查询中的 IN 部分改成多个占位符
         year_query = """
                     SELECT 
-                    YEAR(STR_TO_DATE(workmt, '%Y%m')) AS year,
+                    YEAR(STR_TO_DATE(workmt, '%%Y%%m')) AS year,
                     (1 - SUM(et_out) / NULLIF(SUM(et_in), 0) * SUM(at_out) / NULLIF(SUM(at_in), 0)) * 100 AS ttl_fail,
                     SUM(et_in) AS et_in,
                     SUM(et_out) AS et_out,
@@ -239,20 +259,25 @@ def generate_report_data(db_config, current_date):
                     SUM(at_out) AS at_out,
                     (1 - SUM(at_out) / NULLIF(SUM(at_in), 0)) * 100 AS at_fail
                     FROM db_fail_status
-                    WHERE YEAR(STR_TO_DATE(workmt, '%Y%m')) IN :years
-                    GROUP BY YEAR(STR_TO_DATE(workmt, '%Y%m'))
-        """
+                    WHERE YEAR(STR_TO_DATE(workmt, '%%Y%%m')) IN ({})
+                    GROUP BY YEAR(STR_TO_DATE(workmt, '%%Y%%m'))
+                """.format(','.join(['%s'] * len(years)))  # 使用多个 %s 占位符
 
-        # Execute the query to get the last 3 years of data
-        with engine.connect() as conn:
-            result_years = conn.execute(text(year_query), {"years": tuple(years)}).fetchall()
+        # 打印调试信息
+        print("Years to query:", tuple(years))  # 打印 years 参数
 
-        # Convert the result to a DataFrame for easy manipulation
-        df_years = pd.DataFrame(result_years,
-                                columns=['year', 'ttl_fail', 'et_in', 'et_out', 'et_fail', 'at_in', 'at_out',
-                                         'at_fail'])
+        # 执行查询
+        with connection.cursor() as cursor:
+            cursor.execute(year_query, tuple(years))  # 传入实际的年份元组
+            result_years = cursor.fetchall()
+            print("debug2", result_years)
 
-        # Get the data for the last 12 months
+        # 将结果转换为 DataFrame
+        df_years = pd.DataFrame(result_years, columns=[
+            'year', 'ttl_fail', 'et_in', 'et_out', 'et_fail', 'at_in', 'at_out', 'at_fail'
+        ])
+
+        # 获取过去12个月的数据
         month_query = """
         SELECT 
             workmt,
@@ -264,39 +289,39 @@ def generate_report_data(db_config, current_date):
             at_out,
             at_fail
         FROM db_fail_status
-        WHERE workmt BETWEEN :start_date AND :end_date
+        WHERE workmt BETWEEN %s AND %s
         """
 
-        # Calculate the start and end date for the last 12 months
+        # 计算开始和结束日期
         start_date = f"{months[-1][0]}-{months[-1][1]:02d}-01"
         end_date = f"{current_date.year}-{current_date.month - 1 if current_date.month > 1 else 12:02d}-01"
 
-        # Execute the query to get the last 12 months data
-        with engine.connect() as conn:
-            result_months = conn.execute(text(month_query), {"start_date": start_date, "end_date": end_date}).fetchall()
+        # 执行查询并获取结果
+        with connection.cursor() as cursor:
+            cursor.execute(month_query, (start_date, end_date))
+            result_months = cursor.fetchall()
 
-        # Convert the result to a DataFrame for easy manipulation
-        df_months = pd.DataFrame(result_months,
-                                 columns=['workmt', 'ttl_fail', 'et_in', 'et_out', 'et_fail', 'at_in', 'at_out',
-                                          'at_fail'])
+        # 将结果转换为 DataFrame
+        df_months = pd.DataFrame(result_months, columns=[
+            'workmt', 'ttl_fail', 'et_in', 'et_out', 'et_fail', 'at_in', 'at_out', 'at_fail'
+        ])
 
-        # Combine the year and month data
-        # Combine the 3 years data with the 12 months data (total 15 rows)
+        # 合并年度数据和月度数据
         report_data = pd.concat([df_years, df_months], ignore_index=True)
 
-        # Return the report data as a dictionary
+        # 返回结果作为字典
         report_dict = report_data.to_dict(orient='records')
 
-        # Convert report data into a DataFrame
+        # 转换为 DataFrame
         df = pd.DataFrame(report_data)
 
-        # Combine 'year' and 'workmt' into a single column 'period'
+        # 合并 'year' 和 'workmt' 为 'period'
         df['period'] = df['workmt'].combine_first(df['year'].apply(lambda x: f"{int(x):04}" if pd.notna(x) else None))
 
-        # Drop the original 'year' and 'workmt' columns
+        # 删除原来的 'year' 和 'workmt' 列
         df = df.drop(columns=['year', 'workmt'])
 
-        # Reorder columns to place 'period' at the front
+        # 重新排列列
         cols = ['period'] + [col for col in df.columns if col != 'period']
         df = df[cols]
 
@@ -305,7 +330,10 @@ def generate_report_data(db_config, current_date):
     except Exception as e:
         print(f"Error generating report data: {e}")
         return None
-
+    finally:
+        # 确保连接被关闭
+        if connection:
+            connection.close()
 
 def update_chart_in_ppt(ppt_file, result, chart_slide_index=0, chart_index=1):
     """
@@ -334,11 +362,11 @@ def update_chart_in_ppt(ppt_file, result, chart_slide_index=0, chart_index=1):
     months = result['period'].tail(15).tolist()  # Last 12 periods
     formatted_months = [f"{year[2:4]}년 Total" for year in months[:3]]
     formatted_months += [f"{month[2:4]}년 {month[4:]}월" for month in months[3:]]
-    ttl_fail = result['ttl_fail'].tail(15).round(2).tolist()  # Last 15 TTL Fail values rounded to 2 decimals
+    ttl_fail = result['ttl_fail'].tail(15).apply(lambda x: float(x)).round(2).tolist()  # Last 15 TTL Fail values rounded to 2 decimals
     ttl_fail = [round(value, 2) for value in ttl_fail]
-    et_fail = result['et_fail'].tail(15).round(2).tolist()  # Last 15 ET Fail values rounded to 2 decimals
+    et_fail = result['et_fail'].tail(15).apply(lambda x: float(x)).round(2).tolist()  # Last 15 ET Fail values rounded to 2 decimals
     et_fail = [round(value, 2) for value in et_fail]
-    at_fail = result['at_fail'].tail(15).round(2).tolist()  # Last 15 AT Fail values rounded to 2 decimals
+    at_fail = result['at_fail'].tail(15).apply(lambda x: float(x)).round(2).tolist()  # Last 15 AT Fail values rounded to 2 decimals
     at_fail = [round(value, 2) for value in at_fail]
 
     # Prepare chart data
@@ -427,6 +455,10 @@ def update_table_in_ppt(ppt_file, data, table_slide_index=0, table_index=2):
 
 
 def write_to_ppt(result, reportDir):
+    if result is None:
+        print("No report data available to write to PPT.")
+        return
+
     # Convert result data to table format
     table_data = [['Period', 'TTL Fail', 'ET In', 'ET Out', 'ET Fail', 'AT In', 'AT Out', 'AT Fail']]
     for _, row in result.iterrows():
