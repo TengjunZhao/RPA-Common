@@ -238,7 +238,7 @@ def generate_report_data(db_config, current_date):
         current_month = current_date.month
 
         # 获取过去3年的年份
-        years = [current_year - 1, current_year - 2, current_year - 3]
+        years = [current_year, current_year - 1, current_year - 2]
 
         # 获取过去12个月的月份
         months = [
@@ -293,8 +293,8 @@ def generate_report_data(db_config, current_date):
         """
 
         # 计算开始和结束日期
-        start_date = f"{months[-1][0]}-{months[-1][1]:02d}-01"
-        end_date = f"{current_date.year}-{current_date.month - 1 if current_date.month > 1 else 12:02d}-01"
+        start_date = f"{months[-1][0]}{months[-1][1]:02d}"
+        end_date = f"{current_date.year}{current_date.month - 1 if current_date.month > 1 else 12:02d}"
 
         # 执行查询并获取结果
         with connection.cursor() as cursor:
@@ -545,7 +545,7 @@ def main(mode):
     # 获取当前系统月份的前一个月
     current_date = datetime.now()
     end_month = (current_date.replace(day=1) - timedelta(days=1)).strftime("%Y%m")
-    max_month = '202411'
+    # max_month = '202411'
     # 比较 end_month 和 max_month，并逐月执行
     if end_month > max_month:
         # 从 max_month 的下一个月份开始
@@ -560,8 +560,7 @@ def main(mode):
                 print(result_df)
                 # 将结果写入数据库
                 Insert_data(result_df, db_config)
-            # 增加月份
-            current_month = increment_month(int(current_month))
+
             # 生成报表数据
             result = generate_report_data(db_config, current_date)
             print("Report data:", result)
@@ -571,6 +570,8 @@ def main(mode):
             # 复制文件到指定位置
             report_month = datetime.now().strftime('%Y%m')
             copy_and_save_report(reportDir, target_base_dir, report_month)
+            # 增加月份
+            current_month = increment_month(int(current_month))
     else:
         print("No new months to process.")
 
