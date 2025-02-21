@@ -32,10 +32,11 @@ def Backup_db(backup_dir, info, db, time_str):
                     if table_data:
                         for row in table_data:
                             values = [
-                                f"'{value}'" if isinstance(value, (str, datetime.datetime, datetime.date, datetime.time))
+                                f"'{str(value).replace(chr(39), '')}'" if isinstance(value, (
+                                str, datetime.datetime, datetime.date, datetime.time))
                                 else 'NULL' if value is None
-                                else f"'{str(value)}'" if isinstance(value, datetime.timedelta)
-                                else f"'{value}'" if isinstance(value, (float, int))
+                                else f"'{str(value).replace(chr(39), '')}'" if isinstance(value, datetime.timedelta)
+                                else f"'{str(value).replace(chr(39), '')}'" if isinstance(value, (float, int))
                                 else str(value)
                                 for value in row
                             ]
