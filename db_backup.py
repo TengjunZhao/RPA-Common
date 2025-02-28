@@ -24,6 +24,7 @@ def Backup_db(backup_dir, info, db, time_str):
                 # 添加DROP TABLE语句和CREATE TABLE语句
                 for table in tables:
                     cursor.execute(f"SHOW CREATE TABLE {table}")
+                    print(f"SHOW CREATE TABLE {table}")
                     create_table_sql = cursor.fetchone()[1]
                     backup_file.write(f"DROP TABLE IF EXISTS `{table}`;\n")
                     backup_file.write(f"{create_table_sql};\n")
