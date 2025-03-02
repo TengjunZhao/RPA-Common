@@ -364,6 +364,10 @@ def generate_report_data(db_config, current_date,mtype, Density):
 
         # 重新索引并填充缺失值
         df = df.set_index(['period', 'modtype', 'density']).reindex(multi_index).fillna(0).reset_index()
+        # ttl_fail, et_fail, at_fail保留两位小数
+        df['ttl_fail'] = df['ttl_fail'].apply(lambda x: round(x, 2))
+        df['et_fail'] = df['et_fail'].apply(lambda x: round(x, 2))
+        df['at_fail'] = df['at_fail'].apply(lambda x: round(x, 2))
         return df
 
     except Exception as e:
@@ -374,7 +378,7 @@ def generate_report_data(db_config, current_date,mtype, Density):
         if connection:
             connection.close()
 
-def update_chart_in_ppt(ppt_file, result, chart_slide_index=0, chart_index=1):
+def update_chart_in_ppt(ppt_file, result, chart_slide_index, chart_index=1):
     """
     Update chart data in a specific slide of a PowerPoint presentation.
     :param ppt_file: str, path to the PowerPoint file.
@@ -398,22 +402,28 @@ def update_chart_in_ppt(ppt_file, result, chart_slide_index=0, chart_index=1):
 
     # Prepare data for the chart (e.g., TTL Fail for the last 12 months)
     # Extracting the last 12 periods and TTL Fail values
-    months = result['period'].tail(15).tolist()  # Last 12 periods
-    formatted_months = [f"{year[2:4]}년 Total" for year in months[:3]]
-    formatted_months += [f"{month[2:4]}년 {month[4:]}월" for month in months[3:]]
-    ttl_fail = result['ttl_fail'].tail(15).apply(lambda x: float(x)).round(2).tolist()  # Last 15 TTL Fail values rounded to 2 decimals
-    ttl_fail = [round(value, 2) for value in ttl_fail]
-    et_fail = result['et_fail'].tail(15).apply(lambda x: float(x)).round(2).tolist()  # Last 15 ET Fail values rounded to 2 decimals
-    et_fail = [round(value, 2) for value in et_fail]
-    at_fail = result['at_fail'].tail(15).apply(lambda x: float(x)).round(2).tolist()  # Last 15 AT Fail values rounded to 2 decimals
-    at_fail = [round(value, 2) for value in at_fail]
-
-    # Prepare chart data
+    months = result['period'].unique().tolist()
+    formatted_months = [
+        f"{p[2:4]}년 Total" if len(p) == 4 else f"{p[2:4]}년 {p[4:]}월"
+        for p in sorted(months, key=lambda x: (len(x), x))
+    ]
+    # 按密度分组处理
+    density_order = ['4GB', '8GB', '16GB', '32GB', '64GB', '128GB']
     chart_data = CategoryChartData()
-    chart_data.categories = formatted_months  # Set categories (x-axis labels)
-    chart_data.add_series('ET', et_fail)  # Add series for ET Fail
-    chart_data.add_series('AT', at_fail)  # Add series for AT Fail
-    chart_data.add_series('TTL', ttl_fail)  # Add series for TTL Fail
+    chart_data.categories = formatted_months
+
+    for density in density_order:
+        # 筛选当前密度数据并按时间段排序
+        density_data = result[result['density'] == density].sort_values(
+            'period',
+            key=lambda x: x.apply(lambda p: (len(p), p))
+        )
+
+        # 添加三个系列（ET/AT/TTL）
+        if not density_data.empty:
+            chart_data.add_series(f'{density} ET', density_data['et_fail'].round(2).tolist())
+            chart_data.add_series(f'{density} AT', density_data['at_fail'].round(2).tolist())
+            chart_data.add_series(f'{density} TTL', density_data['ttl_fail'].round(2).tolist())
 
     # Replace the existing data with the new chart_data
     chart.replace_data(chart_data)
@@ -447,69 +457,91 @@ def update_table_in_ppt(ppt_file, data, table_slide_index=0, table_index=2):
     # Access the table
     table = table_shape.table
 
-    data = pd.DataFrame(data)
-    # Transpose the DataFrame to align rows and columns for the table
-    transposed_data = data.transpose()
+    # 创建密度分类的层级结构
+    density_groups = data.groupby('density')
 
-    # Iterate over rows in the transposed data
-    for row_idx, (index, row) in enumerate(transposed_data.iterrows()):
-        for col_idx, value in enumerate(row):
-            # Adjust the target cell positions
-            table_row_idx = row_idx  # Data rows start from the second row in the table
-            table_col_idx = col_idx + 1  # Data columns start from the third column in the table
+    # 动态生成时间段（从数据中提取年份和月份）
+    all_periods = data['period'].unique().astype(str)
+    # 分离年份和月份数据
+    # 分离并排序原始数据（保持原始格式）
+    years = sorted([p for p in all_periods if len(p) == 4])
+    month_periods = sorted([p for p in all_periods if len(p) == 6], key=lambda x: x)
+    # 合并原始顺序（此时已排序）
+    raw_periods = years + month_periods
+    # 转换格式（仅在最后阶段处理一次）
+    formatted_periods = [
+        p if len(p) == 4 else f"{p[2:4]}-{calendar.month_abbr[int(p[4:])]}"
+        for p in raw_periods
+    ]
+    # 生成时间段表头（第一行）
+    header_row = ["Density",'Period'] + formatted_periods
+    table_data = [header_row]
+    density_order = ['4GB', '8GB', '16GB', '32GB', '64GB', '128GB']
 
-            # Format the value
-            if pd.isna(value):
-                value = ""
-            elif row_idx == 0 and col_idx > 3:  # Format period (change to month format)
-                year = str(value)[2:4]  # Extract the year part
-                month = int(str(value)[4:])  # Extract the month part
-                month_name = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-                # Format as "XX-Jan", "XX-Feb", etc.
-                value = f"{year}-{month_name[month - 1]}"  # Format period as "2024-Jan"
-            elif "Fail" in transposed_data.iloc[row_idx, 0] and col_idx > 0:  # Format fail rates
-                value = f"{value:.2f}%"  # Multiply by 100, format to 2 decimals, and add %
-            elif ("In" in transposed_data.iloc[row_idx, 0] or  "Out" in transposed_data.iloc[row_idx, 0]) and col_idx > 0:  # Format in and out values
-                value = f"{int(value):,}"  # Add thousand separators
+    for density in density_order:  # 按指定顺序处理密度
+        if density not in density_groups.groups:
+            continue
 
-            if col_idx > 0:
-                # Write to table cell
-                print(f"Writing {value} to cell ({table_row_idx}, {table_col_idx})")
-                cell = table.cell(table_row_idx, table_col_idx)
+        # 获取并排序当前密度数据
+        group = pd.DataFrame(density_groups.get_group(density)).copy()
+        group['sort_order'] = group['period'].apply(lambda x: raw_periods.index(x))
+        group.sort_values('sort_order', inplace=True)
+        if group.empty:
+            print(f"警告：{density}分组数据为空")
+            continue
+        # # 按时间段顺序重新索引数据
+        # ordered_group = group.set_index('period').reindex(periods).fillna(0)
+
+        # 生成密度区块
+        table_data += [
+            [density, "Rate(%)"] + group['ttl_fail'].map("{:.2f}%".format).tolist(),
+            ["", "ET IN"] + group['et_in'].map("{:,.0f}".format).tolist(),
+            ["", "ET OUT"] + group['et_out'].map("{:,.0f}".format).tolist(),
+            ["", "ET Rate(%)"] + group['et_fail'].map("{:.2f}%".format).tolist(),
+            ["", "AT IN"] + group['at_in'].map("{:,.0f}".format).tolist(),
+            ["", "AT OUT"] + group['at_out'].map("{:,.0f}".format).tolist(),
+            ["", "AT Rate(%)"] + group['at_fail'].map("{:.2f}%".format).tolist()
+        ]
+    max_cols = len(header_row)
+    for row_idx, row in enumerate(table_data):
+        # 自动补全缺失列
+        padded_row = list(row) + [''] * (max_cols - len(row))
+        # 判断是否为Rate行（通过第二列特征）
+        is_rate_row = any(keyword in row[1] for keyword in ['Rate', 'SUM Rate']) if len(row) > 1 else False
+        for col_idx, value in enumerate(padded_row[:max_cols]):
+            if col_idx < 2:
+                continue
+            try:
+                cell = table.cell(row_idx, col_idx + 1)
                 cell.text = str(value)
-
-                # Apply formatting
+                # 统一格式设置
                 paragraph = cell.text_frame.paragraphs[0]
-                paragraph.font.size = Pt(10)  # Adjust font size
-                paragraph.alignment = PP_ALIGN.CENTER  # Center align
-
-                # Bold formatting for fail rates and In/Out values
-                if ("Fail" in transposed_data.iloc[row_idx, 0]):
+                paragraph.font.size = Pt(10)
+                paragraph.alignment = PP_ALIGN.CENTER
+                # 整行加粗逻辑
+                if is_rate_row:
                     paragraph.font.bold = True
+            except IndexError:
+                print(f"表格尺寸不足，需要至少 {row_idx + 1} 行 {col_idx + 1} 列")
 
-    # Save the updated presentation
-    updated_file = ppt_file
-    prs.save(updated_file)
-    print(f"Updated table saved to {updated_file}")
+    prs.save(ppt_file)
+    print(f"Updated table saved to {ppt_file}")
 
-
-def write_to_ppt(result, reportDir, mtype, density):
+def write_to_ppt(result, reportDir, mtype, density, sheet):
     if result is None:
         print("No report data available to write to PPT.")
         return
-    # 过滤数据：保留指定modtype和density
+    # 过滤数据：保留指定mtype和density
     filtered_data = result[
-        (result['modtype'] == mtype) &
-        (result['modDensity'] == density)
+        (result['modtype'].isin(mtype)) &
+        (result['density'].isin(density))
         ].copy()
 
-
-
     # Update table in slide 0, table index 0
-    update_table_in_ppt(reportDir, table_data, table_slide_index=0, table_index=2)
+    update_table_in_ppt(reportDir, filtered_data, table_slide_index=sheet, table_index=2)
 
     # Update chart in slide 1, chart index 1 (e.g., only last 12 months)
-    update_chart_in_ppt(reportDir, result, chart_slide_index=0, chart_index=1)
+    update_chart_in_ppt(reportDir, filtered_data, chart_slide_index=sheet, chart_index=1)
 
 
 def list_shapes_in_slide(ppt_file, slide_index):
@@ -547,6 +579,12 @@ def copy_and_save_report(src_path, target_dir, report_month):
 
 
 def main(mode):
+    pcType = ['SD', 'UD']
+    pptPCType = ['SD']
+    svType = ['RD', 'LD']
+    pptSVType = ['RD']
+    pcDensity = ['4GB', '8GB', '16GB']
+    svDensity = ['16GB', '32GB', '64GB']
     # 确定数据库配置
     if mode == 'test':
         db_config = {
@@ -557,12 +595,6 @@ def main(mode):
         'charset': 'utf8mb4',
         'port': 3306,
         }
-        pcType = ['SD', 'UD']
-        pptPCType = ['SD']
-        svType = ['RD', 'LD']
-        pptSVType = ['RD']
-        pcDensity = ['4GB', '8GB', '16GB']
-        svDensity = ['16GB', '32GB', '64GB']
         reportDir = r'D:\Sync\业务报告\1on1\不良Status.pptx'
         target_base_dir = r'D:\Sync\业务报告\1on1'
     else:
@@ -574,12 +606,8 @@ def main(mode):
             'charset': 'utf8mb4',
             'port': 3306,
         }
-        pcType = ['SD', 'UD']
-        svType = ['RD', 'LD']
-        pcDensity = ['4GB', '8GB', '16GB']
-        svDensity = ['16GB', '32GB', '64GB']
         reportDir = r'\\172.27.7.188\Mod_TestE\20. Fail Status\不良Status.pptx'
-        target_base_dir = r'\\172.27.7.188\Mod_TestE\20. Fail Status'
+        target_base_dir = r'\\172.27.7.188\Mod_TestE\21. Fail Status Density'
     # 确定数据库最大月份
     max_month = get_max_month(db_config)
     # print(f"Max month in the database: {max_month}")
@@ -587,7 +615,7 @@ def main(mode):
     # 获取当前系统月份的前一个月
     current_date = datetime.now()
     end_month = (current_date.replace(day=1) - timedelta(days=1)).strftime("%Y%m")
-    max_month = '202412'
+    max_month = '202212'
     # 比较 end_month 和 max_month，并逐月执行
     if end_month > max_month:
         # 从 max_month 的下一个月份开始
@@ -609,10 +637,11 @@ def main(mode):
             print("Report data:", resultPC)
             # # 写入PPT
             # list_shapes_in_slide(reportDir, 0)
-            write_to_ppt(resultPC, reportDir, pptPCType, pcDensity)
+            write_to_ppt(resultPC, reportDir, pptPCType, pcDensity, 0)
+            write_to_ppt(resultSV, reportDir, pptSVType, svDensity, 1)
             # # 复制文件到指定位置
-            # report_month = datetime.now().strftime('%Y%m')
-            # copy_and_save_report(reportDir, target_base_dir, report_month)
+            report_month = datetime.now().strftime('%Y%m')
+            copy_and_save_report(reportDir, target_base_dir, report_month)
             # 增加月份
             current_month = increment_month(int(current_month))
     else:
