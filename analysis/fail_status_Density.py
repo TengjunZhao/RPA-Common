@@ -225,7 +225,7 @@ def Insert_data(result_df, db_config):
         if connection:
             connection.close()
 
-def generate_report_data(db_config, current_date,mtype, Density):
+def generate_report_failStatus(db_config, current_date, product):
     """Generate report data from db_fail_status using pymysql."""
     try:
         # 连接到数据库
@@ -266,23 +266,17 @@ def generate_report_data(db_config, current_date,mtype, Density):
                     (1 - SUM(at_out) / NULLIF(SUM(at_in), 0)) * 100 AS at_fail
                 FROM db_fail_status_density
                 WHERE YEAR(STR_TO_DATE(workmt, '%%Y%%m')) IN ({}) 
-                    AND modtype IN ({}) 
-                    AND modDensity IN ({})
+                    AND modtype = %s 
+                    AND modDensity = %s
                 GROUP BY YEAR(STR_TO_DATE(workmt, '%%Y%%m')), modtype, modDensity
             """.format(
-            ','.join(['%s'] * len(years)),
-            ','.join(['%s'] * (len(mtype))),
-            ','.join(['%s'] * (len(Density)))
+            ','.join(['%s'] * len(years))
         )
 
         # 打印调试信息
         print("Years to query:", tuple(years))  # 打印 years 参数
         # 执行查询时传入合并参数
-        query_params = (
-                tuple(years) +
-                tuple(mtype) +
-                tuple(Density)
-        )
+        query_params = tuple(years) + (product[0], product[1])
         # 执行查询
         with connection.cursor() as cursor:
             cursor.execute(year_query, query_params)  # 传入实际的年份元组
@@ -298,25 +292,22 @@ def generate_report_data(db_config, current_date,mtype, Density):
 
         # 获取过去12个月的数据
         month_query = """
-        SELECT 
-            workmt,
-            modtype,
-            modDensity,
-            ttl_fail,
-            et_in,
-            et_out,
-            et_fail,
-            at_in,
-            at_out,
-            at_fail
-        FROM db_fail_status_density
-        WHERE workmt BETWEEN %s AND %s AND
-            modtype IN ({}) AND 
-            modDensity IN ({})
-        """.format(
-            ','.join(['%s'] * len(mtype)),
-            ','.join(['%s'] * len(Density))
-        )
+                SELECT 
+                    workmt,
+                    modtype,
+                    modDensity,
+                    ttl_fail,
+                    et_in,
+                    et_out,
+                    et_fail,
+                    at_in,
+                    at_out,
+                    at_fail
+                FROM db_fail_status_density
+                WHERE workmt BETWEEN %s AND %s AND
+                    modtype = %s AND  # 改为单个占位符
+                    modDensity = %s   # 改为单个占位符
+                """
 
         # 计算开始和结束日期
         start_date = f"{months[-1][0]}{months[-1][1]:02d}"
@@ -324,12 +315,8 @@ def generate_report_data(db_config, current_date,mtype, Density):
 
         # 执行查询并获取结果
         with connection.cursor() as cursor:
-            cursor.execute(month_query,(
-                start_date,
-                end_date,
-                *mtype,
-                *Density
-            ))
+            query_params = (start_date, end_date) + (product[0], product[1])
+            cursor.execute(month_query, query_params)
             result_months = cursor.fetchall()
 
         # 将结果转换为 DataFrame
@@ -340,34 +327,134 @@ def generate_report_data(db_config, current_date,mtype, Density):
         # 合并年度数据和月度数据
         report_data = pd.concat([df_years, df_months], ignore_index=True)
 
-        # 返回结果作为字典
-        report_dict = report_data.to_dict(orient='records')
+        # 处理period列（合并year和workmt）
+        report_data['period'] = report_data['workmt'].combine_first(
+            report_data['year'].apply(lambda x: f"{int(x):04}" if pd.notna(x) else None)
+        )
+        report_data['density'] = report_data['density'].combine_first(report_data['modDensity'])
 
-        # 转换为 DataFrame
-        df = pd.DataFrame(report_data)
+        # 先对年度数据排序（升序）
+        df_years_sorted = df_years.sort_values(by='year', ascending=True)
 
-        # 合并 'year' 和 'workmt' 为 'period'
-        df['period'] = df['workmt'].combine_first(df['year'].apply(lambda x: f"{int(x):04}" if pd.notna(x) else None))
-        df['density'] = df['density'].combine_first(df['modDensity'])
-        # 删除原来的 'year' 和 'workmt' 列
-        df = df.drop(columns=['year', 'workmt', 'modDensity'])
+        # 对月度数据排序（按workmt升序）
+        df_months_sorted = df_months.sort_values(by='workmt', ascending=True)
 
-        # 重新排列列
-        cols = ['period'] + [col for col in df.columns if col != 'period']
-        df = df[cols]
-        # 创建完整时间段索引
-        all_periods = [f"{y}" for y in years] + [f"{m[0]}{m[1]:02}" for m in months]
+        # 重新合并排序后的数据
+        sorted_data = pd.concat([df_years_sorted, df_months_sorted], ignore_index=True)
+
+        # 处理period列
+        sorted_data['period'] = sorted_data['workmt'].combine_first(
+            sorted_data['year'].apply(lambda x: f"{int(x):04}" if pd.notna(x) else None)
+        )
+        sorted_data['density'] = sorted_data['density'].combine_first(sorted_data['modDensity'])
+
+        # 删除不需要的列
+        sorted_data = sorted_data.drop(columns=['year', 'workmt', 'modDensity'])
+
+        # 重新排列列顺序
+        cols = ['period'] + [col for col in sorted_data.columns if col != 'period']
+        sorted_data = sorted_data[cols]
+
+        # 创建完整时间段索引（保持原始顺序）
+        all_periods = [f"{y}" for y in sorted(years)] + [f"{m[0]}{m[1]:02}" for m in
+                                                         sorted(months, key=lambda x: (x[0], x[1]))]
         multi_index = pd.MultiIndex.from_product(
-            [all_periods, df['modtype'].unique(), df['density'].unique()],
+            [all_periods, sorted_data['modtype'].unique(), sorted_data['density'].unique()],
             names=['period', 'modtype', 'density']
         )
 
         # 重新索引并填充缺失值
-        df = df.set_index(['period', 'modtype', 'density']).reindex(multi_index).fillna(0).reset_index()
-        # ttl_fail, et_fail, at_fail保留两位小数
-        df['ttl_fail'] = df['ttl_fail'].apply(lambda x: round(x, 2))
-        df['et_fail'] = df['et_fail'].apply(lambda x: round(x, 2))
-        df['at_fail'] = df['at_fail'].apply(lambda x: round(x, 2))
+        final_df = sorted_data.set_index(['period', 'modtype', 'density']).reindex(multi_index).fillna(0).reset_index()
+
+        # 数值列保留两位小数
+        for col in ['ttl_fail', 'et_fail', 'at_fail']:
+            final_df[col] = final_df[col].apply(lambda x: round(x, 2))
+
+        return final_df
+
+    except Exception as e:
+        print(f"Error generating report data: {e}")
+        return None
+    finally:
+        # 确保连接被关闭
+        if connection:
+            connection.close()
+
+# 获取产品的target
+def generate_target(db_config, df, product):
+    try:
+        # 连接到数据库
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            database=db_config['database'],
+            port=db_config['port']
+        )
+        # df增加一列targeet
+        df['target'] = 0
+        # 逐行处理df数据
+        for index, row in df.iterrows():
+            period = row['period']
+            modtype = row['modtype']
+            density = row['density']
+            # 如果period是年份
+            if len(period) == 4:
+                # 查询period所在年份，modtype，density，的ttl_fail的平均值
+                query = f"""
+                    SELECT ROUND(AVG(ttl_fail),2) AS avg_ttl_fail
+                    FROM db_fail_status_density
+                    WHERE SUBSTRING(workmt,1,4) = '{period}'
+                        AND modtype = '{modtype}'
+                        AND modDensity = '{density}'
+                """
+                with connection.cursor() as cursor:
+                    cursor.execute(query)
+                    result = cursor.fetchone()
+                    if result:
+                        avg_ttl_fail = result[0]
+                        df.at[index, 'target'] = avg_ttl_fail
+                    else:
+                        df.at[index, 'target'] = 0
+
+            else:
+                # 查询period所在月份的前三个月，modtype，density的ttl_fail的平均值
+                query = """
+                    SELECT ROUND(AVG(ttl_fail), 2) AS avg_ttl_fail
+                    FROM db_fail_status_density
+                    WHERE workmt BETWEEN %s AND %s
+                        AND modtype = %s
+                        AND modDensity = %s
+                """
+
+                # 计算开始和结束月份
+                year = int(period[0:4])
+                month = int(period[4:6])
+                # 计算结束月份（前一个月）
+                if month > 1:
+                    end_month = month - 1
+                    end_year = year
+                else:
+                    end_month = 12
+                    end_year = year - 1
+                # 计算前三个月的起始月份
+                if month > 3:
+                    start_month = month - 3
+                    start_year = year
+                else:
+                    start_month = 12 + (month - 3)
+                    start_year = year - 1
+
+                # 格式化日期
+                start_date = f"{start_year}{start_month:02d}"
+                end_date = f"{end_year}{end_month:02d}"
+
+                # 执行查询
+                with connection.cursor() as cursor:
+                    cursor.execute(query, (start_date, end_date, modtype, density))
+                    result = cursor.fetchone()
+                    avg_ttl_fail = result[0] if result else 0.0
+                    df.at[index, 'target'] = avg_ttl_fail
         return df
 
     except Exception as e:
@@ -378,7 +465,7 @@ def generate_report_data(db_config, current_date,mtype, Density):
         if connection:
             connection.close()
 
-def update_chart_in_ppt(ppt_file, result, chart_slide_index, chart_index=1):
+def update_chart_in_ppt(ppt_file, result, chart_slide_index, chart_index):
     """
     Update chart data in a specific slide of a PowerPoint presentation.
     :param ppt_file: str, path to the PowerPoint file.
@@ -404,26 +491,24 @@ def update_chart_in_ppt(ppt_file, result, chart_slide_index, chart_index=1):
     # Extracting the last 12 periods and TTL Fail values
     months = result['period'].unique().tolist()
     formatted_months = [
-        f"{p[2:4]}년 Total" if len(p) == 4 else f"{p[2:4]}년 {p[4:]}월"
+        f"{p[0:4]}" if len(p) == 4 else f"{p[2:4]}년 {p[4:]}월"
         for p in sorted(months, key=lambda x: (len(x), x))
     ]
-    # 按密度分组处理
-    density_order = ['4GB', '8GB', '16GB', '32GB', '64GB', '128GB']
+    # 创建包含4个系列的新图表数据
     chart_data = CategoryChartData()
     chart_data.categories = formatted_months
 
-    for density in density_order:
-        # 筛选当前密度数据并按时间段排序
-        density_data = result[result['density'] == density].sort_values(
-            'period',
-            key=lambda x: x.apply(lambda p: (len(p), p))
-        )
+    # ET Fail Rate（柱状图）
+    chart_data.add_series('ET Fail Rate',
+                          [round(val, 2) for val in result['et_fail'].fillna(0).tolist()])
 
-        # 添加三个系列（ET/AT/TTL）
-        if not density_data.empty:
-            chart_data.add_series(f'{density} ET', density_data['et_fail'].round(2).tolist())
-            chart_data.add_series(f'{density} AT', density_data['at_fail'].round(2).tolist())
-            chart_data.add_series(f'{density} TTL', density_data['ttl_fail'].round(2).tolist())
+    # AT Fail Rate（柱状图）
+    chart_data.add_series('AT Fail Rate',
+                          [round(val, 2) for val in result['at_fail'].fillna(0).tolist()])
+
+    # Target（折线图）
+    chart_data.add_series('Target',
+                          [round(val, 2) if pd.notnull(val) else 0 for val in result['target'].tolist()])
 
     # Replace the existing data with the new chart_data
     chart.replace_data(chart_data)
@@ -527,21 +612,19 @@ def update_table_in_ppt(ppt_file, data, table_slide_index=0, table_index=2):
     prs.save(ppt_file)
     print(f"Updated table saved to {ppt_file}")
 
-def write_to_ppt(result, reportDir, mtype, density, sheet):
+def write_to_ppt(result, reportDir, product, sheet):
     if result is None:
         print("No report data available to write to PPT.")
         return
-    # 过滤数据：保留指定mtype和density
-    filtered_data = result[
-        (result['modtype'].isin(mtype)) &
-        (result['density'].isin(density))
-        ].copy()
-
+    # 根据product在products列表中的位置确定chart_index
+    products = [('SD', '4GB'), ('SD', '8GB'), ('SD', '16GB'),
+                ('RD', '16GB'), ('RD', '32GB'), ('RD', '64GB')]
+    chart_index = products.index(product)
     # Update table in slide 0, table index 0
-    update_table_in_ppt(reportDir, filtered_data, table_slide_index=sheet, table_index=2)
+    # update_table_in_ppt(reportDir, filtered_data, table_slide_index=sheet, table_index=2)
 
     # Update chart in slide 1, chart index 1 (e.g., only last 12 months)
-    update_chart_in_ppt(reportDir, filtered_data, chart_slide_index=sheet, chart_index=1)
+    update_chart_in_ppt(reportDir, result, chart_slide_index=sheet, chart_index=chart_index)
 
 
 def list_shapes_in_slide(ppt_file, slide_index):
@@ -585,6 +668,8 @@ def main(mode):
     pptSVType = ['RD']
     pcDensity = ['4GB', '8GB', '16GB']
     svDensity = ['16GB', '32GB', '64GB']
+    products = [('SD','4GB'), ('SD','8GB'),('SD','16GB'),
+               ('RD','16GB'), ('RD','32GB'),('RD','64GB')]
     # 确定数据库配置
     if mode == 'test':
         db_config = {
@@ -595,7 +680,7 @@ def main(mode):
         'charset': 'utf8mb4',
         'port': 3306,
         }
-        reportDir = r'D:\Sync\业务报告\1on1\不良Status.pptx'
+        reportDir = r'D:\Sync\业务报告\1on1\不良Status7.pptx'
         target_base_dir = r'D:\Sync\业务报告\1on1'
     else:
         db_config = {
@@ -606,44 +691,55 @@ def main(mode):
             'charset': 'utf8mb4',
             'port': 3306,
         }
-        reportDir = r'\\172.27.7.188\Mod_TestE\20. Fail Status\不良Status.pptx'
+        reportDir = r'\\172.27.7.188\Mod_TestE\20. Fail Status\不良Status7.pptx'
         target_base_dir = r'\\172.27.7.188\Mod_TestE\21. Fail Status Density'
-    # 确定数据库最大月份
+    # 确定db_fail_status最大月份
     max_month = get_max_month(db_config)
-    # print(f"Max month in the database: {max_month}")
 
     # 获取当前系统月份的前一个月
     current_date = datetime.now()
     end_month = (current_date.replace(day=1) - timedelta(days=1)).strftime("%Y%m")
-    max_month = '202212'
+
+    # 生成当前年开始往前两年的年份列表，升序排列
+    years = [current_date.year - i for i in range(3)]
+    years.sort()
+    # 生成上个月开始往前12个月的月份列表yyyymm格式，升序排列
+    months = [
+        (current_date.year, current_date.month - i) if current_date.month - i > 0 else (current_date.year - 1, 12 + (current_date.month - i))
+        for i in range(1, 13)
+    ]
+
+    # max_month = '202412'
+
     # 比较 end_month 和 max_month，并逐月执行
     if end_month > max_month:
         # 从 max_month 的下一个月份开始
         current_month = increment_month(int(max_month))
-
+        # 计算db_fail_status_density中需要的数值所有产品各个月份的结果
         while current_month <= int(end_month):
             month_str = str(current_month)
-            # print(month_str)
             result_df = process_data_from_db(db_config, month_str)
             if result_df is not None:
                 print(f"Results for {month_str}:")
                 print(result_df)
                 # 将结果写入数据库
                 Insert_data(result_df, db_config)
-
+            current_month = increment_month(int(current_month))
+        for product in products:
+            print(product)
             # 生成报表数据
-            resultPC = generate_report_data(db_config, current_date, pcType, pcDensity)
-            resultSV = generate_report_data(db_config, current_date, svType, svDensity)
-            print("Report data:", resultPC)
+            result = generate_report_failStatus(db_config, current_date, product)
+            result = generate_target(db_config, result, product)
+            print("Report data:", result)
+            write_to_ppt(result, reportDir, product, 2)
+            print("Write Complete")
             # # 写入PPT
             # list_shapes_in_slide(reportDir, 0)
-            write_to_ppt(resultPC, reportDir, pptPCType, pcDensity, 0)
-            write_to_ppt(resultSV, reportDir, pptSVType, svDensity, 1)
             # # 复制文件到指定位置
-            report_month = datetime.now().strftime('%Y%m')
-            copy_and_save_report(reportDir, target_base_dir, report_month)
+            # report_month = datetime.now().strftime('%Y%m')
+            # copy_and_save_report(reportDir, target_base_dir, report_month)
             # 增加月份
-            current_month = increment_month(int(current_month))
+
     else:
         print("No new months to process.")
 
