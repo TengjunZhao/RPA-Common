@@ -148,7 +148,7 @@ def get_max_month(db_config):
             charset=db_config['charset']
         )
 
-        query = "SELECT MAX(workmt) AS max_month FROM cmsalpha.db_fail_status"
+        query = "SELECT MAX(workmt) AS max_month FROM cmsalpha.db_fail_status_density"
         result = pd.read_sql(query, con=connection)
         return result.iloc[0, 0]
 
@@ -691,7 +691,7 @@ def main(mode):
             'charset': 'utf8mb4',
             'port': 3306,
         }
-        reportDir = r'\\172.27.7.188\Mod_TestE\20. Fail Status\不良Status7.pptx'
+        reportDir = r'\\172.27.7.188\Mod_TestE\21. Fail Status Density\不良Status7.pptx'
         target_base_dir = r'\\172.27.7.188\Mod_TestE\21. Fail Status Density'
     # 确定db_fail_status最大月份
     max_month = get_max_month(db_config)
@@ -725,23 +725,24 @@ def main(mode):
                 # 将结果写入数据库
                 Insert_data(result_df, db_config)
             current_month = increment_month(int(current_month))
-        for product in products:
-            print(product)
-            # 生成报表数据
-            result = generate_report_failStatus(db_config, current_date, product)
-            result = generate_target(db_config, result, product)
-            print("Report data:", result)
-            write_to_ppt(result, reportDir, product, 2)
-            print("Write Complete")
-            # # 写入PPT
-            # list_shapes_in_slide(reportDir, 0)
-            # # 复制文件到指定位置
-            # report_month = datetime.now().strftime('%Y%m')
-            # copy_and_save_report(reportDir, target_base_dir, report_month)
-            # 增加月份
+
 
     else:
         print("No new months to process.")
+    for product in products:
+        print(product)
+        # 生成报表数据
+        result = generate_report_failStatus(db_config, current_date, product)
+        result = generate_target(db_config, result, product)
+        print("Report data:", result)
+        write_to_ppt(result, reportDir, product, 2)
+        print("Write Complete")
+        # # 写入PPT
+        # list_shapes_in_slide(reportDir, 0)
+        # # 复制文件到指定位置
+        report_month = datetime.now().strftime('%Y%m')
+        copy_and_save_report(reportDir, target_base_dir, report_month)
+        # 增加月份
 
 
 # Main function to execute processing
