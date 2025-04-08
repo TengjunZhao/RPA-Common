@@ -380,7 +380,7 @@ def generate_report_failStatus(db_config, current_date, product):
         if connection:
             connection.close()
 
-# 获取产品的target
+# 获取产品的target(以当月前三个月均值为基准)
 def generate_target(db_config, df, product):
     try:
         # 连接到数据库
@@ -448,6 +448,90 @@ def generate_target(db_config, df, product):
                 # 格式化日期
                 start_date = f"{start_year}{start_month:02d}"
                 end_date = f"{end_year}{end_month:02d}"
+
+                # 执行查询
+                with connection.cursor() as cursor:
+                    cursor.execute(query, (start_date, end_date, modtype, density))
+                    result = cursor.fetchone()
+                    avg_ttl_fail = result[0] if result else 0.0
+                    df.at[index, 'target'] = avg_ttl_fail
+        return df
+
+    except Exception as e:
+        print(f"Error generating report data: {e}")
+        return None
+    finally:
+        # 确保连接被关闭
+        if connection:
+            connection.close()
+
+# 获取产品的target(以当月上季度均值为基准)
+def generate_target_season(db_config, df, product):
+    try:
+        # 连接到数据库
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            database=db_config['database'],
+            port=db_config['port']
+        )
+        # df增加一列target
+        df['target'] = 0
+        # 逐行处理df数据
+        for index, row in df.iterrows():
+            period = row['period']
+            modtype = row['modtype']
+            density = row['density']
+            # 如果period是年份
+            if len(period) == 4:
+                # 查询period所在年份，modtype，density，的ttl_fail的平均值
+                query = f"""
+                    SELECT ROUND(AVG(ttl_fail),2) AS avg_ttl_fail
+                    FROM db_fail_status_density
+                    WHERE SUBSTRING(workmt,1,4) = '{period}'
+                        AND modtype = '{modtype}'
+                        AND modDensity = '{density}'
+                """
+                with connection.cursor() as cursor:
+                    cursor.execute(query)
+                    result = cursor.fetchone()
+                    if result:
+                        avg_ttl_fail = result[0]
+                        df.at[index, 'target'] = avg_ttl_fail
+                    else:
+                        df.at[index, 'target'] = 0
+
+            else:
+                # 查询period所在月份的上一季度的平均值
+                query = """
+                    SELECT ROUND(AVG(ttl_fail), 2) AS avg_ttl_fail
+                    FROM db_fail_status_density
+                    WHERE workmt BETWEEN %s AND %s
+                        AND modtype = %s
+                        AND modDensity = %s
+                """
+
+                # 计算季度信息
+                year = int(period[0:4])
+                month = int(period[4:6])
+
+                # 确定当前季度和上一季度
+                current_quarter = (month - 1) // 3 + 1
+                if current_quarter == 1:
+                    prev_quarter = 4
+                    prev_year = year - 1
+                else:
+                    prev_quarter = current_quarter - 1
+                    prev_year = year
+
+                # 计算上一季度的开始和结束月份
+                start_month = (prev_quarter - 1) * 3 + 1
+                end_month = prev_quarter * 3
+
+                # 格式化日期
+                start_date = f"{prev_year}{start_month:02d}"
+                end_date = f"{prev_year}{end_month:02d}"
 
                 # 执行查询
                 with connection.cursor() as cursor:
@@ -733,7 +817,7 @@ def main(mode):
         print(product)
         # 生成报表数据
         result = generate_report_failStatus(db_config, current_date, product)
-        result = generate_target(db_config, result, product)
+        result = generate_target_season(db_config, result, product)
         print("Report data:", result)
         write_to_ppt(result, reportDir, product, 2)
         print("Write Complete")
