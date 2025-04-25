@@ -76,13 +76,9 @@ def calculate_workdt(occurred_date):
     return workdt.strftime('%Y%m%d')
 
 
-def import_data(df):
+def import_data(db_config, df):
     # 数据库连接配置，请根据你的实际情况调整
-    connection = pymysql.connect(host='localhost',
-                                 user='remoteuser',
-                                 password='password',
-                                 database='cmsalpha',
-                                 cursorclass=pymysql.cursors.DictCursor)
+    connection = pymysql.connect(**db_config)
 
     with connection:
         with connection.cursor() as cursor:
@@ -159,7 +155,7 @@ def main(mode):
         }
         sourceDir = r'\\172.27.7.188\Mod_TestE\22. PDA Auto\source.xlsx'
     df = read_xls(sourceDir)
-    import_data(df)
+    import_data(db_config, df)
 
 
 if __name__ == '__main__':
