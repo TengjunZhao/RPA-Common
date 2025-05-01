@@ -12,34 +12,31 @@ def nowWorkdt():
 # 从db_lotcheck中获取最新的workdt
 def LatestWorkdt(engine):
     try:
-        # 执行 SQL 查询获取最新的 workdt
-        query = "SELECT MAX(workdt) as latest_workdt FROM db_lotcheck"
-        result = pd.read_sql(query, engine)
-        latest_workdt = result['latest_workdt'].values[0]
-        return latest_workdt
+        query = text("SELECT MAX(workdt) as latest_workdt FROM db_lotcheck")
+        with engine.connect() as conn:
+            result = pd.read_sql(query, conn)
+        return result['latest_workdt'].values[0]
     except Exception as e:
         print(f"Error: {e}")
         return None
-    finally:
-        # 关闭数据库连接
-        engine.dispose()
 
 
 # 获取最新的lot list
 def getLotList(engine, start, end):
     try:
-        query = (f"SELECT workdt, device, fab, owner, grade, lot_id,"
-                 f"oper_old, trans_time, in_qty, out_qty FROM db_yielddetail WHERE workdt BETWEEN '{start}' AND '{end}'"
-                 f"and in_qty <> out_qty;"
-                 )
-        result = pd.read_sql(query, engine)
+        query = text("""
+            SELECT workdt, device, fab, owner, grade, lot_id,
+                   oper_old, trans_time, in_qty, out_qty 
+            FROM db_yielddetail 
+            WHERE workdt BETWEEN :start AND :end
+            AND in_qty <> out_qty
+        """)
+        with engine.connect() as conn:
+            result = pd.read_sql(query, conn, params={'start': start, 'end': end})
         return result
     except Exception as e:
         print(f"Error: {e}")
         return None
-    finally:
-        # 关闭数据库连接
-        engine.dispose()
 
 
 # 写入db_lotcheck
@@ -79,146 +76,180 @@ def writeLotCheck(engine, df):
 
 # 逐行比对PDA
 def checkPDA(engine):
-    # 确认所有需要查询的PDA信息
-    query = (f"SELECT dl.fab, dl.oper, dl.grade, dl.owner, dl.device, "
-             f"dd.Product_Mode, dd.Module_Type, dd.Product_Density, dd.Die_Density, dd.Tech_Name "
-             f"FROM db_lotcheck dl "
-             f"JOIN modulemte.db_deviceinfo dd ON dl.device = dd.Device "
-             f"WHERE pda_check is NULL "
-             f"GROUP BY fab, oper, grade, owner, Product_Mode, Module_Type, Tech_Name, Die_Density, Module_Density;")
-    pdaCondition = pd.read_sql(query, engine)
+    query = text("""
+        SELECT dl.fab, dl.oper, dl.grade, dl.owner, dl.device,
+               dd.Product_Mode, dd.Module_Type, dd.Product_Density, 
+               dd.Die_Density, dd.Tech_Name 
+        FROM db_lotcheck dl
+        JOIN modulemte.db_deviceinfo dd ON dl.device = dd.Device
+        WHERE pda_check is NULL
+        GROUP BY fab, oper, grade, owner, Product_Mode, Module_Type, 
+                 Tech_Name, Die_Density, Module_Density
+    """)
 
-    # 初始化结果列
+    with engine.connect() as conn:
+        pdaCondition = pd.read_sql(query, conn)
+
     pdaCondition['low_yield_reverse'] = None
     pdaCondition['ext_low_yield_reverse'] = None
 
-    # 逐行对比lot信息与PDA信息
     for index, row in pdaCondition.iterrows():
-        mode = row['Product_Mode']
-        fab = row['fab']
-        oper = row['oper']
-        grade = row['grade']
-        owner = row['owner']
-        type = row['Module_Type']
-        tech = row['Tech_Name']
-        pkg = row['Die_Density']
-        density = row['Product_Density']
+        params = {
+            'mode': row['Product_Mode'],
+            'fab': row['fab'],
+            'oper': row['oper'],
+            'grade': row['grade'],
+            'owner': row['owner'],
+            'type': row['Module_Type'],
+            'tech': row['Tech_Name'],
+            'pkg': row['Die_Density'],
+            'density': row['Product_Density']
+        }
 
-        # 优先查找完全匹配的记录
-        query = (f"""
+        # 优先完全匹配
+        query = text("""
             SELECT low_yield_reverse, ext_low_yield_reverse 
-            FROM db_pda dp 
-            WHERE prodtype = '{mode}' 
-              AND fab = '{fab}' 
-              AND oper = '{oper}' 
-              AND grade = '{grade}'
-              AND owner = '{owner}' 
-              AND module_type = '{type}'
-              AND tech = '{tech}' 
-              AND pkg_density = '{pkg}' 
-              AND module_density = '{density}'
-            LIMIT 1;
+            FROM db_pda 
+            WHERE prodtype = :mode
+              AND fab = :fab
+              AND oper = :oper
+              AND grade = :grade
+              AND owner = :owner
+              AND module_type = :type
+              AND tech = :tech
+              AND pkg_density = :pkg
+              AND module_density = :density
+            LIMIT 1
         """)
-        pda = pd.read_sql(query, engine)
 
-        # 如果没有完全匹配的记录，查找owner为空的记录
+        with engine.connect() as conn:
+            pda = pd.read_sql(query, conn, params=params)
+
         if pda.empty:
-            query = (f"""
+            # 尝试owner为空的查询
+            query = text("""
                 SELECT low_yield_reverse, ext_low_yield_reverse 
-                FROM db_pda dp 
-                WHERE prodtype = '{mode}' 
-                  AND fab = '{fab}' 
-                  AND oper = '{oper}' 
-                  AND grade = '{grade}'
-                  AND (owner IS NULL OR owner = '') 
-                  AND module_type = '{type}'
-                  AND tech = '{tech}' 
-                  AND pkg_density = '{pkg}' 
-                  AND module_density = '{density}'
-                LIMIT 1;
+                FROM db_pda 
+                WHERE prodtype = :mode
+                  AND fab = :fab
+                  AND oper = :oper
+                  AND grade = :grade
+                  AND (owner IS NULL OR owner = '')
+                  AND module_type = :type
+                  AND tech = :tech
+                  AND pkg_density = :pkg
+                  AND module_density = :density
+                LIMIT 1
             """)
-            pda = pd.read_sql(query, engine)
+            with engine.connect() as conn:
+                pda = pd.read_sql(query, conn, params=params)
 
-        # 如果找到记录，更新到pdaCondition中
         if not pda.empty:
             pdaCondition.at[index, 'low_yield_reverse'] = pda.iloc[0]['low_yield_reverse']
             pdaCondition.at[index, 'ext_low_yield_reverse'] = pda.iloc[0]['ext_low_yield_reverse']
+
     return pdaCondition
 
 # 获取Lotcheck表中所有待查数据
 def getCheckLot(engine):
-    query = (f"SELECT workdt, device, fab, oper, grade, owner, lot, transtime, yield "
-             f"FROM db_lotcheck "
-             f"WHERE pda_check is NULL;")
-    df = pd.read_sql(query, engine)
+    query = text("""
+            SELECT workdt, device, fab, oper, grade, owner, 
+                   lot, transtime, yield 
+            FROM db_lotcheck 
+            WHERE pda_check IS NULL
+        """)
+
+    with engine.connect() as conn:
+        df = pd.read_sql(query, conn)
+
     return df
 
 # 对比Lot list与PDA
 def comparePDA(engine, df, pda):
-    # 遍历df中的每一行
-    for index, row in df.iterrows():
-        # 从df中获取lot属性
-        fab = row['fab']
-        oper = row['oper']
-        grade = row['grade']
-        owner = row['owner']
-        device = row['device']
-        mYield = row['yield']
-        lot = row['lot']
-        transTime = row['transtime']
-        # 根据Device信息获取其他属性
-        query = (f"SELECT Product_Mode, Tech_Name, Die_Density, Product_Density, Module_Type "
-                 f"FROM modulemte.db_deviceinfo WHERE device = '{device}'")
-        res = pd.read_sql(query, engine)
-        if len(res) == 0:
-            continue
-        mode = res['Product_Mode'].iloc[0]
-        tech = res['Tech_Name'].iloc[0]
-        pkg = res['Die_Density'].iloc[0]
-        density = res['Product_Density'].iloc[0]
-        type = res['Module_Type'].iloc[0]
-        # 查找匹配的PDA条件
-        match = pda[
-            (pda['fab'] == fab)&
-            (pda['oper'] == oper) &
-            (pda['grade'] == grade) &
-            (pda['owner'] == owner) &
-            (pda['Product_Mode'] == mode)&
-            (pda['Module_Type'] == type) &
-            (pda['Tech_Name'] == tech) &
-            (pda['Die_Density'] == pkg) &
-            (pda['Product_Density'] == density)
-        ]
-        if len(match) == 0:
-            match = pda[
-                (pda['fab'] == fab) &
-                (pda['oper'] == oper) &
-                (pda['grade'] == grade) &
-                (pda['Product_Mode'] == mode) &
-                (pda['Module_Type'] == type) &
-                (pda['Tech_Name'] == tech) &
-                (pda['Die_Density'] == pkg) &
-                (pda['Product_Density'] == density)
-            ]
-        # result = 0: 正常，1: lyld，2: eyld
-        if mYield >= match['low_yield_reverse'].values[0]:
-            result = 0
-        elif mYield > match['ext_low_yield_reverse'].values[0]:
-            result = 1
-        else:
-            result = 2
-        # 更新db_lotcheck中pda_check字段
-        update_query = f"""
-            UPDATE db_lotcheck
-            SET pda_check = {result}
-            WHERE 
-              lot = '{lot}'
-              AND oper = '{oper}'
-              AND transtime = '{transTime}';
-        """
-        with engine.connect() as connection:
-            with connection.begin():
-                connection.execute(text(update_query))
+    # 使用单个连接处理所有操作
+    with engine.connect() as conn:
+        with conn.begin():  # 开启事务
+            for index, row in df.iterrows():
+                # 参数化查询设备信息
+                device_query = text("""
+                    SELECT Product_Mode, Tech_Name, Die_Density, 
+                           Product_Density, Module_Type 
+                    FROM modulemte.db_deviceinfo 
+                    WHERE device = :device
+                """)
+                res = pd.read_sql(
+                    device_query,
+                    conn,
+                    params={'device': row['device']}
+                )
+
+                if len(res) == 0:
+                    continue
+
+                # 获取设备属性（避免使用type作为变量名）
+                device_attrs = {
+                    'mode': res['Product_Mode'].iloc[0],
+                    'tech': res['Tech_Name'].iloc[0],
+                    'pkg': res['Die_Density'].iloc[0],
+                    'density': res['Product_Density'].iloc[0],
+                    'module_type': res['Module_Type'].iloc[0]
+                }
+
+                # 构建匹配条件
+                match_conditions = [
+                    ('fab', row['fab']),
+                    ('oper', row['oper']),
+                    ('grade', row['grade']),
+                    ('owner', row['owner']),
+                    ('Product_Mode', device_attrs['mode']),
+                    ('Module_Type', device_attrs['module_type']),
+                    ('Tech_Name', device_attrs['tech']),
+                    ('Die_Density', device_attrs['pkg']),
+                    ('Product_Density', device_attrs['density'])
+                ]
+
+                # 首次匹配（包含owner）
+                mask = True
+                for col, val in match_conditions:
+                    if col in pda.columns:
+                        mask &= (pda[col] == val)
+                match = pda[mask]
+
+                # 二次匹配（不包含owner）
+                if len(match) == 0:
+                    mask = True
+                    for col, val in match_conditions:
+                        if col in pda.columns and col != 'owner':
+                            mask &= (pda[col] == val)
+                    match = pda[mask]
+
+                # 计算结果
+                if len(match) > 0:
+                    threshold = match.iloc[0]  # 取第一条匹配记录
+                    if row['yield'] >= threshold['low_yield_reverse']:
+                        result = 0
+                    elif row['yield'] > threshold['ext_low_yield_reverse']:
+                        result = 1
+                    else:
+                        result = 2
+
+                    # 参数化更新
+                    update_query = text("""
+                        UPDATE db_lotcheck
+                        SET pda_check = :result
+                        WHERE lot = :lot
+                        AND oper = :oper
+                        AND transtime = :transtime
+                    """)
+                    conn.execute(
+                        update_query,
+                        {
+                            'result': result,
+                            'lot': row['lot'],
+                            'oper': row['oper'],
+                            'transtime': row['transtime']
+                        }
+                    )
     return True
 
 
@@ -255,4 +286,5 @@ def main(mode):
 
 
 if __name__ == '__main__':
+    print(sqlalchemy.__version__)
     main('test')
