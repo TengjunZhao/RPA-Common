@@ -764,7 +764,7 @@ def main(mode):
         'charset': 'utf8mb4',
         'port': 3306,
         }
-        reportDir = r'D:\Sync\业务报告\1on1\不良Status7.pptx'
+        reportDir = r'D:\Sync\业务报告\1on1\M-Test品质现况 202504.pptx'
         target_base_dir = r'D:\Sync\业务报告\1on1'
     else:
         db_config = {
