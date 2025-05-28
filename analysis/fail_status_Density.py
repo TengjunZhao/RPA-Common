@@ -549,6 +549,56 @@ def generate_target_season(db_config, df, product):
         if connection:
             connection.close()
 
+# 获取产品的target（以当年为目标）
+def generate_target_year(db_config, df, product):
+    try:
+        # 连接到数据库
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            database=db_config['database'],
+            port=db_config['port']
+        )
+        # df增加一列target
+        df['target'] = 0
+        # 逐行处理df数据
+        for index, row in df.iterrows():
+            period = row['period']
+            modtype = row['modtype']
+            density = row['density']
+            # 如果period是年份
+            if len(period) == 4:
+                # 查询period所在年份，modtype，density，的ttl_fail的平均值
+                query = f"""
+                    SELECT ROUND(AVG(ttl_fail),2) AS avg_ttl_fail
+                    FROM db_fail_status_density
+                    WHERE SUBSTRING(workmt,1,4) = '{period}'
+                        AND modtype = '{modtype}'
+                        AND modDensity = '{density}'
+                """
+                with connection.cursor() as cursor:
+                    cursor.execute(query)
+                    result = cursor.fetchone()
+                    if result:
+                        avg_ttl_fail = result[0]
+                        df.at[index, 'target'] = avg_ttl_fail
+                    else:
+                        df.at[index, 'target'] = 0
+                latest = df.at[index, 'target']
+                print(latest)
+            else:
+                df.at[index, 'target'] = latest
+        return df
+
+    except Exception as e:
+        print(f"Error generating report data: {e}")
+        return None
+    finally:
+        # 确保连接被关闭
+        if connection:
+            connection.close()
+
 def update_chart_in_ppt(ppt_file, result, chart_slide_index, chart_index):
     """
     Update chart data in a specific slide of a PowerPoint presentation.
@@ -764,7 +814,7 @@ def main(mode):
         'charset': 'utf8mb4',
         'port': 3306,
         }
-        reportDir = r'D:\Sync\业务报告\1on1\M-Test品质现况 202504.pptx'
+        reportDir = r'D:\Sync\业务报告\1on1\M-Test品质现况 202508.pptx'
         target_base_dir = r'D:\Sync\业务报告\1on1'
     else:
         db_config = {
@@ -817,9 +867,9 @@ def main(mode):
         print(product)
         # 生成报表数据
         result = generate_report_failStatus(db_config, current_date, product)
-        result = generate_target_season(db_config, result, product)
+        result = generate_target_year(db_config, result, product)
         print("Report data:", result)
-        write_to_ppt(result, reportDir, product, 2)
+        write_to_ppt(result, reportDir, product, 1)
         print("Write Complete")
         # # 写入PPT
         # list_shapes_in_slide(reportDir, 0)
