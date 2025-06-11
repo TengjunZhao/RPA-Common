@@ -86,7 +86,9 @@ class DataBase:
                     user_id = VALUES(user_id),
                     B_Status = VALUES(B_Status);
                     """
-        insert_data_task = (new_bid, "6", downloadTime, id, name, user_id, "1")
+        # 增加低收率任务自动关闭功能
+        status = '0' if '저수율' in name else '1'
+        insert_data_task = (new_bid, "6", downloadTime, id, name, user_id, status)
         self.cursor.execute(insert_query, insert_data_task)
         self.conn.commit()
 
@@ -253,6 +255,7 @@ def task_generator(my_string):
     string_lower = my_string.lower()
     print(string_lower)
     task_mapping = {
+        '저수율': 'z130157',
         'et': 'z130157',
         'ern': 'z130157',
         'sorting': 'z130157',
