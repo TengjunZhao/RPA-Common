@@ -7,7 +7,7 @@ def getLotList(engine):
     maxWorkdtQuery = text("SELECT max(workdt) FROM db_etLog;")
     with engine.connect() as connection:
         maxWorkdt = connection.execute(maxWorkdtQuery).fetchone()
-    lotListQuery = text(f"SELECT workdt, lot_id, oper_old, trans_time "
+    lotListQuery = text(f"SELECT workdt, lot_id, oper_old, trans_time, main_equip_id, equip_model "
                         f"FROM db_yielddetail "
                         f"WHERE workdt >= '{maxWorkdt[0]}' AND oper_old = '5600'"
                         f"GROUP BY lot_id;")
@@ -23,7 +23,9 @@ def import_data(engine, df):
         'workdt': 'workdt',  # 列名相同
         'lot_id': 'lot_id',  # lot_id映射到lot_id
         'oper_old': 'oper',  # oper_old映射到oper
-        'trans_time': 'trans_time'
+        'trans_time': 'trans_time',
+        'main_equip_id': 'equip',
+        'equip_model': 'model'
     }
 
     # 选择需要的列并进行重命名
