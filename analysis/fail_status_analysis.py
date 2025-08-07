@@ -6,6 +6,7 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 import numpy as np
+from scipy import stats
 
 
 # 配置日志记录器
@@ -430,7 +431,7 @@ def analyze_abnormal_oper(db_config, oper, workdt, logger):
 
 
 # 针对产品分析分析该工序含量的变化
-def analyze_product_trend(vital_df, db_config, oper, dt_semiYear, yesterday, logger, trend_threshold=0.01):
+def analyze_product_proportion(vital_df, db_config, oper, dt_semiYear, yesterday, logger, trend_threshold=0.01):
     """
     分析vital_df中每种产品的每月产量占比及趋势（增加/稳定/降低）
 
@@ -587,6 +588,166 @@ def analyze_product_trend(vital_df, db_config, oper, dt_semiYear, yesterday, log
     return product_trend_results
 
 
+# 针对产品分析半年度不良率趋势
+def analyze_product_failRate(db_config, oper, vital_df, dt_semiYear, yesterday, logger,
+                             stability_threshold=0.5, significance_level=0.05):
+    """
+    参数:
+        db_config: 数据库配置字典
+        oper: 目标工序代码
+        vital_df: 主要不良产品数据（含Product_Mode等属性）
+        dt_semiYear: 半年起始日期（YYYYMMDD）
+        yesterday: 结束日期（YYYYMMDD）
+        logger: 日志记录器
+        stability_threshold: 稳定性阈值（斜率绝对值≤此值视为稳定，单位：%/月）
+        significance_level: 统计显著性水平（默认0.05）
+
+    返回:
+        dict: 键为产品唯一标识，值包含：
+            - monthly_data: 半年度每月原始数据（dt, sum_in, sum_out, fail_rate）
+            - conclusion: 趋势结论（字符串）
+            - kpi: 考核指标（字典）
+    """
+    combined_results = {}
+
+    try:
+        if vital_df.empty:
+            logger.warning("vital_df为空，无需执行半年度分析")
+            return combined_results
+
+        product_attrs = ['Product_Mode', 'Tech_Name', 'Die_Density',
+                         'Product_Density', 'Module_Type', 'grade']
+
+        # 1. 遍历主要不良产品，获取半年度数据（原Step6）
+        for _, product_row in vital_df.iterrows():
+            product_info = {attr: product_row[attr] for attr in product_attrs}
+            product_id = " |".join([f"{v}" for k, v in product_info.items()])
+            logger.info(f"开始分析产品 {product_id} 的半年度数据及趋势（工序：{oper}）")
+
+            # 1.1 查询半年度每月数据
+            query = text("""
+                select 
+                    substring(workdt, 1, 6) as dt,
+                    sum(in_qty) as sum_in,
+                    sum(out_qty) as sum_out
+                from 
+                    cmsalpha.db_yielddetail dy
+                    join modulemte.db_deviceinfo dd on dy.device = dd.Device
+                where 
+                    dy.oper_old = :oper 
+                    and dy.workdt between :start_dt and :end_dt 
+                    and dd.Product_Mode = :pm 
+                    and dd.Tech_Name = :tn 
+                    and dd.Die_Density = :dd 
+                    and dd.Product_Density = :pd 
+                    and dd.Module_Type = :mt 
+                    and dy.grade = :g 
+                group by 
+                    dt 
+                order by 
+                    dt asc;
+            """)
+
+            conn_str = (
+                f"mysql+pymysql://{db_config['user']}:{db_config['password']}@"
+                f"{db_config['host']}:{db_config['port']}/{db_config['database']}?"
+                f"charset={db_config['charset']}"
+            )
+
+            with create_engine(conn_str).connect() as conn:
+                monthly_df = pd.read_sql(
+                    query.bindparams(
+                        oper=oper, start_dt=dt_semiYear, end_dt=yesterday,
+                        pm=product_info['Product_Mode'], tn=product_info['Tech_Name'],
+                        dd=product_info['Die_Density'], pd=product_info['Product_Density'],
+                        mt=product_info['Module_Type'], g=product_info['grade']
+                    ),
+                    conn
+                )
+
+            # 1.2 处理原始数据（计算不良率）
+            if monthly_df.empty:
+                logger.warning(f"产品 {product_id} 无半年度数据")
+                combined_results[product_id] = {
+                    "monthly_data": pd.DataFrame(),
+                    "conclusion": "无数据",
+                    "kpi": None
+                }
+                continue
+
+            # 计算每月不良率（处理除零问题）
+            monthly_df['fail_rate'] = np.where(
+                monthly_df['sum_in'] > 0,
+                (1 - monthly_df['sum_out'] / monthly_df['sum_in']) * 100,
+                0
+            )
+            monthly_df = monthly_df.sort_values('dt').reset_index(drop=True)
+            valid_df = monthly_df[['dt', 'sum_in', 'sum_out', 'fail_rate']].copy()
+
+            # 2. 趋势分析（原Step7）
+            # 2.1 校验数据量（至少3个月）
+            if len(valid_df) < 3:
+                logger.warning(f"产品 {product_id} 有效数据不足3个月（仅{len(valid_df)}个月）")
+                combined_results[product_id] = {
+                    "monthly_data": valid_df,
+                    "conclusion": f"数据不足（仅{len(valid_df)}个月，无法判断趋势）",
+                    "kpi": None
+                }
+                continue
+
+            # 2.2 线性回归分析趋势
+            valid_df['month_index'] = range(1, len(valid_df) + 1)  # 月份连续索引
+            x = valid_df['month_index'].values
+            y = valid_df['fail_rate'].values
+            slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+
+            # 2.3 判断趋势（稳定/恶化/改善）
+            trend = "稳定"
+            if p_value < significance_level:  # 趋势显著
+                if slope > stability_threshold:
+                    trend = "恶化"
+                elif slope < -stability_threshold:
+                    trend = "改善"
+            else:
+                trend = "稳定（趋势不显著）"
+
+            # 2.4 计算考核指标
+            kpi = {
+                "半年度平均不良率（%）": round(np.mean(y), 4),
+                "最高不良率（%）及月份": (round(np.max(y), 4), valid_df.loc[y.argmax(), 'dt']),
+                "最低不良率（%）及月份": (round(np.min(y), 4), valid_df.loc[y.argmin(), 'dt']),
+                "每月平均变化率（%/月）": round(slope, 4),
+                "趋势显著性（p值）": round(p_value, 4),
+                "首尾月变化幅度（%）": round(
+                    ((y[-1] - y[0]) / y[0]) * 100, 2
+                ) if y[0] != 0 else None
+            }
+
+            # 2.5 生成结论描述
+            conclusion = (
+                f"产品 {product_id} 半年度不良率趋势为：{trend}。"
+                f"平均不良率 {kpi['半年度平均不良率（%）']}%，"
+                f"每月平均变化 {kpi['每月平均变化率（%/月）']}%，"
+                f"首尾月变化 {kpi['首尾月变化幅度（%）']}%。"
+            )
+
+            # 3. 保存结果
+            combined_results[product_id] = {
+                "monthly_data": valid_df,
+                "conclusion": conclusion,
+                "kpi": kpi
+            }
+
+            logger.info(f"产品 {product_id} 分析完成：{conclusion}")
+            logger.debug(
+                f"详细数据：\n{valid_df.drop(columns=['month_index']).to_string(index=False)}"
+            )
+
+    except Exception as e:
+        logger.error(f"半年度趋势分析合并方法出错：{str(e)}", exc_info=True)
+
+    return combined_results
+
 # 主函数
 def main(mode):
     # 初始化日志记录器
@@ -651,7 +812,7 @@ def main(mode):
                 )
                 # Step5. 针对主要不良产品分析产品占比变化（排查产品结构变化导致的）
                 if not vital_df.empty:
-                    trend_analysis = analyze_product_trend(
+                    trend_analysis = analyze_product_proportion(
                         vital_df=vital_df,
                         db_config=db_config,
                         oper=oper,  # 当前分析的工序
@@ -660,10 +821,18 @@ def main(mode):
                         logger=logger,
                         trend_threshold=0.02  # 可根据实际需求调整阈值
                     )
-
-                # Step6. 针对主要不良产品分析设备差异
-
-                # Step7. 针对主要不良产品分析半年度变化
+                # Step6. 针对主要不良产品分析半年度变化
+                    semi_annual_result = analyze_product_failRate(
+                        db_config=db_config,
+                        oper=oper,
+                        vital_df=vital_df,
+                        dt_semiYear=dt_semiYear,
+                        yesterday=yesterday,
+                        logger=logger,
+                        stability_threshold=0.3,  # 例如：每月变化≤0.3%视为稳定
+                        significance_level=0.05
+                    )
+                # Step7. 针对主要不良产品分析设备差异
 
         else:
             logger.warning("未获取到任何每日Fail Status")
