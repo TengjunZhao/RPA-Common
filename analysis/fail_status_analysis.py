@@ -56,15 +56,238 @@ def setup_logger(
 
 
 # 产品类：包括产品基本属性及状态
-class product:
-    def __init__(self, product_id, product_name, product_type, product_status):
-        self.product_id = product_id
-        self.product_name = product_name
-        self.product_type = product_type
-        self.product_status = product_status
+class Product:
+    """产品类，封装产品属性及所有相关分析方法"""
+
+    def __init__(self, product_info, db_config, logger):
+        # 1. 产品核心属性（从vital_df提取的6个关键属性）
+        self.product_mode = product_info['Product_Mode']
+        self.tech_name = product_info['Tech_Name']
+        self.die_density = product_info['Die_Density']
+        self.product_density = product_info['Product_Density']
+        self.module_type = product_info['Module_Type']
+        self.grade = product_info['grade']
+
+        # 2. 外部依赖（数据库配置、日志器）
+        self.db_config = db_config
+        self.logger = logger
+
+        # 3. 分析结果存储（便于后续取用）
+        self.proportion_result = None  # 占比趋势分析结果
+        self.failrate_result = None  # 不良率趋势分析结果
+
+        # 4. 唯一标识（用于日志和区分）
+        self.product_id = " ".join([
+            f"{self.product_mode}", f"{self.tech_name}",
+            f"{self.die_density}", f"{self.product_density}",
+            f"{self.module_type}", f"{self.grade}"
+        ])
 
     def __str__(self):
-        return f"Product(ID: {self.product_id}, Name: {self.product_name}, Type: {self.product_type}, Status: {self.product_status})"
+        return f"Product[{self.product_id}]"
+
+    # ------------------------------
+    # 封装分析方法：占比趋势分析
+    # ------------------------------
+    def analyze_proportion(self, oper, dt_semiYear, yesterday, trend_threshold=0.01):
+        """分析当前产品在工序中的每月占比趋势（原analyze_product_proportion）"""
+        self.logger.info(f"\n===== 开始分析 {self} 的占比趋势 =====")
+        try:
+            # 1. 查询工序每月总投入量
+            total_in_query = text("""
+                select substring(workdt, 1, 6) as dt, sum(in_qty) as total_in_qty 
+                from cmsalpha.db_yielddetail 
+                where oper_old = :oper and workdt between :start and :end 
+                group by dt order by dt asc;
+            """)
+            conn_str = self._get_conn_str()
+            with create_engine(conn_str).connect() as conn:
+                total_in_df = pd.read_sql(
+                    total_in_query.bindparams(oper=oper, start=dt_semiYear, end=yesterday),
+                    conn
+                )
+
+            if total_in_df.empty:
+                self.logger.warning(f"工序 {oper} 无总产量数据，无法计算占比")
+                return None
+
+            # 2. 查询当前产品的每月投入量
+            product_in_query = text("""
+                select substring(workdt, 1, 6) as dt, sum(in_qty) as product_in_qty 
+                from cmsalpha.db_yielddetail dy
+                join modulemte.db_deviceinfo dd on dy.device = dd.Device
+                where dy.oper_old = :oper 
+                    and dy.workdt between :start and :end 
+                    and dd.Product_Mode = :pm 
+                    and dd.Tech_Name = :tn 
+                    and dd.Die_Density = :dd 
+                    and dd.Product_Density = :pd 
+                    and dd.Module_Type = :mt 
+                    and dy.grade = :g 
+                group by dt order by dt asc;
+            """)
+
+            with create_engine(conn_str).connect() as conn:
+                product_in_df = pd.read_sql(
+                    product_in_query.bindparams(
+                        oper=oper,
+                        start=dt_semiYear,
+                        end=yesterday,
+                        pm=self.product_mode,
+                        tn=self.tech_name,
+                        dd=self.die_density,
+                        pd=self.product_density,
+                        mt=self.module_type,
+                        g=self.grade
+                    ),
+                    conn
+                )
+
+            # 3. 计算占比及趋势
+            merge_df = pd.merge(total_in_df, product_in_df, on='dt', how='left').fillna(0)
+            merge_df['ratio'] = np.where(
+                merge_df['total_in_qty'] > 0,
+                (merge_df['product_in_qty'] / merge_df['total_in_qty']) * 100,
+                0
+            )
+
+            # 趋势判断
+            merge_df['month_index'] = range(1, len(merge_df) + 1)
+            trend = "数据不足（<2个月）"
+            slope = None
+            if len(merge_df) >= 2:
+                x = merge_df['month_index'].values
+                y = merge_df['ratio'].values
+                slope, _ = np.polyfit(x, y, 1)
+                if slope > trend_threshold:
+                    trend = "逐渐增加"
+                elif slope < -trend_threshold:
+                    trend = "逐渐降低"
+                else:
+                    trend = "稳定"
+
+            # 保存结果
+            self.proportion_result = {
+                'trend': trend,
+                'slope': slope,
+                'monthly_data': merge_df
+            }
+
+            # 日志输出
+            self.logger.info(f"{self} 占比趋势：{trend}")
+            self.logger.debug(f"每月占比数据:\n{merge_df[['dt', 'ratio']].to_string(index=False)}")
+            return self.proportion_result
+
+        except Exception as e:
+            self.logger.error(f"{self} 占比分析出错: {str(e)}", exc_info=True)
+            return None
+
+    # ------------------------------
+    # 封装分析方法：不良率趋势分析
+    # ------------------------------
+    def analyze_fail_rate(self, oper, dt_semiYear, yesterday,
+                          stability_threshold=0.5, significance_level=0.05):
+        """分析当前产品的半年度不良率趋势（原analyze_product_failRate）"""
+        self.logger.info(f"\n===== 开始分析 {self} 的不良率趋势 =====")
+        try:
+            # 1. 查询产品半年度数据
+            query = text("""
+                select substring(workdt, 1, 6) as dt, sum(in_qty) as sum_in, sum(out_qty) as sum_out
+                from cmsalpha.db_yielddetail dy
+                join modulemte.db_deviceinfo dd on dy.device = dd.Device
+                where dy.oper_old = :oper 
+                    and dy.workdt between :start_dt and :end_dt 
+                    and dd.Product_Mode = :pm 
+                    and dd.Tech_Name = :tn 
+                    and dd.Die_Density = :dd 
+                    and dd.Product_Density = :pd 
+                    and dd.Module_Type = :mt 
+                    and dy.grade = :g 
+                group by dt order by dt asc;
+            """)
+
+            conn_str = self._get_conn_str()
+            with create_engine(conn_str).connect() as conn:
+                monthly_df = pd.read_sql(
+                    query.bindparams(
+                        oper=oper,
+                        start_dt=dt_semiYear,
+                        end_dt=yesterday,
+                        pm=self.product_mode,
+                        tn=self.tech_name,
+                        dd=self.die_density,
+                        pd=self.product_density,
+                        mt=self.module_type,
+                        g=self.grade
+                    ),
+                    conn
+                )
+
+            if monthly_df.empty:
+                self.logger.warning(f"{self} 无半年度数据")
+                return None
+
+            # 2. 计算不良率及趋势
+            monthly_df['fail_rate'] = np.where(
+                monthly_df['sum_in'] > 0,
+                (1 - monthly_df['sum_out'] / monthly_df['sum_in']) * 100,
+                0
+            )
+            valid_df = monthly_df[['dt', 'sum_in', 'sum_out', 'fail_rate']].copy()
+
+            # 趋势判断
+            trend = "数据不足（<3个月）"
+            kpi = None
+            if len(valid_df) >= 3:
+                valid_df['month_index'] = range(1, len(valid_df) + 1)
+                x = valid_df['month_index'].values
+                y = valid_df['fail_rate'].values
+                slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+
+                trend = "稳定"
+                if p_value < significance_level:
+                    if slope > stability_threshold:
+                        trend = "恶化"
+                    elif slope < -stability_threshold:
+                        trend = "改善"
+                else:
+                    trend = "稳定（趋势不显著）"
+
+                # 计算考核指标
+                kpi = {
+                    "半年度平均不良率（%）": round(np.mean(y), 4),
+                    "最高不良率（%）及月份": (round(np.max(y), 4), valid_df.loc[y.argmax(), 'dt']),
+                    "每月平均变化率（%/月）": round(slope, 4),
+                    "首尾月变化幅度（%）": round(((y[-1] - y[0]) / y[0]) * 100, 2) if y[0] != 0 else None
+                }
+
+            # 保存结果
+            self.failrate_result = {
+                'conclusion': f"{self} 不良率趋势：{trend}" + (
+                    f"，平均不良率 {kpi['半年度平均不良率（%）']}%" if kpi else ""),
+                'kpi': kpi,
+                'monthly_data': valid_df
+            }
+
+            # 日志输出
+            self.logger.info(self.failrate_result['conclusion'])
+            self.logger.debug(f"详细数据：\n{valid_df[['dt', 'fail_rate']].to_string(index=False)}")
+            return self.failrate_result
+
+        except Exception as e:
+            self.logger.error(f"{self} 不良率分析出错: {str(e)}", exc_info=True)
+            return None
+
+    # ------------------------------
+    # 辅助方法：生成数据库连接字符串
+    # ------------------------------
+    def _get_conn_str(self):
+        """封装连接字符串生成逻辑，避免重复代码"""
+        return (
+            f"mysql+pymysql://{self.db_config['user']}:{self.db_config['password']}@"
+            f"{self.db_config['host']}:{self.db_config['port']}/{self.db_config['database']}?"
+            f"charset={self.db_config['charset']}"
+        )
 
 
 # 获取Daily Fail Status
@@ -429,206 +652,6 @@ def analyze_abnormal_oper(db_config, oper, workdt, logger):
         return (pd.DataFrame(), pd.DataFrame())
 
 
-# 针对产品分析分析该工序含量的变化
-def analyze_product_proportion(product_info, db_config, oper, dt_semiYear, yesterday, logger, trend_threshold=0.01):
-    """分析单个产品的每月产量占比及趋势（替代原analyze_product_proportion）"""
-    try:
-        # 生成产品唯一标识
-        product_id = " ".join([f"{v}" for k, v in product_info.items()])
-        logger.info(f"\n===== 开始分析产品 [{product_id}] 的占比趋势 =====")
-
-        # 1. 查询该工序在时间范围内的每月总in_qty
-        total_in_query = text("""
-            select substring(workdt, 1, 6) as dt, sum(in_qty) as total_in_qty 
-            from cmsalpha.db_yielddetail 
-            where oper_old = :oper and workdt between :start and :end 
-            group by dt order by dt asc;
-        """)
-        conn_str = (
-            f"mysql+pymysql://{db_config['user']}:{db_config['password']}@"
-            f"{db_config['host']}:{db_config['port']}/{db_config['database']}?"
-            f"charset={db_config['charset']}"
-        )
-        with create_engine(f"mysql+pymysql://{db_config['user']}:{db_config['password']}@"
-                           f"{db_config['host']}:{db_config['port']}/{db_config['database']}?"
-                           f"charset={db_config['charset']}").connect() as conn:
-            total_in_df = pd.read_sql(
-                total_in_query.bindparams(oper=oper, start=dt_semiYear, end=yesterday),
-                conn
-            )
-
-        if total_in_df.empty:
-            logger.warning(f"工序 {oper} 无总产量数据，无法计算占比")
-            return None
-
-        # 2. 查询该单个产品的每月in_qty
-        product_in_query = text("""
-            select substring(workdt, 1, 6) as dt, sum(in_qty) as product_in_qty 
-            from cmsalpha.db_yielddetail dy
-            join modulemte.db_deviceinfo dd on dy.device = dd.Device
-            where dy.oper_old = :oper 
-                and dy.workdt between :start and :end 
-                and dd.Product_Mode = :pm 
-                and dd.Tech_Name = :tn 
-                and dd.Die_Density = :dd 
-                and dd.Product_Density = :pd 
-                and dd.Module_Type = :mt 
-                and dy.grade = :g 
-            group by dt order by dt asc;
-        """)
-
-        with create_engine(conn_str).connect() as conn:
-            product_in_df = pd.read_sql(
-                product_in_query.bindparams(
-                    oper=oper,
-                    start=dt_semiYear,
-                    end=yesterday,
-                    pm=product_info['Product_Mode'],
-                    tn=product_info['Tech_Name'],
-                    dd=product_info['Die_Density'],
-                    pd=product_info['Product_Density'],
-                    mt=product_info['Module_Type'],
-                    g=product_info['grade']
-                ),
-                conn
-            )
-
-        # 3. 计算占比及趋势
-        merge_df = pd.merge(total_in_df, product_in_df, on='dt', how='left').fillna(0)
-        merge_df['ratio'] = np.where(
-            merge_df['total_in_qty'] > 0,
-            (merge_df['product_in_qty'] / merge_df['total_in_qty']) * 100,
-            0
-        )
-
-        # 趋势分析（同原逻辑）
-        merge_df['month_index'] = range(1, len(merge_df) + 1)
-        trend = "数据不足（<2个月）"
-        slope = None
-        if len(merge_df) >= 2:
-            x = merge_df['month_index'].values
-            y = merge_df['ratio'].values
-            slope, _ = np.polyfit(x, y, 1)
-            if slope > trend_threshold:
-                trend = "逐渐增加"
-            elif slope < -trend_threshold:
-                trend = "逐渐降低"
-            else:
-                trend = "稳定"
-
-        # 日志输出（单个产品的占比分析结果）
-        logger.info(f"产品 [{product_id}] 占比趋势：{trend}")
-        logger.debug(f"每月占比数据:\n{merge_df[['dt', 'ratio']].to_string(index=False)}")
-
-        return {
-            'product_id': product_id,
-            'trend': trend,
-            'monthly_data': merge_df
-        }
-
-    except Exception as e:
-        logger.error(f"产品 [{product_id}] 占比分析出错: {str(e)}", exc_info=True)
-        return None
-
-
-# 针对产品分析半年度不良率趋势
-def analyze_product_failRate(product_info, db_config, oper, dt_semiYear, yesterday, logger,
-                                   stability_threshold=0.5, significance_level=0.05):
-    """分析单个产品的半年度不良率趋势（替代原analyze_product_failRate）"""
-    try:
-        # 生成产品唯一标识
-        product_id = " ".join([f"{v}" for k, v in product_info.items()])
-        logger.info(f"\n===== 开始分析产品 [{product_id}] 的不良率趋势 =====")
-
-        # 1. 查询该单个产品的半年度数据
-        query = text("""
-            select substring(workdt, 1, 6) as dt, sum(in_qty) as sum_in, sum(out_qty) as sum_out
-            from cmsalpha.db_yielddetail dy
-            join modulemte.db_deviceinfo dd on dy.device = dd.Device
-            where dy.oper_old = :oper 
-                and dy.workdt between :start_dt and :end_dt 
-                and dd.Product_Mode = :pm 
-                and dd.Tech_Name = :tn 
-                and dd.Die_Density = :dd 
-                and dd.Product_Density = :pd 
-                and dd.Module_Type = :mt 
-                and dy.grade = :g 
-            group by dt order by dt asc;
-        """)
-
-        conn_str = (
-            f"mysql+pymysql://{db_config['user']}:{db_config['password']}@"
-            f"{db_config['host']}:{db_config['port']}/{db_config['database']}?"
-            f"charset={db_config['charset']}"
-        )
-
-        with create_engine(conn_str).connect() as conn:
-            monthly_df = pd.read_sql(
-                query.bindparams(
-                    oper=oper, start_dt=dt_semiYear, end_dt=yesterday,
-                    pm=product_info['Product_Mode'], tn=product_info['Tech_Name'],
-                    dd=product_info['Die_Density'], pd=product_info['Product_Density'],
-                    mt=product_info['Module_Type'], g=product_info['grade']
-                ),
-                conn
-            )
-
-        if monthly_df.empty:
-            logger.warning(f"产品 [{product_id}] 无半年度数据")
-            return None
-
-        # 2. 计算不良率及趋势
-        monthly_df['fail_rate'] = np.where(
-            monthly_df['sum_in'] > 0,
-            (1 - monthly_df['sum_out'] / monthly_df['sum_in']) * 100,
-            0
-        )
-        valid_df = monthly_df[['dt', 'sum_in', 'sum_out', 'fail_rate']].copy()
-
-        # 趋势分析（同原逻辑）
-        trend = "数据不足（<3个月）"
-        kpi = None
-        if len(valid_df) >= 3:
-            valid_df['month_index'] = range(1, len(valid_df) + 1)
-            x = valid_df['month_index'].values
-            y = valid_df['fail_rate'].values
-            slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
-
-            trend = "稳定"
-            if p_value < significance_level:
-                if slope > stability_threshold:
-                    trend = "恶化"
-                elif slope < -stability_threshold:
-                    trend = "改善"
-            else:
-                trend = "稳定（趋势不显著）"
-
-            # 计算考核指标
-            kpi = {
-                "半年度平均不良率（%）": round(np.mean(y), 4),
-                "最高不良率（%）及月份": (round(np.max(y), 4), valid_df.loc[y.argmax(), 'dt']),
-                "每月平均变化率（%/月）": round(slope, 4),
-                "首尾月变化幅度（%）": round(((y[-1] - y[0]) / y[0]) * 100, 2) if y[0] != 0 else None
-            }
-
-        # 日志输出（单个产品的不良率分析结果）
-        conclusion = f"产品 [{product_id}] 不良率趋势：{trend}"
-        if kpi:
-            conclusion += f"，平均不良率 {kpi['半年度平均不良率（%）']}%"
-        logger.info(conclusion)
-        logger.debug(f"详细数据：\n{valid_df[['dt', 'fail_rate']].to_string(index=False)}")
-
-        return {
-            'product_id': product_id,
-            'conclusion': conclusion,
-            'kpi': kpi,
-            'monthly_data': valid_df
-        }
-
-    except Exception as e:
-        logger.error(f"产品 [{product_id}] 不良率分析出错: {str(e)}", exc_info=True)
-        return None
-
 # 主函数
 def main(mode):
     # 初始化日志记录器
@@ -707,37 +730,37 @@ def main(mode):
                     if not vital_df.empty:
                         product_attrs = ['Product_Mode', 'Tech_Name', 'Die_Density',
                                          'Product_Density', 'Module_Type', 'grade']
-                        # 遍历每个主要不良产品
+                        # 遍历每个主要不良产品，创建Product对象并执行分析
                         for _, product_row in vital_df.iterrows():
                             product_info = {attr: product_row[attr] for attr in product_attrs}
-                            product_id = " ".join([f"{v}" for k, v in product_info.items()])
-                            logger.info(f"\n----- 开始处理产品 [{product_id}] -----")  # 产品分隔符
-
-                            # Step5：单个产品的占比趋势分析
-                            logger.info("Step5: 分析产品占比变化趋势")
-                            proportion_result = analyze_product_proportion(
+                            # 实例化产品对象（封装属性和依赖）
+                            product = Product(
                                 product_info=product_info,
                                 db_config=db_config,
+                                logger=logger
+                            )
+                            logger.info(f"\n----- 开始处理 {product} -----")
+
+                            # 调用对象方法执行分析（无需传递产品属性参数）
+                            # Step5：占比趋势分析
+                            logger.info("Step5: 分析产品占比变化趋势")
+                            product.analyze_proportion(
                                 oper=oper,
                                 dt_semiYear=dt_semiYear,
                                 yesterday=yesterday,
-                                logger=logger,
                                 trend_threshold=0.02
                             )
 
-                            # Step6：单个产品的不良率趋势分析（紧随占比分析之后）
+                            # Step6：不良率趋势分析
                             logger.info("Step6: 分析产品半年度不良率趋势")
-                            failrate_result = analyze_product_failRate(
-                                product_info=product_info,
-                                db_config=db_config,
+                            product.analyze_fail_rate(
                                 oper=oper,
                                 dt_semiYear=dt_semiYear,
                                 yesterday=yesterday,
-                                logger=logger,
                                 stability_threshold=0.3
                             )
 
-                            logger.info(f"----- 产品 [{product_id}] 分析完成 -----\n")  # 产品结束符
+                            logger.info(f"----- {product} 分析完成 -----\n")
                     else:
                         logger.warning(f"工序 [{oper}] 无主要不良产品，跳过产品分析")
                 else:
