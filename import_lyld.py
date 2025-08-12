@@ -61,52 +61,114 @@ def calculate_workdt(occurred_date):
 
 def import_data(df):
     # 数据库连接配置，请根据你的实际情况调整
-    connection = pymysql.connect(host='localhost',
-                                 user='remoteuser',
-                                 password='password',
-                                 database='cmsalpha',
-                                 cursorclass=pymysql.cursors.DictCursor)
+    connection = pymysql.connect(
+        host='localhost',
+        user='remoteuser',
+        password='password',
+        database='cmsalpha',
+        cursorclass=pymysql.cursors.DictCursor,
+        # 增加对旧版本数据库的兼容设置
+        charset='utf8',
+        use_unicode=True
+    )
 
-    with connection:
-        with connection.cursor() as cursor:
-            # 定义 SQL 插入语句
-            sql = """
-                INSERT INTO db_lyld (
-                    `Serial_Number`, `PKG_Density`, `Tech`, `Module_Density`,
-                    `Hold_Time`, `Occurred_Oper`, `OWNER`, `SAP_CODE`, `Product_Special_Handling`,
-                    `Occurred_Date`, `Lot_ID`, `Hold_Code`, `Device`, `Module_Type`,
-                    `Grade`, `Qty`, `Yield`, `Equip`, `Abnormal_Contents`,
-                    `Complete_Charger`, `Complete_Date`, `Complete_TAT`, `Cause`, `Action_Flow`, `Delay_Date`,`workdt`
-                ) VALUES (
-                    %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s
-                ) ON DUPLICATE KEY UPDATE
-                    `workdt` = VALUES(`workdt`), `PKG_Density` = VALUES(`PKG_Density`), `Tech` = VALUES(`Tech`),
-                    `Module_Density` = VALUES(`Module_Density`), `Hold_Time` = VALUES(`Hold_Time`),
-                    `Occurred_Oper` = VALUES(`Occurred_Oper`), `OWNER` = VALUES(`OWNER`),
-                    `SAP_CODE` = VALUES(`SAP_CODE`), `Product_Special_Handling` = VALUES(`Product_Special_Handling`),
-                    `Occurred_Date` = VALUES(`Occurred_Date`), `Lot_ID` = VALUES(`Lot_ID`),
-                    `Hold_Code` = VALUES(`Hold_Code`), `Device` = VALUES(`Device`), `Module_Type` = VALUES(`Module_Type`),
-                    `Grade` = VALUES(`Grade`), `Qty` = VALUES(`Qty`), `Yield` = VALUES(`Yield`),
-                    `Equip` = VALUES(`Equip`), `Abnormal_Contents` = VALUES(`Abnormal_Contents`),
-                    `Complete_Charger` = VALUES(`Complete_Charger`), `Complete_Date` = VALUES(`Complete_Date`),
-                    `Complete_TAT` = VALUES(`Complete_TAT`), `Cause` = VALUES(`Cause`),
-                    `Action_Flow` = VALUES(`Action_Flow`), `Delay_Date` = VALUES(`Delay_Date`);
-                """
-            # 将DataFrame中的数据转换为用于插入的元组列表
-            records = [tuple(x) for x in df.to_numpy()]
+    # 定义需要特殊处理的字段
+    date_fields = ['Occurred_Date', 'Complete_Date', 'workdt']
+    numeric_fields = ['PKG_Density', 'Module_Density', 'Hold_Time', 'Qty', 'Yield', 'Complete_TAT', 'Delay_Date']
 
-            try:
-                # 循环插入每行数据
-                for record in records:
-                    cursor.execute(sql, record)
+    try:
+        with connection:
+            with connection.cursor() as cursor:
+                # 定义 SQL 插入语句
+                sql = """
+                    INSERT INTO db_lyld (
+                        `Serial_Number`, `PKG_Density`, `Tech`, `Module_Density`,
+                        `Hold_Time`, `Occurred_Oper`, `OWNER`, `SAP_CODE`, `Product_Special_Handling`,
+                        `Occurred_Date`, `Lot_ID`, `Hold_Code`, `Device`, `Module_Type`,
+                        `Grade`, `Qty`, `Yield`, `Equip`, `Abnormal_Contents`,
+                        `Complete_Charger`, `Complete_Date`, `Complete_TAT`, `Cause`, `Action_Flow`, `Delay_Date`,`workdt`
+                    ) VALUES (
+                        %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s, %s
+                    ) ON DUPLICATE KEY UPDATE
+                        `workdt` = VALUES(`workdt`), `PKG_Density` = VALUES(`PKG_Density`), `Tech` = VALUES(`Tech`),
+                        `Module_Density` = VALUES(`Module_Density`), `Hold_Time` = VALUES(`Hold_Time`),
+                        `Occurred_Oper` = VALUES(`Occurred_Oper`), `OWNER` = VALUES(`OWNER`),
+                        `SAP_CODE` = VALUES(`SAP_CODE`), `Product_Special_Handling` = VALUES(`Product_Special_Handling`),
+                        `Occurred_Date` = VALUES(`Occurred_Date`), `Lot_ID` = VALUES(`Lot_ID`),
+                        `Hold_Code` = VALUES(`Hold_Code`), `Device` = VALUES(`Device`), `Module_Type` = VALUES(`Module_Type`),
+                        `Grade` = VALUES(`Grade`), `Qty` = VALUES(`Qty`), `Yield` = VALUES(`Yield`),
+                        `Equip` = VALUES(`Equip`), `Abnormal_Contents` = VALUES(`Abnormal_Contents`),
+                        `Complete_Charger` = VALUES(`Complete_Charger`), `Complete_Date` = VALUES(`Complete_Date`),
+                        `Complete_TAT` = VALUES(`Complete_TAT`), `Cause` = VALUES(`Cause`),
+                        `Action_Flow` = VALUES(`Action_Flow`), `Delay_Date` = VALUES(`Delay_Date`);
+                    """
+
+                # 处理每条记录，确保兼容性
+                processed_records = []
+                for idx, row in df.iterrows():
+                    record = []
+                    for col, value in row.items():
+                        # 处理空值
+                        if pd.isna(value) or value == '':
+                            record.append(None)
+                            continue
+
+                        # 处理日期字段
+                        if col in date_fields:
+                            try:
+                                # 转换为数据库兼容的日期格式
+                                if isinstance(value, pd.Timestamp):
+                                    record.append(value.strftime('%Y-%m-%d %H:%M:%S'))
+                                else:
+                                    # 尝试解析字符串日期
+                                    parsed_date = pd.to_datetime(value)
+                                    record.append(parsed_date.strftime('%Y-%m-%d %H:%M:%S'))
+                            except:
+                                # 无法解析的日期视为空值
+                                record.append(None)
+                            continue
+
+                        # 处理数字字段
+                        if col in numeric_fields:
+                            try:
+                                # 转换为浮点数，处理可能的格式问题
+                                num_value = float(value)
+                                record.append(num_value)
+                            except:
+                                # 无法转换的数字视为空值
+                                record.append(None)
+                            continue
+
+                        # 其他字段直接添加，确保是字符串类型
+                        record.append(str(value) if not isinstance(value, str) else value)
+
+                    processed_records.append(tuple(record))
+
+                # 执行插入
+                row_count = 0
+                for record in processed_records:
+                    try:
+                        cursor.execute(sql, record)
+                        row_count += 1
+                    except Exception as e:
+                        print(f"处理记录 {row_count + 1} 时发生错误: {e}")
+                        print(f"有问题的记录: {record}")
+                        # 继续处理下一条记录
+                        continue
+
                 connection.commit()  # 提交事务
-                print("数据成功插入或更新到MySQL数据库。")
-            except Exception as e:
-                print(f"插入数据时发生错误: {e}")
+                print(f"数据处理完成，成功插入/更新 {row_count} 条记录。")
+
+    except Exception as e:
+        connection.rollback()  # 发生错误时回滚
+        print(f"操作发生错误: {e}")
+    finally:
+        if connection.open:
+            connection.close()
 
 
 def main():
