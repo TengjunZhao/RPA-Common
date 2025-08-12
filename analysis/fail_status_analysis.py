@@ -279,6 +279,113 @@ class Product:
             return None
 
     # ------------------------------
+    # 封装分析方法：不良率趋势分析
+    # ------------------------------
+    def analyze_equip_diff(self, workdt, oper):
+        """
+        分析该产品在特定工序所有设备上的不良数据是否存在显著差异
+        :param workdt: 分析日期（格式：'YYYYMMDD'）
+        :param oper: 目标工序（如'5600'）
+        :return: 分析结果字典，包含卡方检验结果和结论
+        """
+        self.logger.info(f"\n===== 开始分析 {self} 在工序 {oper} 于 {workdt} 的设备差异 =====")
+        try:
+            # 1. 构建参数化SQL查询（与analyze_fail_rate保持一致的风格）
+            query = text("""
+                select 
+                    dy.main_equip_id as 设备名,
+                    sum(dy.in_qty) as 总投入,
+                    sum(dy.in_qty) - sum(dy.out_qty) as 不良数,
+                    sum(dy.out_qty) as 合格数
+                from cmsalpha.db_yielddetail dy 
+                join modulemte.db_deviceinfo dd on dy.device = dd.Device 
+                where 
+                    dy.oper_old = :oper 
+                    and dy.workdt = :workdt 
+                    and dd.Product_Mode = :pm 
+                    and dd.Tech_Name = :tn 
+                    and dd.Die_Density = :dd 
+                    and dd.Product_Density = :pd 
+                    and dd.Module_Type = :mt 
+                    and dy.grade = :g 
+                group by dy.main_equip_id
+                having sum(dy.in_qty) > 0  # 排除无投入的设备
+                order by 设备名 asc;
+            """)
+
+            # 2. 复用数据库连接逻辑（与现有方法一致）
+            conn_str = self._get_conn_str()
+            with create_engine(conn_str).connect() as conn:
+                equip_df = pd.read_sql(
+                    query.bindparams(
+                        oper=oper,
+                        workdt=workdt,
+                        pm=self.product_mode,
+                        tn=self.tech_name,
+                        dd=self.die_density,
+                        pd=self.product_density,
+                        mt=self.module_type,
+                        g=self.grade
+                    ),
+                    conn
+                )
+
+            # 3. 数据校验（与现有方法的空数据处理逻辑一致）
+            if equip_df.empty:
+                self.logger.warning(f"{self} 在工序 {oper} 于 {workdt} 无设备生产数据")
+                return None
+
+            # 4. 卡方检验准备：构建观察频数矩阵（不良数+合格数）
+            observed = equip_df[['不良数', '合格数']].values
+            if observed.shape[0] < 2:
+                self.logger.warning(f"设备数量不足（仅{observed.shape[0]}台），无法进行差异分析")
+                return None
+
+            # 5. 执行卡方检验（判断设备间差异）
+            from scipy.stats import chi2_contingency
+            chi2, p_value, dof, expected = chi2_contingency(observed)
+
+            # 6. 计算设备不良率并排序（辅助分析）
+            equip_df['不良率(%)'] = np.where(
+                equip_df['总投入'] > 0,
+                (equip_df['不良数'] / equip_df['总投入']) * 100,
+                0
+            ).round(4)
+            equip_sorted = equip_df.sort_values('不良率(%)', ascending=False)
+
+            # 7. 趋势结论生成（参考analyze_fail_rate的结论格式）
+            alpha = 0.05  # 显著性水平与现有方法保持一致
+            significant = p_value < alpha
+            conclusion = f"{self} 在工序 {oper} 的设备间不良率"
+            if significant:
+                conclusion += f"存在显著差异（卡方值={chi2:.4f}，p值={p_value:.4f}，自由度={dof}），" \
+                              f"表现最差设备为 {equip_sorted.iloc[0]['设备名']}（不良率 {equip_sorted.iloc[0]['不良率(%)']}%）"
+            else:
+                conclusion += f"无显著差异（卡方值={chi2:.4f}，p值={p_value:.4f}，自由度={dof}）"
+
+            # 8. 保存结果（与现有方法的结果存储结构一致）
+            self.equip_diff_result = {
+                'conclusion': conclusion,
+                'statistic': {
+                    'chi2': round(chi2, 4),
+                    'p_value': round(p_value, 4),
+                    'dof': dof,
+                    'significant': significant
+                },
+                'equipment_data': equip_sorted.to_dict('records'),
+                'worst_equip': equip_sorted.iloc[0].to_dict() if not equip_sorted.empty else None
+            }
+
+            # 9. 日志输出（保持与现有方法一致的日志级别和格式）
+            self.logger.info(self.equip_diff_result['conclusion'])
+            self.logger.debug(
+                f"设备详细数据:\n{equip_sorted[['设备名', '总投入', '不良数', '不良率(%)']].to_string(index=False)}")
+            return self.equip_diff_result
+
+        except Exception as e:
+            self.logger.error(f"{self} 设备差异分析出错: {str(e)}", exc_info=True)
+            return None
+
     # 辅助方法：生成数据库连接字符串
     # ------------------------------
     def _get_conn_str(self):
@@ -689,7 +796,7 @@ def main(mode):
             logger.info("使用生产环境数据库(172.27.154.57)")
         logger.info("程序开始运行")
         # 作业时间计算
-        yesterday_date = datetime.now() - timedelta(days=1)
+        yesterday_date = datetime.now() - timedelta(days=3)
         yesterday = yesterday_date.strftime('%Y%m%d')
         dt_semiYear_date = yesterday_date - dateutil.relativedelta.relativedelta(months=6)
         dt_semiYear_date = dt_semiYear_date.replace(day=1)
@@ -759,6 +866,9 @@ def main(mode):
                                 yesterday=yesterday,
                                 stability_threshold=0.3
                             )
+                            # Step7: 分析产品在该工序设备别不良率
+                            logger.info("Step7: 分析产品在该工序设备别不良率")
+                            product.analyze_equip_diff(workdt=yesterday, oper=oper)
 
                             logger.info(f"----- {product} 分析完成 -----\n")
                     else:
