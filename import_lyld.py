@@ -73,8 +73,8 @@ def import_data(df):
     )
 
     # 定义需要特殊处理的字段
-    date_fields = ['Occurred_Date', 'Complete_Date', 'workdt']
-    numeric_fields = ['PKG_Density', 'Module_Density', 'Hold_Time', 'Qty', 'Yield', 'Complete_TAT', 'Delay_Date']
+    date_fields = ['Occurred_Date', 'Complete_Date']
+    numeric_fields = ['Hold_Time', 'Qty', 'Yield', 'Complete_TAT', 'Delay_Date']
 
     try:
         with connection:
