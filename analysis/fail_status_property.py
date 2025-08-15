@@ -105,7 +105,7 @@ def create_product_instances(property_df, device_property_list, lot_property_lis
 
 
 # 获取操作月的所有投产Device的属性列表
-def get_property_list(db_config, start, end, operList, devicePropertyList, lotPropertyList,
+def get_property_list(db_config, start, end, devicePropertyList, lotPropertyList,
                       additional_conditions=None, logger=None):
     """
     从数据库中查询所需的属性列表，支持额外的WHERE条件限制
@@ -130,17 +130,12 @@ def get_property_list(db_config, start, end, operList, devicePropertyList, lotPr
         device_fields = [f"dd.{field}" for field in devicePropertyList]
         lot_fields = [f"dy.{field}" for field in lotPropertyList]
         select_fields = ", ".join(device_fields + lot_fields)
-
         # 构建WHERE子句条件
         where_clauses = [
-            "dy.workdt BETWEEN :start_dt AND :end_dt",
-            f"oper IN ({', '.join([f':oper_{i}' for i in range(len(operList))])})"
+            "dy.workdt BETWEEN :start_dt AND :end_dt"
         ]
-
         # 准备参数字典
         params = {'start_dt': start, 'end_dt': end}
-        for i, oper in enumerate(operList):
-            params[f'oper_{i}'] = oper
 
         # 处理额外的查询条件
         condition_counter = 0
@@ -200,15 +195,17 @@ def get_property_list(db_config, start, end, operList, devicePropertyList, lotPr
         return None
 
 
-def get_product_production_data(db_config, product, oper_list, time_type, device_property_list, logger=None):
+def get_product_production_data(db_config, product, additional_conditions, time_type, device_property_list, logger=None):
     try:
         # 确定时间范围和格式
         if time_type == 'annual':
             # 前年、去年、今年
+            last_month_last_day = datetime.now().replace(day=1) - timedelta(days=1)
             current_year = datetime.now().year
             years = [current_year - 2, current_year - 1, current_year]
             start_date = f"{years[0]}0101"
-            end_date = f"{years[-1]}1231"
+            end_date = last_month_last_day.strftime('%Y%m%d')
+            # end_date = f"{years[-1]}1231"
             date_format = "SUBSTRING(dy.workdt, 1, 4)"  # 提取年份
             group_by = "dt, oper_old"
         else:  # monthly
@@ -219,15 +216,18 @@ def get_product_production_data(db_config, product, oper_list, time_type, device
             date_format = "SUBSTRING(dy.workdt, 1, 6)"  # 提取年月
             group_by = "dt, oper_old"
 
-        # 构建oper_list的参数占位符（如:oper_0, :oper_1, ...）
-        oper_placeholders = [f":oper_{i}" for i in range(len(oper_list))]
+        # # 构建oper_list的参数占位符（如:oper_0, :oper_1, ...）
+        # oper_placeholders = [f":oper_{i}" for i in range(len(oper_list))]
 
         # 构建产品属性条件
         where_conditions = [
             f"dy.workdt BETWEEN :start_date AND :end_date",  # 日期参数化
-            f"oper_old IN ({', '.join(oper_placeholders)})"  # 操作列表参数化
         ]
-
+        # 准备所有参数（关键步骤：将所有占位符与值绑定）
+        params = {
+            "start_date": start_date,  # 绑定日期参数
+            "end_date": end_date
+        }
         # 添加产品属性过滤条件
         for prop_name, prop_value in product.properties.items():
             if prop_name in device_property_list:
@@ -239,6 +239,25 @@ def get_product_production_data(db_config, product, oper_list, time_type, device
                 prop_placeholder = f":dy_{prop_name}"
                 where_conditions.append(f"dy.{prop_name} = {prop_placeholder}")
 
+        condition_counter = 0
+        if additional_conditions:
+            for table_alias, field, operator, values in additional_conditions:
+                if operator.upper() not in ['IN', '=', '!=', '>', '<', '>=', '<=']:
+                    raise ValueError(f"不支持的操作符: {operator}")
+
+                if operator.upper() == 'IN':
+                    # 处理IN条件（如dy.oper_old IN ('5600', '5710')）
+                    placeholders = ", ".join([f":cond_{condition_counter}_{i}" for i in range(len(values))])
+                    where_conditions.append(f"{table_alias}.{field} {operator} ({placeholders})")
+                    # 绑定参数
+                    for i, value in enumerate(values):
+                        params[f'cond_{condition_counter}_{i}'] = value
+                else:
+                    # 处理其他条件（=, !=等）
+                    placeholder = f":cond_{condition_counter}"
+                    where_conditions.append(f"{table_alias}.{field} {operator} {placeholder}")
+                    params[placeholder[1:]] = values  # 移除占位符中的冒号
+                condition_counter += 1
         # 构建SQL查询
         sql = f"""
             SELECT 
@@ -255,16 +274,6 @@ def get_product_production_data(db_config, product, oper_list, time_type, device
 
         # if logger:
         #     logger.debug(f"获取产品数据的SQL: {sql}")
-
-        # 准备所有参数（关键步骤：将所有占位符与值绑定）
-        params = {
-            "start_date": start_date,  # 绑定日期参数
-            "end_date": end_date
-        }
-
-        # 绑定操作列表参数（:oper_0, :oper_1...）
-        for i, oper in enumerate(oper_list):
-            params[f"oper_{i}"] = oper
 
         # 绑定产品属性参数（:dd_xxx 或 :dy_xxx）
         for prop_name, prop_value in product.properties.items():
@@ -301,7 +310,7 @@ def get_product_production_data(db_config, product, oper_list, time_type, device
         return pd.DataFrame()
 
 
-def populate_product_data(db_config, product_instances, oper_list, device_property_list, logger=None):
+def populate_product_data(db_config, product_instances, additional_conditions, device_property_list, logger=None):
     """为所有产品实例填充生产数据"""
     for i, product in enumerate(product_instances):
         if logger:
@@ -309,7 +318,7 @@ def populate_product_data(db_config, product_instances, oper_list, device_proper
 
         # 获取年度数据时传入device_property_list
         annual_df = get_product_production_data(
-            db_config, product, oper_list, 'annual', device_property_list, logger  # 新增参数
+            db_config, product, additional_conditions, 'annual', device_property_list, logger  # 新增参数
         )
 
         # 填充年度数据到产品实例（不变）
@@ -324,7 +333,7 @@ def populate_product_data(db_config, product_instances, oper_list, device_proper
 
         # 获取月度数据时传入device_property_list
         monthly_df = get_product_production_data(
-            db_config, product, oper_list, 'monthly', device_property_list, logger  # 新增参数
+            db_config, product, additional_conditions, 'monthly', device_property_list, logger  # 新增参数
         )
 
         # 填充月度数据到产品实例（不变）
@@ -340,7 +349,7 @@ def populate_product_data(db_config, product_instances, oper_list, device_proper
 
 def process_all_products(db_config, pc_property_df, sv_property_df,
                          device_property_list, lot_property_list,
-                         oper_list, logger=None):
+                         oper_list, additional_conditions_pc, additional_conditions_sv, logger=None):
     """处理所有PC和Server产品"""
     # 创建产品实例
     if logger:
@@ -358,11 +367,11 @@ def process_all_products(db_config, pc_property_df, sv_property_df,
     # 填充生产数据
     if logger:
         logger.info("填充PC产品数据...")
-    populate_product_data(db_config, pc_products, oper_list, device_property_list, logger)
+    populate_product_data(db_config, pc_products, additional_conditions_pc, device_property_list, logger)
 
     if logger:
         logger.info("填充Server产品数据...")
-    populate_product_data(db_config, sv_products, oper_list, device_property_list, logger)
+    populate_product_data(db_config, sv_products, additional_conditions_sv, device_property_list, logger)
 
     return pc_products, sv_products
 
@@ -384,7 +393,7 @@ def main(mode):
         # 根据模式选择数据库主机
         if mode == 'test':
             db_config['host'] = 'localhost'
-            log_path = "C:/Users/Zhao Tengjun/Desktop"
+            log_path = "C:/Users/Tengjun Zhao/Desktop"
             logger = setup_logger(
                 log_path=log_path,
                 log_name=log_name,
@@ -424,7 +433,7 @@ def main(mode):
         svType = ['RD', 'LD']
         # Step1：获取属性列表
         logger.info("PC向列表")
-        additional_conditions = [
+        additional_conditions_pc = [
             ('dd', 'Module_Type', 'IN', pcType),  # dd.Module_Type IN ('SD', 'UD')
             ('dy', 'oper_old', 'IN', operList)
         ]
@@ -432,14 +441,13 @@ def main(mode):
             db_config=db_config,
             start=str_startWorkdt,
             end=str_endWorkdt,
-            operList=operList,
             devicePropertyList=devicePropertyList,
             lotPropertyList=lotPropertyList,
-            additional_conditions=additional_conditions,
+            additional_conditions=additional_conditions_pc,
             logger=logger
         )
         logger.info("Server向列表")
-        additional_conditions = [
+        additional_conditions_sv = [
             ('dd', 'Module_Type', 'IN', svType),  # dd.Module_Type IN ('RD', 'LD')
             ('dy', 'oper_old', 'IN', operList)
         ]
@@ -447,10 +455,9 @@ def main(mode):
             db_config=db_config,
             start=str_startWorkdt,
             end=str_endWorkdt,
-            operList=operList,
             devicePropertyList=devicePropertyList,
             lotPropertyList=lotPropertyList,
-            additional_conditions=additional_conditions,
+            additional_conditions=additional_conditions_sv,
             logger=logger
         )
 
@@ -461,6 +468,8 @@ def main(mode):
             device_property_list=devicePropertyList,
             lot_property_list=lotPropertyList,
             oper_list=operList,
+            additional_conditions_pc=additional_conditions_pc,
+            additional_conditions_sv=additional_conditions_sv,
             logger=logger
         )
 
