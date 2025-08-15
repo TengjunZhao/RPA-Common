@@ -69,6 +69,81 @@ class ProductData:
         df = df.set_index('period')
         return df.sort_index()
 
+    def calculate_annual_fail_stats(self):
+        """计算年度fail数据统计：et fail、at fail、ttl fail"""
+        return self._calculate_fail_stats(self.annual_data)
+
+    def calculate_monthly_fail_stats(self):
+        """计算月度fail数据统计：et fail、at fail、ttl fail"""
+        return self._calculate_fail_stats(self.monthly_data)
+
+    def _calculate_fail_stats(self, data):
+        """
+        通用fail数据计算与存储方法
+        et fail: 5600工序的fail值
+        at fail: 5710、5700、5780工序的fail总和
+        ttl fail: 上述所有工序的fail总和（仅包含有数据的工序）
+        """
+        stats = []
+        et_oper = '5600'
+        at_opers = ['5710', '5700', '5780']
+        all_opers = [et_oper] + at_opers
+
+        for period, oper_data in data.items():
+            # 计算et fail（仅5600工序）
+            et_fail = oper_data[et_oper]['fail'] if et_oper in oper_data else None
+
+            # 计算at fail（5710、5700、5780工序总和）
+            at_sum = 0.0
+            at_count = 0
+            for oper in at_opers:
+                if oper in oper_data:
+                    at_sum += oper_data[oper]['fail']
+                    at_count += 1
+            at_fail = round(at_sum, 2) if at_count > 0 else None
+
+            # 计算ttl fail（所有指定工序总和）
+            ttl_sum = 0.0
+            ttl_count = 0
+            for oper in all_opers:
+                if oper in oper_data:
+                    ttl_sum += oper_data[oper]['fail']
+                    ttl_count += 1
+            ttl_fail = round(ttl_sum, 2) if ttl_count > 0 else None
+
+            # 存储统计结果到数据字典
+            fail_stats = {
+                'et_fail': et_fail,
+                'at_fail': at_fail,
+                'ttl_fail': ttl_fail
+            }
+            oper_data['fail_stats'] = fail_stats  # 添加到当前周期的数据中
+
+            stats.append({
+                'period': period,
+                'et_fail': et_fail,
+                'at_fail': at_fail,
+                'ttl_fail': ttl_fail
+            })
+
+        # 转换为DataFrame并排序
+        if not stats:
+            return pd.DataFrame(columns=['period', 'et_fail', 'at_fail', 'ttl_fail'])
+
+        df = pd.DataFrame(stats)
+        return df.set_index('period').sort_index()
+
+    def get_product_display_name(self):
+        """获取产品显示名称（仅属性值拼接，解决未定义问题）"""
+        # 将所有属性值转换为字符串并拼接（如："DDR4 8G NQ"）
+        return " ".join(str(v) for v in self.properties.values())
+
+    def get_5600_in_qty(self, period, is_annual=True):
+        """获取指定周期5600工序的in数量（空值返回0）"""
+        data = self.annual_data if is_annual else self.monthly_data
+        oper_data = data.get(period, {})
+        return oper_data.get('5600', {}).get('in', 0)
+
     def __str__(self):
         prop_str = ", ".join([f"{k}={v}" for k, v in self.properties.items()])
         return f"ProductData[{prop_str}]"
@@ -376,6 +451,122 @@ def process_all_products(db_config, pc_property_df, sv_property_df,
     return pc_products, sv_products
 
 
+def log_fail_tables(product_list, product_type, logger):
+    """输出产品不良数据表格日志"""
+    if not product_list:
+        logger.info(f"没有{product_type}产品数据可输出")
+        return
+
+    # 获取需要展示的年度和月度周期
+    current_year = datetime.now().year
+    annual_periods = [current_year - 2, current_year - 1, current_year]
+    annual_periods_str = [str(y) for y in annual_periods]
+
+    last_month = datetime.now().replace(day=1) - timedelta(days=1)
+    monthly_periods = [(last_month - dateutil.relativedelta.relativedelta(months=i)).strftime('%Y%m')
+                       for i in range(11, -1, -1)]
+
+    # 定义三种不良类型
+    fail_types = [
+        ('et_fail', f'{product_type} ET不良数据'),
+        ('at_fail', f'{product_type} AT不良数据'),
+        ('ttl_fail', f'{product_type} TTL不良数据')
+    ]
+
+    for fail_type, title in fail_types:
+        logger.info(f"\n===== {title} =====")
+
+        # 构建表格数据
+        table_data = []
+        headers = ["Product"] + annual_periods_str + monthly_periods
+        table_data.append(headers)
+
+        # 收集所有行数据
+        for product in product_list:
+            row = [product.get_product_display_name()]
+
+            # 添加年度数据
+            for year in annual_periods:
+                year_data = product.annual_data.get(year, {})
+                fail_val = year_data.get('fail_stats', {}).get(fail_type)
+                row.append(f"{fail_val:.2f}" if fail_val is not None else "")
+
+            # 添加月度数据
+            for month in monthly_periods:
+                month_data = product.monthly_data.get(month, {})
+                fail_val = month_data.get('fail_stats', {}).get(fail_type)
+                row.append(f"{fail_val:.2f}" if fail_val is not None else "")
+
+            table_data.append(row)
+
+        # 计算每列最大宽度
+        col_widths = [max(len(str(row[i])) for row in table_data) for i in range(len(headers))]
+
+        # 输出表头
+        header_row = " | ".join([f"{str(h).ljust(col_widths[i])}" for i, h in enumerate(headers)])
+        logger.info(header_row)
+
+        # 输出分隔线
+        separator = "-|-".join(["-" * w for w in col_widths])
+        logger.info(separator)
+
+        # 输出数据行
+        for row in table_data[1:]:
+            data_row = " | ".join([f"{str(cell).ljust(col_widths[i])}" for i, cell in enumerate(row)])
+            logger.info(data_row)
+
+        logger.info(f"===== {title} 结束 =====")
+
+
+def log_qty_table(product_list, product_type, logger):
+    """新增：输出5600工序in数量表（以5600 in为基准，空值用0）"""
+    if not product_list:
+        logger.info(f"没有{product_type}产品的QTY数据可输出")
+        return
+
+    # 周期定义（与不良表一致）
+    current_year = datetime.now().year
+    annual_periods = [current_year - 2, current_year - 1, current_year]
+    annual_periods_str = [str(y) for y in annual_periods]
+
+    last_month = datetime.now().replace(day=1) - timedelta(days=1)
+    monthly_periods = [(last_month - dateutil.relativedelta.relativedelta(months=i)).strftime('%Y%m')
+                       for i in range(11, -1, -1)]
+
+    logger.info(f"\n===== {product_type} QTY数据（5600工序in数量） =====")
+
+    # 表格数据（空值用0）
+    table_data = []
+    headers = ["Product"] + annual_periods_str + monthly_periods
+    table_data.append(headers)
+
+    for product in product_list:
+        row = [product.get_product_display_name()]
+
+        # 年度5600 in数量（空值→0）
+        for year in annual_periods:
+            in_qty = product.get_5600_in_qty(year, is_annual=True)
+            row.append(str(in_qty))  # 整数格式
+
+        # 月度5600 in数量（空值→0）
+        for month in monthly_periods:
+            in_qty = product.get_5600_in_qty(month, is_annual=False)
+            row.append(str(in_qty))
+
+        table_data.append(row)
+
+    # 格式化输出
+    col_widths = [max(len(str(row[i])) for row in table_data) for i in range(len(headers))]
+    header_row = " | ".join([f"{h.ljust(col_widths[i])}" for i, h in enumerate(headers)])
+    logger.info(header_row)
+    logger.info("-|-".join(["-" * w for w in col_widths]))
+    for row in table_data[1:]:
+        data_row = " | ".join([f"{cell.ljust(col_widths[i])}" for i, cell in enumerate(row)])
+        logger.info(data_row)
+
+    logger.info(f"===== {product_type} QTY数据结束 =====")
+
+
 def main(mode):
     # 初始化日志记录器
     log_name = datetime.today().strftime('%Y%m%d')
@@ -427,7 +618,7 @@ def main(mode):
 
         # 准备作业参数
         operList = ['5600', '5710', '5700', '5780']
-        devicePropertyList = ['Product_Mode', 'Die_Density', 'Product_Density']
+        devicePropertyList = ['Product_Mode', 'Product_Density']
         lotPropertyList = ['grade']
         pcType = ['SD', 'UD']
         svType = ['RD', 'LD']
@@ -435,7 +626,8 @@ def main(mode):
         logger.info("PC向列表")
         additional_conditions_pc = [
             ('dd', 'Module_Type', 'IN', pcType),  # dd.Module_Type IN ('SD', 'UD')
-            ('dy', 'oper_old', 'IN', operList)
+            ('dy', 'oper_old', 'IN', operList),
+            ('dd', 'Product_Mode', '=', 'DDR4 DIMM'),
         ]
         pcPropertyList = get_property_list(
             db_config=db_config,
@@ -449,7 +641,8 @@ def main(mode):
         logger.info("Server向列表")
         additional_conditions_sv = [
             ('dd', 'Module_Type', 'IN', svType),  # dd.Module_Type IN ('RD', 'LD')
-            ('dy', 'oper_old', 'IN', operList)
+            ('dy', 'oper_old', 'IN', operList),
+            ('dd', 'Product_Mode', '=', 'DDR4 DIMM'),
         ]
         svPropertyList = get_property_list(
             db_config=db_config,
@@ -473,11 +666,19 @@ def main(mode):
             logger=logger
         )
 
-        if pc_products:
-            first_pc_product = pc_products[0]
-            print(f"产品: {first_pc_product}")
-            print("月度数据透视表:")
-            print(first_pc_product.get_pivoted_monthly_data())
+        for product in pc_products:
+            annual_stats_df = product.calculate_annual_fail_stats()
+            monthly_stats_df = product.calculate_monthly_fail_stats()
+
+        for product in sv_products:
+            annual_stats_df = product.calculate_annual_fail_stats()
+            monthly_stats_df = product.calculate_monthly_fail_stats()
+
+        # 输出日志表格（包含新增的qty表）
+        log_fail_tables(pc_products, "PC", logger)
+        log_fail_tables(sv_products, "SV", logger)
+        log_qty_table(pc_products, "PC", logger)  # 新增QTY表
+        log_qty_table(sv_products, "SV", logger)  # 新增QTY表
 
     except Exception as e:
         logger.critical(f"程序主流程出错: {str(e)}", exc_info=True)
