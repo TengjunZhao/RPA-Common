@@ -796,7 +796,7 @@ def main(mode):
             logger.info("使用生产环境数据库(172.27.154.57)")
         logger.info("程序开始运行")
         # 作业时间计算
-        yesterday_date = datetime.now() - timedelta(days=3)
+        yesterday_date = datetime.now() - timedelta(days=1)
         yesterday = yesterday_date.strftime('%Y%m%d')
         dt_semiYear_date = yesterday_date - dateutil.relativedelta.relativedelta(months=6)
         dt_semiYear_date = dt_semiYear_date.replace(day=1)
