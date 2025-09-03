@@ -17,7 +17,7 @@ class ProductData:
     """产品数据类，用于存储特定产品的属性及相关生产数据"""
 
     def __init__(self, product_properties):
-        self.properties = product_properties
+        self.properties = product_properties  # 允许空字典
         self.annual_data = {}  # {年份: {oper: {'in': int, 'out': int, 'fail': float}}}
         self.monthly_data = {}  # {年月: {oper: {'in': int, 'out': int, 'fail': float}}}
 
@@ -52,7 +52,7 @@ class ProductData:
         return self._pivot_data(self.monthly_data)
 
     def _pivot_data(self, data):
-        """将数据转换为透视表格式"""
+        """将数据转换为透视表格式（支持空数据）"""
         rows = []
         for period, oper_data in data.items():
             row = {'period': period}
@@ -62,12 +62,7 @@ class ProductData:
                 row[f'{oper}_fail'] = values['fail']
             rows.append(row)
 
-        if not rows:
-            return pd.DataFrame()
-
-        df = pd.DataFrame(rows)
-        df = df.set_index('period')
-        return df.sort_index()
+        return pd.DataFrame(rows).set_index('period').sort_index() if rows else pd.DataFrame()
 
     def calculate_annual_fail_stats(self):
         """计算年度fail数据统计：et fail、at fail、ttl fail"""
@@ -78,12 +73,7 @@ class ProductData:
         return self._calculate_fail_stats(self.monthly_data)
 
     def _calculate_fail_stats(self, data):
-        """
-        通用fail数据计算与存储方法
-        et fail: 5600工序的fail值
-        at fail: 5710、5700、5780工序的fail总和
-        ttl fail: 上述所有工序的fail总和（仅包含有数据的工序）
-        """
+        """通用fail数据计算（支持空数据）"""
         stats = []
         et_oper = '5600'
         at_opers = ['5710', '5700', '5780']
@@ -112,13 +102,11 @@ class ProductData:
             ttl_fail = round(ttl_sum, 2) if ttl_count > 0 else None
 
             # 存储统计结果到数据字典
-            fail_stats = {
+            oper_data['fail_stats'] = {
                 'et_fail': et_fail,
                 'at_fail': at_fail,
                 'ttl_fail': ttl_fail
             }
-            oper_data['fail_stats'] = fail_stats  # 添加到当前周期的数据中
-
             stats.append({
                 'period': period,
                 'et_fail': et_fail,
@@ -126,17 +114,13 @@ class ProductData:
                 'ttl_fail': ttl_fail
             })
 
-        # 转换为DataFrame并排序
-        if not stats:
-            return pd.DataFrame(columns=['period', 'et_fail', 'at_fail', 'ttl_fail'])
-
-        df = pd.DataFrame(stats)
-        return df.set_index('period').sort_index()
+        # 支持空统计结果
+        return pd.DataFrame(stats).set_index('period').sort_index() if stats else \
+            pd.DataFrame(columns=['period', 'et_fail', 'at_fail', 'ttl_fail'])
 
     def get_product_display_name(self):
-        """获取产品显示名称（仅属性值拼接，解决未定义问题）"""
-        # 将所有属性值转换为字符串并拼接（如："DDR4 8G NQ"）
-        return " ".join(str(v) for v in self.properties.values())
+        """获取产品显示名称（支持空属性，返回空字符串）"""
+        return " ".join(str(v) for v in self.properties.values()) if self.properties else ""
 
     def get_5600_in_qty(self, period, is_annual=True):
         """获取指定周期5600工序的in数量（空值返回0）"""
@@ -145,98 +129,115 @@ class ProductData:
         return oper_data.get('5600', {}).get('in', 0)
 
     def __str__(self):
-        prop_str = ", ".join([f"{k}={v}" for k, v in self.properties.items()])
+        """支持空属性的字符串表示"""
+        prop_str = ", ".join([f"{k}={v}" for k, v in self.properties.items()]) if self.properties else "无属性"
         return f"ProductData[{prop_str}]"
 
 
-# 实例化产品
-def create_product_instances(property_df, device_property_list, lot_property_list):
+# 实例化产品（支持空属性列表）
+def create_product_instances(property_df, device_property_list, lot_property_list, logger=None):
     """
     根据属性DataFrame创建ProductData实例列表
 
     参数:
         property_df: 包含产品属性的DataFrame
-        device_property_list: 设备属性列表
-        lot_property_list: 批次属性列表
+        device_property_list: 设备属性列表（允许空列表/None）
+        lot_property_list: 批次属性列表（允许空列表/None）
+        logger: 日志记录器（可选）
 
     返回:
         list: ProductData实例列表
     """
+    # 强制转为列表（避免None导致的遍历错误）
+    device_property_list = device_property_list if isinstance(device_property_list, list) else []
+    lot_property_list = lot_property_list if isinstance(lot_property_list, list) else []
+
     product_instances = []
+    # 记录空列表状态（便于调试）
+    if not device_property_list and logger:
+        logger.info("device_property_list为空，不提取设备属性")
+    if not lot_property_list and logger:
+        logger.info("lot_property_list为空，不提取批次属性")
+
+    # 处理空DataFrame（避免遍历错误）
+    if property_df.empty:
+        if logger:
+            logger.warning("property_df为空，不创建任何ProductData实例")
+        return product_instances
 
     for _, row in property_df.iterrows():
-        # 提取设备属性
+        # 提取属性（空列表时返回空字典，安全无报错）
         device_props = {prop: row[prop] for prop in device_property_list if prop in row}
-
-        # 提取批次属性
         lot_props = {prop: row[prop] for prop in lot_property_list if prop in row}
 
-        # 合并属性并创建实例
+        # 合并属性（允许空字典）
         product_properties = {**device_props, **lot_props}
         product_instance = ProductData(product_properties)
         product_instances.append(product_instance)
 
+    if logger:
+        logger.info(f"成功创建{len(product_instances)}个ProductData实例")
     return product_instances
 
 
-# 获取操作月的所有投产Device的属性列表
+# 获取属性列表（核心修改：处理空属性列表的SQL语法）
 def get_property_list(db_config, start, end, devicePropertyList, lotPropertyList,
                       additional_conditions=None, logger=None):
     """
-    从数据库中查询所需的属性列表，支持额外的WHERE条件限制
+    从数据库中查询所需的属性列表（支持空设备/批次属性列表）
 
     参数:
         db_config: 数据库配置字典
         start: 开始日期，格式如'20250701'
         end: 结束日期，格式如'20250731'
-        operList: 操作列表，如['5600', '5710']
-        devicePropertyList: 设备属性列表，如['Product_Mode', 'Die_Density']
-        lotPropertyList: 批次属性列表，如['grade']
-        additional_conditions: 额外的查询条件列表，每个条件为元组
-                              格式: [(表别名, 字段名, 操作符, 值列表), ...]
-                              例如: [('dd', 'Module_Type', 'IN', ['SD', 'UD'])]
-        logger: 日志记录器
+        devicePropertyList: 设备属性列表（允许空列表/None）
+        lotPropertyList: 批次属性列表（允许空列表/None）
+        additional_conditions: 额外查询条件（可选）
+        logger: 日志记录器（可选）
 
     返回:
         pandas.DataFrame: 查询结果数据框，若出错则返回None
     """
     try:
-        # 构建查询字段
-        device_fields = [f"dd.{field}" for field in devicePropertyList]
-        lot_fields = [f"dy.{field}" for field in lotPropertyList]
-        select_fields = ", ".join(device_fields + lot_fields)
+        # 强制转为列表（避免None）
+        devicePropertyList = devicePropertyList if isinstance(devicePropertyList, list) else []
+        lotPropertyList = lotPropertyList if isinstance(lotPropertyList, list) else []
+
+        # 构建查询字段（处理空列表：若均为空，用默认字段避免SQL错误）
+        device_fields = [f"dd.{field}" for field in devicePropertyList] if devicePropertyList else []
+        lot_fields = [f"dy.{field}" for field in lotPropertyList] if lotPropertyList else []
+        all_fields = device_fields + lot_fields
+
+        # 关键修复：若所有字段为空，设置默认字段（dy.device存在于JOIN后的表中）
+        if not all_fields:
+            if logger:
+                logger.warning("devicePropertyList和lotPropertyList均为空，使用默认字段'dy.device'查询")
+            all_fields = ["dy.device"]  # 默认字段确保SQL语法正确
+        select_fields = ", ".join(all_fields)
+
         # 构建WHERE子句条件
-        where_clauses = [
-            "dy.workdt BETWEEN :start_dt AND :end_dt"
-        ]
-        # 准备参数字典
+        where_clauses = [f"dy.workdt BETWEEN :start_dt AND :end_dt"]
         params = {'start_dt': start, 'end_dt': end}
 
-        # 处理额外的查询条件
+        # 处理额外条件（原逻辑保留，支持空条件）
         condition_counter = 0
-        if additional_conditions:
+        if additional_conditions and isinstance(additional_conditions, list):
             for table_alias, field, operator, values in additional_conditions:
-                # 确保操作符是支持的类型
                 if operator.upper() not in ['IN', '=', '!=', '>', '<', '>=', '<=']:
                     raise ValueError(f"不支持的操作符: {operator}")
 
-                # 为IN操作符创建多个占位符
                 if operator.upper() == 'IN':
                     placeholders = ", ".join([f":cond_{condition_counter}_{i}" for i in range(len(values))])
                     where_clauses.append(f"{table_alias}.{field} {operator} ({placeholders})")
-
-                    # 添加参数
                     for i, value in enumerate(values):
                         params[f'cond_{condition_counter}_{i}'] = value
                 else:
-                    # 处理其他操作符 (=, !=, >, < 等)
                     placeholder = f":cond_{condition_counter}"
                     where_clauses.append(f"{table_alias}.{field} {operator} {placeholder}")
-                    params[placeholder[1:]] = values  # 移除占位符中的冒号
-
+                    params[placeholder[1:]] = values
                 condition_counter += 1
 
-        # 构建完整的SQL查询
+        # 构建SQL（GROUP BY与SELECT字段一致，避免语法错误）
         sql = f"""
             SELECT {select_fields}
             FROM cmsalpha.db_yielddetail dy
@@ -246,20 +247,19 @@ def get_property_list(db_config, start, end, devicePropertyList, lotPropertyList
             ORDER BY {select_fields} ASC
         """
 
-        # 创建数据库连接
+        # 执行查询
         conn_str = (f"mysql+pymysql://{db_config['user']}:{db_config['password']}@"
                     f"{db_config['host']}:{db_config['port']}/?charset={db_config['charset']}")
         engine = create_engine(conn_str)
 
-        # 执行查询
         with engine.connect() as conn:
             result = conn.execute(text(sql), params)
             df = pd.DataFrame(result.fetchall(), columns=result.keys())
 
         if logger:
-            logger.info(f"查询成功，返回{len(df)}条记录")
-            if not df.empty:
-                logger.info(f"查询结果:\n{df.to_string()}")
+            logger.info(f"属性列表查询成功，返回{len(df)}条记录")
+            if not df.empty and logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"查询结果:\n{df.to_string()}")
         return df
 
     except Exception as e:
@@ -270,70 +270,69 @@ def get_property_list(db_config, start, end, devicePropertyList, lotPropertyList
         return None
 
 
+# 获取产品生产数据（支持空设备属性列表）
 def get_product_production_data(db_config, product, additional_conditions, time_type, device_property_list, logger=None):
     try:
-        # 确定时间范围和格式
+        # 强制转为列表（避免None）
+        device_property_list = device_property_list if isinstance(device_property_list, list) else []
+        # 记录空列表状态
+        if not device_property_list and logger:
+            logger.debug(f"产品 {product} 的device_property_list为空，所有属性按批次属性处理")
+
+        # 时间范围逻辑（原逻辑保留）
         if time_type == 'annual':
-            # 前年、去年、今年
             last_month_last_day = datetime.now().replace(day=1) - timedelta(days=1)
             current_year = datetime.now().year
             years = [current_year - 2, current_year - 1, current_year]
             start_date = f"{years[0]}0101"
             end_date = last_month_last_day.strftime('%Y%m%d')
-            # end_date = f"{years[-1]}1231"
-            date_format = "SUBSTRING(dy.workdt, 1, 4)"  # 提取年份
+            date_format = "SUBSTRING(dy.workdt, 1, 4)"
             group_by = "dt, oper_old"
         else:  # monthly
-            # 最近12个月，包含lastMonthLastDay所在月
             last_month_last_day = datetime.now().replace(day=1) - timedelta(days=1)
             start_date = (last_month_last_day - dateutil.relativedelta.relativedelta(months=11)).strftime('%Y%m%d')
             end_date = last_month_last_day.strftime('%Y%m%d')
-            date_format = "SUBSTRING(dy.workdt, 1, 6)"  # 提取年月
+            date_format = "SUBSTRING(dy.workdt, 1, 6)"
             group_by = "dt, oper_old"
 
-        # # 构建oper_list的参数占位符（如:oper_0, :oper_1, ...）
-        # oper_placeholders = [f":oper_{i}" for i in range(len(oper_list))]
+        # 构建WHERE条件（支持空产品属性）
+        where_conditions = [f"dy.workdt BETWEEN :start_date AND :end_date"]
+        params = {"start_date": start_date, "end_date": end_date}
 
-        # 构建产品属性条件
-        where_conditions = [
-            f"dy.workdt BETWEEN :start_date AND :end_date",  # 日期参数化
-        ]
-        # 准备所有参数（关键步骤：将所有占位符与值绑定）
-        params = {
-            "start_date": start_date,  # 绑定日期参数
-            "end_date": end_date
-        }
-        # 添加产品属性过滤条件
-        for prop_name, prop_value in product.properties.items():
-            if prop_name in device_property_list:
-                # 设备属性条件参数化（新增参数占位符）
-                prop_placeholder = f":dd_{prop_name}"
-                where_conditions.append(f"dd.{prop_name} = {prop_placeholder}")
-            else:
-                # 批次属性条件参数化（新增参数占位符）
-                prop_placeholder = f":dy_{prop_name}"
-                where_conditions.append(f"dy.{prop_name} = {prop_placeholder}")
+        # 处理空产品属性（不添加属性过滤条件）
+        if not product.properties:
+            if logger:
+                logger.debug(f"产品 {product} 的properties为空，不添加属性过滤条件")
+        else:
+            # 添加属性过滤（空device列表时，所有属性按批次处理）
+            for prop_name, prop_value in product.properties.items():
+                if prop_name in device_property_list:
+                    prop_placeholder = f":dd_{prop_name}"
+                    where_conditions.append(f"dd.{prop_name} = {prop_placeholder}")
+                else:
+                    prop_placeholder = f":dy_{prop_name}"
+                    where_conditions.append(f"dy.{prop_name} = {prop_placeholder}")
+                params[prop_placeholder[1:]] = prop_value  # 绑定参数（统一处理，避免遗漏）
 
+        # 处理额外条件（原逻辑保留）
         condition_counter = 0
-        if additional_conditions:
+        if additional_conditions and isinstance(additional_conditions, list):
             for table_alias, field, operator, values in additional_conditions:
                 if operator.upper() not in ['IN', '=', '!=', '>', '<', '>=', '<=']:
                     raise ValueError(f"不支持的操作符: {operator}")
 
                 if operator.upper() == 'IN':
-                    # 处理IN条件（如dy.oper_old IN ('5600', '5710')）
                     placeholders = ", ".join([f":cond_{condition_counter}_{i}" for i in range(len(values))])
                     where_conditions.append(f"{table_alias}.{field} {operator} ({placeholders})")
-                    # 绑定参数
                     for i, value in enumerate(values):
                         params[f'cond_{condition_counter}_{i}'] = value
                 else:
-                    # 处理其他条件（=, !=等）
                     placeholder = f":cond_{condition_counter}"
                     where_conditions.append(f"{table_alias}.{field} {operator} {placeholder}")
-                    params[placeholder[1:]] = values  # 移除占位符中的冒号
+                    params[placeholder[1:]] = values
                 condition_counter += 1
-        # 构建SQL查询
+
+        # 构建SQL
         sql = f"""
             SELECT 
                 {date_format} as dt, 
@@ -347,36 +346,24 @@ def get_product_production_data(db_config, product, additional_conditions, time_
             ORDER BY dt ASC
         """
 
-        # if logger:
-        #     logger.debug(f"获取产品数据的SQL: {sql}")
-
-        # 绑定产品属性参数（:dd_xxx 或 :dy_xxx）
-        for prop_name, prop_value in product.properties.items():
-            if prop_name in device_property_list:
-                params[f"dd_{prop_name}"] = prop_value
-            else:
-                params[f"dy_{prop_name}"] = prop_value
-
-        # 创建数据库连接
+        # 执行查询
         conn_str = (f"mysql+pymysql://{db_config['user']}:{db_config['password']}@"
                     f"{db_config['host']}:{db_config['port']}/?charset={db_config['charset']}")
         engine = create_engine(conn_str)
 
-        # 执行查询并传入参数（关键：第二个参数是params）
         with engine.connect() as conn:
-            result = conn.execute(text(sql), params)  # 此处传入参数
+            result = conn.execute(text(sql), params)
             df = pd.DataFrame(result.fetchall(), columns=result.keys())
 
-        # 计算故障率
+        # 计算故障率（支持空DataFrame）
         if not df.empty:
-            # 先计算原始值，再显式四舍五入并转换为float（确保2位小数精度）
             df['fail'] = ((df['in_qty'] - df['out_qty']) / df['in_qty'] * 100).round(2).astype(float)
-            # 填充NaN为0.0（同样确保2位小数）
             df['fail'] = df['fail'].fillna(0.0).round(2)
 
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug(f"产品 {product} 的{time_type}数据: {len(df)}条记录")
-            logger.debug(f"产品 {product} 的{time_type}数据:\n{df.to_string()}")
+            if not df.empty:
+                logger.debug(f"生产数据:\n{df.to_string()}")
         return df
 
     except Exception as e:
@@ -385,79 +372,97 @@ def get_product_production_data(db_config, product, additional_conditions, time_
         return pd.DataFrame()
 
 
+# 填充产品数据（支持空属性列表）
 def populate_product_data(db_config, product_instances, additional_conditions, device_property_list, logger=None):
-    """为所有产品实例填充生产数据"""
-    for i, product in enumerate(product_instances):
+    """为所有产品实例填充生产数据（支持空设备属性列表）"""
+    # 强制转为列表（避免None）
+    device_property_list = device_property_list if isinstance(device_property_list, list) else []
+
+    if not product_instances:
         if logger:
-            logger.info(f"处理产品 {i + 1}/{len(product_instances)}: {product}")
+            logger.warning("product_instances为空，不填充任何生产数据")
+        return
 
-        # 获取年度数据时传入device_property_list
+    for i, product in enumerate(product_instances, 1):
+        if logger:
+            logger.info(f"处理产品 {i}/{len(product_instances)}: {product}")
+
+        # 填充年度数据
         annual_df = get_product_production_data(
-            db_config, product, additional_conditions, 'annual', device_property_list, logger  # 新增参数
+            db_config, product, additional_conditions, 'annual', device_property_list, logger
         )
-
-        # 填充年度数据到产品实例（不变）
         if not annual_df.empty:
             for _, row in annual_df.iterrows():
                 product.add_annual_oper_data(
-                    int(row['dt']),  # 年份
-                    row['oper_old'],
-                    int(row['in_qty']),
-                    int(row['out_qty'])
+                    int(row['dt']), row['oper_old'], int(row['in_qty']), int(row['out_qty'])
                 )
+        else:
+            if logger:
+                logger.debug(f"产品 {product} 无年度生产数据")
 
-        # 获取月度数据时传入device_property_list
+        # 填充月度数据
         monthly_df = get_product_production_data(
-            db_config, product, additional_conditions, 'monthly', device_property_list, logger  # 新增参数
+            db_config, product, additional_conditions, 'monthly', device_property_list, logger
         )
-
-        # 填充月度数据到产品实例（不变）
         if not monthly_df.empty:
             for _, row in monthly_df.iterrows():
                 product.add_monthly_oper_data(
-                    row['dt'],  # 年月格式如'202501'
-                    row['oper_old'],
-                    int(row['in_qty']),
-                    int(row['out_qty'])
+                    row['dt'], row['oper_old'], int(row['in_qty']), int(row['out_qty'])
                 )
+        else:
+            if logger:
+                logger.debug(f"产品 {product} 无月度生产数据")
 
 
+# 处理所有产品（支持空属性列表）
 def process_all_products(db_config, pc_property_df, sv_property_df,
                          device_property_list, lot_property_list,
                          oper_list, additional_conditions_pc, additional_conditions_sv, logger=None):
-    """处理所有PC和Server产品"""
-    # 创建产品实例
+    """处理所有PC和Server产品（支持空设备/批次属性列表）"""
+    # 强制转为列表（避免None）
+    device_property_list = device_property_list if isinstance(device_property_list, list) else []
+    lot_property_list = lot_property_list if isinstance(lot_property_list, list) else []
+
+    # 创建PC产品实例
     if logger:
-        logger.info("创建PC产品实例...")
+        logger.info("开始创建PC产品实例...")
     pc_products = create_product_instances(
-        pc_property_df, device_property_list, lot_property_list
+        pc_property_df, device_property_list, lot_property_list, logger=logger
     )
 
+    # 创建Server产品实例
     if logger:
-        logger.info("创建Server产品实例...")
+        logger.info("开始创建Server产品实例...")
     sv_products = create_product_instances(
-        sv_property_df, device_property_list, lot_property_list
+        sv_property_df, device_property_list, lot_property_list, logger=logger
     )
 
-    # 填充生产数据
+    # 填充PC产品数据
     if logger:
-        logger.info("填充PC产品数据...")
+        logger.info("开始填充PC产品生产数据...")
     populate_product_data(db_config, pc_products, additional_conditions_pc, device_property_list, logger)
 
+    # 填充Server产品数据
     if logger:
-        logger.info("填充Server产品数据...")
+        logger.info("开始填充Server产品生产数据...")
     populate_product_data(db_config, sv_products, additional_conditions_sv, device_property_list, logger)
+
+    # 计算fail统计（原逻辑保留，支持空数据）
+    for product in pc_products + sv_products:
+        product.calculate_annual_fail_stats()
+        product.calculate_monthly_fail_stats()
 
     return pc_products, sv_products
 
 
+# 日志输出表格（支持空产品列表/空数据）
 def log_fail_tables(product_list, product_type, logger):
-    """输出产品不良数据表格日志"""
+    """输出产品不良数据表格日志（支持空数据）"""
     if not product_list:
-        logger.info(f"没有{product_type}产品数据可输出")
+        logger.info(f"没有{product_type}产品数据可输出（产品列表为空）")
         return
 
-    # 获取需要展示的年度和月度周期
+    # 周期定义（原逻辑保留）
     current_year = datetime.now().year
     annual_periods = [current_year - 2, current_year - 1, current_year]
     annual_periods_str = [str(y) for y in annual_periods]
@@ -476,55 +481,52 @@ def log_fail_tables(product_list, product_type, logger):
     for fail_type, title in fail_types:
         logger.info(f"\n===== {title} =====")
 
-        # 构建表格数据
-        table_data = []
-        headers = ["Product"] + annual_periods_str + monthly_periods
-        table_data.append(headers)
-
-        # 收集所有行数据
+        # 构建表格数据（支持空数据）
+        table_data = [["Product"] + annual_periods_str + monthly_periods]  # 表头
         for product in product_list:
             row = [product.get_product_display_name()]
-
-            # 添加年度数据
+            # 年度数据（空值显示空字符串）
             for year in annual_periods:
                 year_data = product.annual_data.get(year, {})
                 fail_val = year_data.get('fail_stats', {}).get(fail_type)
                 row.append(f"{fail_val:.2f}" if fail_val is not None else "")
-
-            # 添加月度数据
+            # 月度数据（空值显示空字符串）
             for month in monthly_periods:
                 month_data = product.monthly_data.get(month, {})
                 fail_val = month_data.get('fail_stats', {}).get(fail_type)
                 row.append(f"{fail_val:.2f}" if fail_val is not None else "")
-
             table_data.append(row)
 
-        # 计算每列最大宽度
-        col_widths = [max(len(str(row[i])) for row in table_data) for i in range(len(headers))]
+        # 格式化输出（支持空表格）
+        if len(table_data) <= 1:
+            logger.info("无不良数据可显示")
+            logger.info(f"===== {title} 结束 =====\n")
+            continue
 
-        # 输出表头
-        header_row = " | ".join([f"{str(h).ljust(col_widths[i])}" for i, h in enumerate(headers)])
+        # 计算列宽
+        col_widths = [max(len(str(row[i])) for row in table_data) for i in range(len(table_data[0]))]
+        # 表头
+        header_row = " | ".join([f"{str(h).ljust(col_widths[i])}" for i, h in enumerate(table_data[0])])
         logger.info(header_row)
-
-        # 输出分隔线
+        # 分隔线
         separator = "-|-".join(["-" * w for w in col_widths])
         logger.info(separator)
-
-        # 输出数据行
+        # 数据行
         for row in table_data[1:]:
             data_row = " | ".join([f"{str(cell).ljust(col_widths[i])}" for i, cell in enumerate(row)])
             logger.info(data_row)
 
-        logger.info(f"===== {title} 结束 =====")
+        logger.info(f"===== {title} 结束 =====\n")
 
 
+# 日志输出QTY表格（支持空数据）
 def log_qty_table(product_list, product_type, logger):
-    """新增：输出5600工序in数量表（以5600 in为基准，空值用0）"""
+    """输出5600工序in数量表（支持空数据）"""
     if not product_list:
-        logger.info(f"没有{product_type}产品的QTY数据可输出")
+        logger.info(f"没有{product_type}产品的QTY数据可输出（产品列表为空）")
         return
 
-    # 周期定义（与不良表一致）
+    # 周期定义（原逻辑保留）
     current_year = datetime.now().year
     annual_periods = [current_year - 2, current_year - 1, current_year]
     annual_periods_str = [str(y) for y in annual_periods]
@@ -535,43 +537,40 @@ def log_qty_table(product_list, product_type, logger):
 
     logger.info(f"\n===== {product_type} QTY数据（5600工序in数量） =====")
 
-    # 表格数据（空值用0）
-    table_data = []
-    headers = ["Product"] + annual_periods_str + monthly_periods
-    table_data.append(headers)
-
+    # 构建表格数据（支持空数据）
+    table_data = [["Product"] + annual_periods_str + monthly_periods]
     for product in product_list:
         row = [product.get_product_display_name()]
-
-        # 年度5600 in数量（空值→0）
+        # 年度数据（空值返回0）
         for year in annual_periods:
-            in_qty = product.get_5600_in_qty(year, is_annual=True)
-            row.append(str(in_qty))  # 整数格式
-
-        # 月度5600 in数量（空值→0）
+            row.append(str(product.get_5600_in_qty(year, is_annual=True)))
+        # 月度数据（空值返回0）
         for month in monthly_periods:
-            in_qty = product.get_5600_in_qty(month, is_annual=False)
-            row.append(str(in_qty))
-
+            row.append(str(product.get_5600_in_qty(month, is_annual=False)))
         table_data.append(row)
 
     # 格式化输出
-    col_widths = [max(len(str(row[i])) for row in table_data) for i in range(len(headers))]
-    header_row = " | ".join([f"{h.ljust(col_widths[i])}" for i, h in enumerate(headers)])
+    if len(table_data) <= 1:
+        logger.info("无QTY数据可显示")
+        logger.info(f"===== {product_type} QTY数据结束 =====\n")
+        return
+
+    col_widths = [max(len(str(row[i])) for row in table_data) for i in range(len(table_data[0]))]
+    header_row = " | ".join([f"{h.ljust(col_widths[i])}" for i, h in enumerate(table_data[0])])
     logger.info(header_row)
     logger.info("-|-".join(["-" * w for w in col_widths]))
     for row in table_data[1:]:
         data_row = " | ".join([f"{cell.ljust(col_widths[i])}" for i, cell in enumerate(row)])
         logger.info(data_row)
 
-    logger.info(f"===== {product_type} QTY数据结束 =====")
+    logger.info(f"===== {product_type} QTY数据结束 =====\n")
 
 
 def main(mode):
     # 初始化日志记录器
     log_name = datetime.today().strftime('%Y%m%d')
     try:
-        # 数据库配置
+        # 数据库配置（原逻辑保留，建议将密码等敏感信息移到环境变量）
         db_config = {
             'host': None,
             'user': 'remoteuser',
@@ -581,7 +580,7 @@ def main(mode):
             'port': 3306,
         }
 
-        # 根据模式选择数据库主机
+        # 环境选择（原逻辑保留）
         if mode == 'test':
             db_config['host'] = 'localhost'
             log_path = "C:/Users/Tengjun Zhao/Desktop"
@@ -604,30 +603,25 @@ def main(mode):
             logger.info("使用生产环境数据库(172.27.154.57)")
         logger.info("程序开始运行")
 
-        # 获取上个月的最后一天
+        # 时间范围定义（原逻辑保留）
         lastMonthLastDay = datetime.now().replace(day=1) - timedelta(days=1)
         str_endWorkdt = lastMonthLastDay.strftime('%Y%m%d')
         lastMonthFirstDay = lastMonthLastDay.replace(day=1)
         str_startWorkdt = lastMonthFirstDay.strftime('%Y%m%d')
-        # 当年的1月1日
-        startWorkdt = datetime.now().replace(month=1, day=1)
-        str_thisYearWorkdt = startWorkdt.strftime('%Y%m%d')
-        # 3年前的1月1日
-        thrWorkdt = startWorkdt - dateutil.relativedelta.relativedelta(years=3)
-        str_thrWorkdt = thrWorkdt.strftime('%Y%m%d')
 
-        # 准备作业参数
+        # 作业参数（可测试空列表：devicePropertyList = []，lotPropertyList = []）
         operList = ['5600', '5710', '5700', '5780']
-        devicePropertyList = ['Product_Mode', 'Product_Density']
-        lotPropertyList = ['grade']
+        devicePropertyList = ['Product_Mode', 'Product_Density']  # 测试空列表时改为 []
+        lotPropertyList = []  # 测试空列表时改为 []
         pcType = ['SD', 'UD']
         svType = ['RD', 'LD']
-        # Step1：获取属性列表
-        logger.info("PC向列表")
+
+        # Step1：获取PC属性列表
+        logger.info("开始查询PC产品属性列表...")
         additional_conditions_pc = [
-            ('dd', 'Module_Type', 'IN', pcType),  # dd.Module_Type IN ('SD', 'UD')
+            ('dd', 'Module_Type', 'IN', pcType),
             ('dy', 'oper_old', 'IN', operList),
-            ('dd', 'Product_Mode', '=', 'DDR4 DIMM'),
+            ('dd', 'Product_Mode', '=', 'DDR5 DIMM')
         ]
         pcPropertyList = get_property_list(
             db_config=db_config,
@@ -638,11 +632,13 @@ def main(mode):
             additional_conditions=additional_conditions_pc,
             logger=logger
         )
-        logger.info("Server向列表")
+
+        # Step2：获取Server属性列表
+        logger.info("开始查询Server产品属性列表...")
         additional_conditions_sv = [
-            ('dd', 'Module_Type', 'IN', svType),  # dd.Module_Type IN ('RD', 'LD')
+            ('dd', 'Module_Type', 'IN', svType),
             ('dy', 'oper_old', 'IN', operList),
-            ('dd', 'Product_Mode', '=', 'DDR4 DIMM'),
+            ('dd', 'Product_Mode', '=', 'DDR5 DIMM')
         ]
         svPropertyList = get_property_list(
             db_config=db_config,
@@ -654,10 +650,11 @@ def main(mode):
             logger=logger
         )
 
+        # Step3：处理所有产品（支持空属性列表）
         pc_products, sv_products = process_all_products(
             db_config=db_config,
-            pc_property_df=pcPropertyList,
-            sv_property_df=svPropertyList,
+            pc_property_df=pcPropertyList if pcPropertyList is not None else pd.DataFrame(),
+            sv_property_df=svPropertyList if svPropertyList is not None else pd.DataFrame(),
             device_property_list=devicePropertyList,
             lot_property_list=lotPropertyList,
             oper_list=operList,
@@ -666,23 +663,17 @@ def main(mode):
             logger=logger
         )
 
-        for product in pc_products:
-            annual_stats_df = product.calculate_annual_fail_stats()
-            monthly_stats_df = product.calculate_monthly_fail_stats()
-
-        for product in sv_products:
-            annual_stats_df = product.calculate_annual_fail_stats()
-            monthly_stats_df = product.calculate_monthly_fail_stats()
-
-        # 输出日志表格（包含新增的qty表）
+        # Step4：输出日志表格（支持空数据）
         log_fail_tables(pc_products, "PC", logger)
         log_fail_tables(sv_products, "SV", logger)
-        log_qty_table(pc_products, "PC", logger)  # 新增QTY表
-        log_qty_table(sv_products, "SV", logger)  # 新增QTY表
+        log_qty_table(pc_products, "PC", logger)
+        log_qty_table(sv_products, "SV", logger)
+
+        logger.info("程序运行结束")
 
     except Exception as e:
         logger.critical(f"程序主流程出错: {str(e)}", exc_info=True)
 
 
 if __name__ == '__main__':
-    main('test')
+    main('test')  # 测试时使用'test'模式，生产环境改为其他模式
