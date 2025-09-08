@@ -381,11 +381,18 @@ class ProcessGenerator:
                             if not target_values:
                                 continue
 
+                            # 从config.json映射到db_deviceinfo表
                             device_field_map = {
                                 "mode": "Product_Mode",
                                 "speed": "Speed_Code",
-                                "product_mode": "Product_Mode",
-                                "speed_code": "Speed_Code"
+                                "module_type": "Module_Type",
+                                "tech": "Tech_Name",
+                                "package_density": "PKG_Density",
+                                "module_density": "Product_Density",
+                                "family": "Product_Family",
+                                "module_config": "Module_Config",
+                                "organization": "Organization",
+                                "device_group": "Product_Group_ID"
                             }
                             db_field = device_field_map.get(prop.lower(), prop)
                             actual_value = device_info.get(db_field)
@@ -404,9 +411,30 @@ class ProcessGenerator:
                             if not target_values:
                                 continue
 
-                            actual_value = wip_row.get(prop.lower())
-                            if actual_value not in target_values:
+                            # 处理hist_code的特殊逻辑：使用batch_no的最后四位
+                            if prop.lower() == "hist_code":
+                                # 获取batch_no并处理空值
+                                batch_no = wip_row.get("batch_no")
+                                if batch_no is None:
+                                    # 若batch_no为空，直接不匹配
+                                    dy_match = False
+                                    break
+
+                                # 转换为字符串并取最后四位（不足四位则取全部）
+                                batch_str = str(batch_no).strip()
+                                actual_value = batch_str[-4:] if len(batch_str) >= 4 else batch_str
+                            else:
+                                # 其他属性正常从wip_row获取值
+                                actual_value = wip_row.get(prop.lower())
+                                # 转换为字符串避免类型比较问题
+                                actual_value = str(actual_value).strip() if actual_value is not None else ""
+
+                            # 目标值统一转为字符串进行比较
+                            target_values_str = [str(tv).strip() for tv in target_values]
+
+                            if actual_value not in target_values_str:
                                 dy_match = False
+                                logger.debug(f"属性[{prop}]不匹配，实际值[{actual_value}]不在目标值[{target_values}]中")
                                 break
                         if not dy_match:
                             continue
