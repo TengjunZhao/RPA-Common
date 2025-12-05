@@ -165,6 +165,12 @@ class PGMOmsHistory(Base):
     fac_id = Column(String(50), comment='工厂ID')
     process_name = Column(String(255), comment='流程名称')
     process_status_code = Column(String(50), comment='流程状态代码')
+
+    # 添加缺失的字段
+    tat_days = Column(Float, comment='TAT天数')
+    tat_marking = Column(String(50), comment='TAT标记')
+    info_object = Column(String(100), comment='信息对象')
+
     fetched_at = Column(DateTime, default=func.now(), comment='获取时间')
 
     def to_dict(self):
@@ -182,6 +188,9 @@ class PGMOmsHistory(Base):
             'fac_id': self.fac_id,
             'process_name': self.process_name,
             'process_status_code': self.process_status_code,
+            'tat_days': self.tat_days,
+            'tat_marking': self.tat_marking,
+            'info_object': self.info_object,
             'fetched_at': self.fetched_at.isoformat() if self.fetched_at else None
         }
 

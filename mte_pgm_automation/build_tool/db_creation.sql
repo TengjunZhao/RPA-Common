@@ -86,6 +86,11 @@ CREATE TABLE IF NOT EXISTS PGM_OMS_HISTORY (
     process_name VARCHAR(255),
     process_status_code VARCHAR(50),
 
+    -- TAT相关
+    tat_days FLOAT COMMENT 'TAT天数',
+    tat_marking VARCHAR(50) COMMENT 'TAT标记',
+    info_object VARCHAR(100) COMMENT '信息对象';
+
     -- 时间戳
     fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '获取时间',
 
