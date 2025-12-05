@@ -1,0 +1,190 @@
+{
+  "environment": "test",
+  "database": {
+    "test": {
+      "host": "localhost",
+      "port": 3306,
+      "username": "remoteuser",
+      "password": "password",
+      "database": "cmsalpha",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci"
+    },
+    "production": {
+      "host": "172.27.154.57",
+      "port": 3306,
+      "username": "remoteuser",
+      "password": "password",
+      "database": "cmsalpha",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci"
+    }
+  },
+  "oms": {
+    "api_base": "https://apihtts.skhynix.com",
+    "auth_endpoint": "/auth/sign/in",
+    "data_endpoint": "/bpms/test-pgm/module/distribute-status",
+    "credentials": {
+      "test": {
+        "user_id": "Z130090",
+        "password": "MOqWPX1knyOY4up4Gezk3g==",
+        "decryption_key": "test_key_123"
+      },
+      "production": {
+        "user_id": "生产用户ID",
+        "password": "生产加密密码",
+        "decryption_key": "production_key_456"
+      }
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0",
+      "Content-Type": "application/json",
+      "Accept": "application/json, text/plain, */*"
+    }
+  },
+  "file_paths": {
+    "test": {
+      "local_verify": "D:/Python/RPA Common/PGM Automation/pgm file",
+      "local_apply": "D:/Python/RPA Common/PGM Automation/apply",
+      "temp_dir": "D:/Python/RPA Common/PGM Automation/temp"
+    },
+    "production": {
+      "local_verify": "\\\\172.27.7.188\\Mod_TestE\\23. PGM Automation",
+      "local_apply": "待确认的生产环境路径",
+      "temp_dir": "C:/Temp/PGM_Automation"
+    }
+  },
+  "ftp": {
+    "et": {
+      "host": "172.27.3.41",
+      "port": 21,
+      "username": "modetup",
+      "password": "aa12345678",
+      "remote_root": "/et_pgm/",
+      "timeout": 30
+    },
+    "at": {
+      "host": "172.27.3.41",
+      "port": 21,
+      "username": "modappup",
+      "password": "aa12345678",
+      "remote_root": "/at_pgm/",
+      "timeout": 30
+    }
+  },
+  "email": {
+    "smtp_server": "smtp.office365.com",
+    "smtp_port": 587,
+    "use_tls": true,
+    "sender_email": "pgm.alarm@company.com",
+    "sender_name": "PGM Automation System",
+    "credentials": {
+      "test": {
+        "username": "test@company.com",
+        "password": "test_password"
+      },
+      "production": {
+        "username": "production@company.com",
+        "password": "production_password"
+      }
+    },
+    "recipients": {
+      "tat_alarm": ["team.lead@company.com", "pgm.engineer@company.com"],
+      "system_error": ["system.admin@company.com"],
+      "daily_report": ["manager@company.com"]
+    },
+    "tat_thresholds": {
+      "notice_hours": 24,
+      "warning_hours": 48,
+      "alarm_hours": 72
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "file_path": "./logs/pgm_automation.log",
+    "max_size_mb": 10,
+    "backup_count": 5,
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "date_format": "%Y-%m-%d %H:%M:%S"
+  },
+  "rpa_settings": {
+    "fetch_interval_minutes": 30,
+    "verify_interval_minutes": 15,
+    "apply_check_interval_minutes": 10,
+    "alarm_check_times": ["09:00", "12:00", "15:00", "18:00"],
+    "monitor_interval_hours": 2,
+    "max_retries": 3,
+    "retry_delay_seconds": 60
+  },
+  "hess_settings": {
+    "valid_extensions": [".xlsx", ".xls", ".csv"],
+    "at_identifier_cell": "X1",
+    "at_identifier_value": "HDIAG DIR",
+    "et_identifier_cell": "X1",
+    "et_identifier_value": "NEW PGM ID",
+    "at_path_column": "Y",
+    "et_path_column": "X",
+    "product_columns": {
+      "fab": 2,
+      "oper": 6,
+      "mod_type": 7,
+      "grade": 9,
+      "pkg": 10,
+      "equip": 11,
+      "p_io": 12,
+      "tech": 13,
+      "den": 16,
+      "dir_p": 25
+    }
+  },
+  "pgm_verification": {
+    "pgm_types": {
+      "at_extensions": [".xml"],
+      "et_extensions": [".obj"],
+      "zip_extensions": [".zip"]
+    },
+    "comparison_codes": {
+      "da0de0ha1he1": "仅有ET/AT HESS",
+      "da0de0ha0he1": "仅有ET HESS",
+      "da0de0ha1he0": "仅有AT HESS",
+      "da0de0ha0he0": "无有效的PGM以及HESS",
+      "da0de1ha0he0": "缺ET HESS",
+      "da0de1ha1he0": "错发AT HESS",
+      "da0de1ha1he1": "ET 匹配，多发AT HESS",
+      "da0de3ha1he1": "ET 不匹配，多发AT HESS",
+      "da0de1ha1he2": "ET HESS多余，多发AT HESS",
+      "da0de2ha1he1": "ET HESS不足，多发AT HESS",
+      "da0de1ha0he1": "ET 匹配",
+      "da0de3ha0he1": "ET 不匹配",
+      "da0de1ha0he2": "ET HESS多余",
+      "da0de2ha0he1": "ET HESS不足",
+      "da1de0ha1he1": "AT 匹配，多发ET HESS",
+      "da1de0ha2he1": "AT HESS多余，多发ET HESS",
+      "da2de0ha1he1": "AT HESS不足，多发ET HESS",
+      "da1de0ha0he1": "错发ET HESS",
+      "da1de0ha1he0": "AT 匹配",
+      "da1de0ha2he0": "AT HESS多余",
+      "da2de0ha1he0": "AT HESS不足",
+      "da1de0ha0he0": "缺AT HESS",
+      "da1de1ha1he1": "AT 匹配，ET 匹配",
+      "da1de3ha1he1": "AT 匹配，ET 不匹配",
+      "da3de1ha1he1": "AT 不匹配，ET 匹配",
+      "da3de3ha1he1": "AT 不匹配，ET 不匹配",
+      "da1de1ha2he1": "AT HESS多余，ET 匹配",
+      "da1de1ha2he2": "AT HESS多余，ET HESS多余",
+      "da1de2ha2he1": "AT HESS多余，ET HESS不足",
+      "da2de1ha1he1": "AT HESS不足，ET 匹配",
+      "da2de1ha1he2": "AT HESS不足，ET HESS多余",
+      "da2de2ha1he1": "AT HESS不足，ET HESS不足",
+      "da1de1ha0he1": "缺AT HESS，ET 匹配",
+      "da1de3ha0he1": "缺AT HESS，ET 不匹配",
+      "da1de1ha0he2": "缺AT HESS，ET HESS多余",
+      "da1de2ha0he1": "缺AT HESS，ET HESS不足",
+      "da1de1ha1he0": "AT 匹配，缺ET HESS",
+      "da3de1ha1he0": "AT 不匹配，缺ET HESS",
+      "da1de1ha2he0": "AT HESS多余，缺ET HESS",
+      "da2de1ha1he0": "AT HESS不足，缺ET HESS",
+      "da1de1ha0he0": "缺AT HESS，缺ET HESS"
+    }
+  }
+}

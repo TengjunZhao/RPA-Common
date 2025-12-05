@@ -2,7 +2,7 @@ import json
 import requests
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine, Column, String, Integer
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from urllib.parse import quote
 
@@ -87,7 +87,7 @@ def get_date_params():
     """生成日期参数（beginDate: 当日11天前, endDate: 当日后一天）"""
     today = datetime.now()
     # 计算日期部分（包含时间，格式为标准的yyyy-MM-dd HH:mm:ss）
-    begin_date = (today - timedelta(days=11)).strftime("%Y-%m-%d 07:00:00")  # 11天前的日期
+    begin_date = (today - timedelta(days=1)).strftime("%Y-%m-%d 07:00:00")  # 11天前的日期
     end_date = (today + timedelta(days=1)).strftime("%Y-%m-%d 07:00:00")  # 后一天的日期
 
     print(f"📅 日期参数: beginDate={begin_date}, endDate={end_date}")
@@ -208,9 +208,8 @@ def calculate_tat(work_start_tm):
     """计算TAT（当前时间 - 开始时间，单位：天）"""
     try:
         # 解析work_start_tm（格式：MM/DD HH:MM），暂用当前年份
-        current_year = datetime.now().year
-        start_str = f"{current_year}-{work_start_tm}"
-        start_time = datetime.strptime(start_str, "%Y-%m/%d %H:%M")
+        start_str = f"{work_start_tm}"
+        start_time = datetime.strptime(start_str, "%Y/%m/%d %H:%M")
         tat = (datetime.now() - start_time).total_seconds() / (24 * 3600)  # 转换为天
         return round(tat, 2)
     except Exception as e:
@@ -329,6 +328,7 @@ def main(mode):
 
         # 2. 登录OMS获取token
         token = login_oms(oms_config)
+
 
         # 3. 获取数据列表
         raw_data = get_data_list(token)
