@@ -1,8 +1,10 @@
 build/
-.idea
+**/.idea/
 Lib/
 Scripts/
 dist/
 analysis/
 import_lyld.spec
 .idea/MarsCodeWorkspaceAppSettings.xml
+**/__pycache__/
+*.py[cod]
