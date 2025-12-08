@@ -34,18 +34,36 @@ class OMSClient:
         self.token = None
         self.token_expiry = None
 
+        # ET和AT API端点
+        self.et_detail_endpoint = "/bpms/test-pgm/module/dram-et/process-id"
+        self.at_detail_endpoint = "/bpms/test-pgm/module/dram-at/process-id"
+
         # 缓存最近查询的PGM数据（可选）
         self.cache = {}
         self.cache_ttl = 300  # 5分钟缓存
 
         self.logger.info("🔧 OMS客户端初始化完成")
 
-    def _get_headers(self) -> Dict[str, str]:
-        """获取请求头"""
+    def _get_headers(self, additional_headers: Dict[str, str] = None) -> Dict[str, str]:
         headers = self.config['headers'].copy()
+        """获取请求头"""
+        headers.update({
+            "uiId": "ModuleTestPgmDistributeStatus",
+            "uiName": "BPM%20%3E%20MOD%20Test%20PGM%20Distribute%20Status",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-ch-ua": "\"Microsoft Edge\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+            "sec-ch-ua-mobile": "?0",
+            "Accept": "application/json, text/plain, */*",
+            "Sec-Fetch-Site": "same-site",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Dest": "empty"
+        })
 
         if self.token:
             headers['Authorization'] = self.token
+
+        if additional_headers:
+            headers.update(additional_headers)
 
         return headers
 
@@ -70,7 +88,6 @@ class OMSClient:
             }
 
             self.logger.info(f"🔑 正在登录OMS系统: {self.config['user_id']}")
-            self.logger.debug(f"登录URL: {login_url}")
 
             response = requests.post(
                 login_url,
@@ -112,54 +129,30 @@ class OMSClient:
             return self.login()
         return True
 
-    def get_pgm_distribution_status(self,
-                                    begin_date: Optional[str] = None,
-                                    end_date: Optional[str] = None,
-                                    force_refresh: bool = False) -> List[Dict[str, Any]]:
+    def get_et_pgm_details(self, process_id: str, work_sequence: int) -> Optional[Dict[str, Any]]:
         """
-        获取PGM分发状态
+        获取ET PGM详细信息
 
         Args:
-            begin_date: 开始日期 (格式: "YYYY-MM-DD HH:MM:SS")
-            end_date: 结束日期 (格式: "YYYY-MM-DD HH:MM:SS")
-            force_refresh: 是否强制刷新缓存
+            process_id: 流程ID (UUID格式)
+            work_sequence: 工作序列号
 
         Returns:
-            PGM分发状态列表
+            ET PGM详细信息
         """
-        cache_key = f"distribution_status_{begin_date}_{end_date}"
-
-        # 检查缓存
-        if not force_refresh and cache_key in self.cache:
-            cache_data, cache_time = self.cache[cache_key]
-            if time.time() - cache_time < self.cache_ttl:
-                self.logger.debug(f"📦 使用缓存的PGM分发状态数据")
-                return cache_data
-
         try:
-            # 确保已登录
             if not self._ensure_login():
-                self.logger.error("❌ 获取PGM分发状态失败: 登录无效")
-                return []
+                self.logger.error("❌ 获取ET详情失败: 登录无效")
+                return None
 
-            # 设置默认日期范围
-            if not begin_date or not end_date:
-                today = datetime.now()
-                begin_date = (today - timedelta(days=11)).strftime("%Y-%m-%d 07:00:00")
-                end_date = (today + timedelta(days=1)).strftime("%Y-%m-%d 07:00:00")
-
-            url = urljoin(self.config['api_base'], self.config['data_endpoint'])
+            url = urljoin(self.config['api_base'], self.et_detail_endpoint)
 
             params = {
-                "factoryId": "OSMOD",
-                "companyId": "HITECH",
-                "beginDate": begin_date,
-                "endDate": end_date
+                "processId": process_id,
+                "workSequence": work_sequence
             }
 
-            self.logger.info(f"📋 获取PGM分发状态: {begin_date} 到 {end_date}")
-            self.logger.debug(f"请求URL: {url}")
-            self.logger.debug(f"请求参数: {params}")
+            self.logger.info(f"📋 获取ET PGM详情: process_id={process_id}, work_sequence={work_sequence}")
 
             start_time = time.time()
             response = requests.get(
@@ -174,131 +167,263 @@ class OMSClient:
 
             data = response.json()
 
-            self.logger.info(f"✅ 成功获取PGM分发状态，共{len(data)}条记录")
-            self.logger.debug(f"响应时间: {response_time:.2f}秒")
+            self.logger.info(f"✅ 成功获取ET PGM详情，响应时间: {response_time:.2f}秒")
 
-            # 缓存结果
-            self.cache[cache_key] = (data, time.time())
+            # 提取关键信息
+            extracted_data = self._extract_et_info(data, process_id, work_sequence)
 
-            return data
+            return extracted_data
 
         except requests.exceptions.RequestException as e:
-            self.logger.error(f"❌ 获取PGM分发状态失败 (网络错误): {str(e)}")
-
-            # 网络错误时尝试刷新token并重试一次
-            if "401" in str(e) or "403" in str(e):
-                self.logger.info("🔄 Token可能过期，尝试重新登录...")
-                self.token = None
-                return self.get_pgm_distribution_status(begin_date, end_date, force_refresh)
-
-            return []
+            self.logger.error(f"❌ 获取ET PGM详情失败 (网络错误): {str(e)}")
+            return None
         except json.JSONDecodeError as e:
-            self.logger.error(f"❌ 获取PGM分发状态失败 (JSON解析错误): {str(e)}")
-            return []
+            self.logger.error(f"❌ 获取ET PGM详情失败 (JSON解析错误): {str(e)}")
+            return None
         except Exception as e:
-            self.logger.error(f"❌ 获取PGM分发状态失败 (未知错误): {str(e)}")
-            return []
+            self.logger.error(f"❌ 获取ET PGM详情失败 (未知错误): {str(e)}")
+            return None
 
-    def get_new_pgms(self, last_check_time: Optional[datetime] = None) -> List[Dict[str, Any]]:
+    def get_at_pgm_details(self, process_id: str, work_sequence: int) -> Optional[Dict[str, Any]]:
         """
-        获取新的PGM（自上次检查后新增的）
+        获取AT PGM详细信息
 
         Args:
-            last_check_time: 上次检查时间
+            process_id: 流程ID (UUID格式)
+            work_sequence: 工作序列号
 
         Returns:
-            新的PGM列表
+            AT PGM详细信息
         """
         try:
-            # 如果没有指定上次检查时间，默认检查过去1天的数据
-            if not last_check_time:
-                last_check_time = datetime.now() - timedelta(days=1)
+            if not self._ensure_login():
+                self.logger.error("❌ 获取AT详情失败: 登录无效")
+                return None
 
-            begin_date = last_check_time.strftime("%Y-%m-%d %H:%M:%S")
-            end_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            url = urljoin(self.config['api_base'], self.at_detail_endpoint)
 
-            all_pgms = self.get_pgm_distribution_status(begin_date, end_date)
+            params = {
+                "processId": process_id,
+                "workSequence": work_sequence
+            }
 
-            # 过滤出新的PGM（这里可以根据业务逻辑进一步过滤）
-            new_pgms = []
-            for pgm in all_pgms:
-                # 示例过滤逻辑：只获取特定状态或类型的PGM
-                work_type_desc = pgm.get('workTypeDesc', '')
-                complete_yn = pgm.get('completeYn', '')
+            self.logger.info(f"📋 获取AT PGM详情: process_id={process_id}, work_sequence={work_sequence}")
 
-                # 可以根据实际需求调整过滤条件
-                if 'PGM' in str(pgm.get('processName', '')).upper():
-                    new_pgms.append(pgm)
+            start_time = time.time()
+            response = requests.get(
+                url,
+                params=params,
+                headers=self._get_headers(),
+                timeout=60
+            )
+            response_time = time.time() - start_time
 
-            self.logger.info(f"📊 发现 {len(new_pgms)} 个新的PGM")
+            response.raise_for_status()
 
-            return new_pgms
+            data = response.json()
+
+            self.logger.info(f"✅ 成功获取AT PGM详情，响应时间: {response_time:.2f}秒")
+
+            # 提取关键信息
+            extracted_data = self._extract_at_info(data, process_id, work_sequence)
+
+            return extracted_data
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"❌ 获取AT PGM详情失败 (网络错误): {str(e)}")
+            return None
+        except json.JSONDecodeError as e:
+            self.logger.error(f"❌ 获取AT PGM详情失败 (JSON解析错误): {str(e)}")
+            return None
+        except Exception as e:
+            self.logger.error(f"❌ 获取AT PGM详情失败 (未知错误): {str(e)}")
+            return None
+
+    def _extract_et_info(self, data: Dict[str, Any], process_id: str, work_sequence: int) -> Dict[str, Any]:
+        """提取ET信息"""
+        try:
+            extracted = {
+                'process_id': process_id,
+                'work_sequence': work_sequence,
+                'type': 'ET',
+                'extracted_at': datetime.now().isoformat(),
+                'pgm_records': [],
+                'file_info': [],
+                'work_info': {}
+            }
+
+            # 提取工作详情
+            if 'workDetailViews' in data and data['workDetailViews']:
+                work_detail = data['workDetailViews'][0]
+                extracted['work_info'] = {
+                    'process_name': work_detail.get('processName'),
+                    'work_name': work_detail.get('workName'),
+                    'status': work_detail.get('status'),
+                    'process_start_time': work_detail.get('processStartTime'),
+                    'process_end_time': work_detail.get('processEndTime'),
+                    'work_start_time': work_detail.get('workStartTime'),
+                    'work_end_time': work_detail.get('workEndTime'),
+                    'factory': work_detail.get('factory'),
+                    'specified_work_user': work_detail.get('specifiedWorkUserName')
+                }
+
+                # 提取文件信息
+                if 'file' in work_detail and work_detail['file']:
+                    for file_item in work_detail['file']:
+                        file_info = {
+                            'file_download_id': file_item.get('fileDownloadId'),
+                            'file_name': file_item.get('fileName'),
+                            'size': file_item.get('size')
+                        }
+                        extracted['file_info'].append(file_info)
+
+            # 提取PGM记录
+            if 'testProgramModuleDramEtViews' in data:
+                for pgm_record in data['testProgramModuleDramEtViews']:
+                    pgm_info = {
+                        'draft_id': pgm_record.get('draftId'),
+                        'pgm_id': pgm_record.get('pgmId'),
+                        'pgm_rev_ver': pgm_record.get('pgmRevVer'),
+                        'pgm_dir': pgm_record.get('pgmDir'),
+                        'pgm_dir2': pgm_record.get('pgmDir2'),
+                        'pgm_dir3': pgm_record.get('pgmDir3'),
+                        'pgm_dir4': pgm_record.get('pgmDir4'),
+                        'equipment_model_code': pgm_record.get('equipmentModelCode'),
+                        'operation_id': pgm_record.get('operationId'),
+                        'module_type': pgm_record.get('moduleType'),
+                        'product_type': pgm_record.get('productType'),
+                        'tech_nm': pgm_record.get('techNm'),
+                        'pkg_den_typ': pgm_record.get('pkgDenTyp'),
+                        'organiz_cd': pgm_record.get('organizCd'),
+                        'den_typ': pgm_record.get('denTyp'),
+                        'change_date_time': pgm_record.get('changeDateTime'),
+                        'factory_id': pgm_record.get('factoryId')
+                    }
+                    extracted['pgm_records'].append(pgm_info)
+
+            self.logger.info(f"📊 提取ET信息: {len(extracted['pgm_records'])}条PGM记录")
+            return extracted
 
         except Exception as e:
-            self.logger.error(f"❌ 获取新PGM失败: {str(e)}")
-            return []
+            self.logger.error(f"❌ 提取ET信息失败: {str(e)}")
+            return {}
 
-    def download_pgm_attachment(self, draft_id: str,
-                                save_path: str) -> bool:
+    def _extract_at_info(self, data: Dict[str, Any], process_id: str, work_sequence: int) -> Dict[str, Any]:
+        """提取AT信息"""
+        try:
+            extracted = {
+                'process_id': process_id,
+                'work_sequence': work_sequence,
+                'type': 'AT',
+                'extracted_at': datetime.now().isoformat(),
+                'pgm_records': [],
+                'file_info': [],
+                'work_info': {}
+            }
+
+            # 提取工作详情
+            if 'workDetailViews' in data and data['workDetailViews']:
+                work_detail = data['workDetailViews'][0]
+                extracted['work_info'] = {
+                    'process_name': work_detail.get('processName'),
+                    'work_name': work_detail.get('workName'),
+                    'status': work_detail.get('status'),
+                    'process_start_time': work_detail.get('processStartTime'),
+                    'process_end_time': work_detail.get('processEndTime'),
+                    'work_start_time': work_detail.get('workStartTime'),
+                    'work_end_time': work_detail.get('workEndTime'),
+                    'factory': work_detail.get('factory'),
+                    'specified_work_user': work_detail.get('specifiedWorkUserName')
+                }
+
+                # 提取文件信息
+                if 'file' in work_detail and work_detail['file']:
+                    for file_item in work_detail['file']:
+                        file_info = {
+                            'file_download_id': file_item.get('fileDownloadId'),
+                            'file_name': file_item.get('fileName'),
+                            'size': file_item.get('size')
+                        }
+                        extracted['file_info'].append(file_info)
+
+            # 提取PGM记录
+            if 'testProgramModuleDramAtViews' in data:
+                for pgm_record in data['testProgramModuleDramAtViews']:
+                    pgm_info = {
+                        'draft_id': pgm_record.get('draftId'),
+                        'pgm_id': pgm_record.get('pgmId'),
+                        'pgm_rev_ver': pgm_record.get('pgmRevVer'),
+                        'pgm_dir': pgm_record.get('pgmDir'),
+                        'hdiag_dir': pgm_record.get('hdiagDir'),
+                        'test_board_id': pgm_record.get('testBoardId'),
+                        'operation_id': pgm_record.get('operationId'),
+                        'module_type': pgm_record.get('moduleType'),
+                        'product_type': pgm_record.get('productType'),
+                        'tech_nm': pgm_record.get('techNm'),
+                        'pkg_den_typ': pgm_record.get('pkgDenTyp'),
+                        'sap_history_code': pgm_record.get('sapHistoryCode'),
+                        'temper_val': pgm_record.get('temperVal'),
+                        'change_date_time': pgm_record.get('changeDateTime'),
+                        'factory_id': pgm_record.get('factoryId')
+                    }
+                    extracted['pgm_records'].append(pgm_info)
+
+            self.logger.info(f"📊 提取AT信息: {len(extracted['pgm_records'])}条PGM记录")
+            return extracted
+
+        except Exception as e:
+            self.logger.error(f"❌ 提取AT信息失败: {str(e)}")
+            return {}
+
+    def download_file(self, file_download_id: str, save_path: str) -> bool:
         """
-        下载PGM附件
+        下载文件
 
         Args:
-            draft_id: 草稿ID
+            file_download_id: 文件下载ID
             save_path: 保存路径
 
         Returns:
             是否下载成功
         """
         try:
-            # 注意：这里需要根据实际的OMS API来调整
-            # 当前代码是基于现有oms_autoV2.py的逻辑
+            if not self._ensure_login():
+                self.logger.error("❌ 下载文件失败: 登录无效")
+                return False
 
-            # 示例：假设有一个下载附件的API
-            # download_url = f"{self.config['api_base']}/attachments/{draft_id}"
+            # 假设下载文件的API端点（需要确认实际API）
+            download_url = f"{self.config['api_base']}/files/download/{file_download_id}"
 
-            # response = requests.get(download_url, headers=self._get_headers(), stream=True)
-            # with open(save_path, 'wb') as f:
-            #     for chunk in response.iter_content(chunk_size=8192):
-            #         f.write(chunk)
+            self.logger.info(f"📥 下载文件: {file_download_id} -> {save_path}")
 
-            self.logger.info(f"📥 下载PGM附件: {draft_id} -> {save_path}")
+            response = requests.get(
+                download_url,
+                headers=self._get_headers(),
+                stream=True,
+                timeout=120
+            )
 
-            # 暂时返回成功（实际需要根据OMS API实现）
+            response.raise_for_status()
+
+            # 确保目录存在
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+            # 下载文件
+            with open(save_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+
+            file_size = os.path.getsize(save_path)
+            self.logger.info(f"✅ 文件下载完成: {save_path} ({file_size} bytes)")
             return True
 
-        except Exception as e:
-            self.logger.error(f"❌ 下载PGM附件失败 ({draft_id}): {str(e)}")
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"❌ 下载文件失败 (网络错误): {str(e)}")
             return False
-
-    def get_pgm_details(self, draft_id: str) -> Optional[Dict[str, Any]]:
-        """
-        获取PGM详细信息
-
-        Args:
-            draft_id: 草稿ID
-
-        Returns:
-            PGM详细信息
-        """
-        try:
-            # 从分发状态数据中查找特定draft_id
-            # 这里可以调用单独的API，或者从缓存中查找
-
-            # 临时实现：获取最近30天的数据并查找
-            all_pgms = self.get_pgm_distribution_status()
-
-            for pgm in all_pgms:
-                if pgm.get('draftId') == draft_id:
-                    return pgm
-
-            self.logger.warning(f"⚠️ 未找到PGM详细信息: {draft_id}")
-            return None
-
         except Exception as e:
-            self.logger.error(f"❌ 获取PGM详细信息失败 ({draft_id}): {str(e)}")
-            return None
-
+            self.logger.error(f"❌ 下载文件失败 (未知错误): {str(e)}")
+            return False
 
 class OMSDataProcessor:
     """OMS数据处理器"""
