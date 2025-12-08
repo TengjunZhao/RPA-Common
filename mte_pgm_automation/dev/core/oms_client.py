@@ -8,7 +8,16 @@ from typing import Dict, List, Optional, Any
 from urllib.parse import urljoin
 import time
 import hashlib
+import sys
+import os
 
+# 添加项目根目录到Python路径
+current_dir = os.path.dirname(os.path.abspath(__file__))  # scripts目录
+dev_dir = os.path.dirname(current_dir)  # dev目录
+project_root = os.path.dirname(dev_dir)  # 项目根目录
+
+sys.path.insert(0, dev_dir)
+sys.path.insert(0, project_root)
 from utils.config_loader import get_config
 from utils.logger import get_pgm_logger
 from database.models import PGMOmsHistory

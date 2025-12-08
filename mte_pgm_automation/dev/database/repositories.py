@@ -311,6 +311,24 @@ class PGMMainRepository(BaseRepository):
         """更新TAT标记"""
         return self.update(pgm_id, {'tat_marking': marking.value})
 
+    def delete(self, pgm_id: str) -> bool:
+        """删除PGM记录"""
+        try:
+            result = self.session.query(PGMMain).filter(PGMMain.pgm_id == pgm_id).delete()
+            self.commit()
+
+            if result > 0:
+                self.logger.info(f"🗑️ 删除PGM记录: {pgm_id}")
+                return True
+            else:
+                self.logger.warning(f"⚠️ PGM记录不存在，无法删除: {pgm_id}")
+                return False
+
+        except SQLAlchemyError as e:
+            self.rollback()
+            self.logger.error(f"❌ 删除PGM记录失败 ({pgm_id}): {str(e)}")
+            return False
+
 
 class PGMAlarmHistoryRepository(BaseRepository):
     """PGM报警历史仓库类"""
