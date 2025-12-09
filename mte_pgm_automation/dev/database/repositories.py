@@ -203,9 +203,21 @@ class PGMMainRepository(BaseRepository):
             columns_str = ', '.join(columns)
             values_str = ', '.join(values)
 
+            # 移除可能重复的created_at和updated_at列
+            if 'created_at' not in columns:
+                columns.append('created_at')
+                values.append('NOW()')
+            
+            if 'updated_at' not in columns:
+                columns.append('updated_at')
+                values.append('NOW()')
+            
+            columns_str = ', '.join(columns)
+            values_str = ', '.join(values)
+            
             sql = f"""
-            INSERT INTO pgm_main ({columns_str}, created_at, updated_at)
-            VALUES ({values_str}, NOW(), NOW())
+            INSERT INTO pgm_main ({columns_str})
+            VALUES ({values_str})
             """
 
             # 执行插入

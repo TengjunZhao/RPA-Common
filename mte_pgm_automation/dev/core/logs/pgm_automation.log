@@ -51,3 +51,174 @@
 2025-12-08 10:18:56 - hess_analyzer - INFO - 📊 分析Excel HESS文件: /tmp/test_hess.xlsx
 2025-12-08 10:18:56 - hess_analyzer - INFO - ✅ HESS分析完成: ET - 2条记录
 2025-12-08 10:18:56 - 文件处理器测试 - ERROR - ❌ 失败执行完成: 文件处理器测试 - 'PGMMainRepository' object has no attribute 'delete'
+2025-12-09 13:47:25 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 13:47:25 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 13:47:25 - OMS客户端测试 - INFO - 🚀 开始执行: OMS客户端测试
+2025-12-09 13:47:25 - oms - INFO - 🔧 OMS客户端初始化完成
+2025-12-09 13:47:25 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 13:47:26 - oms - INFO - ✅ OMS登录成功
+2025-12-09 13:47:26 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
+2025-12-09 13:47:27 - oms - INFO - ✅ 成功获取PGM分发状态，共31条记录
+2025-12-09 13:47:27 - oms - INFO - 🔧 OMS客户端初始化完成
+2025-12-09 13:47:27 - oms_processor - INFO - 🔄 开始获取最新OMS数据
+2025-12-09 13:47:27 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 13:47:27 - oms - INFO - ✅ OMS登录成功
+2025-12-09 13:47:27 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
+2025-12-09 13:47:29 - oms - INFO - ✅ 成功获取PGM分发状态，共31条记录
+2025-12-09 13:47:29 - oms_processor - INFO - 📊 获取到 31 条OMS记录
+2025-12-09 13:47:29 - oms_processor - INFO - ✅ OMS数据处理完成 - 成功: 31, 失败: 0
+2025-12-09 13:47:29 - oms_processor - INFO - 🔍 检查TAT超时报警
+2025-12-09 13:47:29 - oms_processor - INFO - ⚠️ 发现 31 个TAT超时报警
+2025-12-09 13:47:29 - OMS客户端测试 - INFO - ✅ 成功执行完成: OMS客户端测试
+2025-12-09 15:47:37 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 15:47:37 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 15:47:37 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
+2025-12-09 15:47:37 - 增强版OMS客户端测试 - ERROR - ❌ 失败执行完成: 增强版OMS客户端测试 - 'endpoints'
+2025-12-09 15:51:13 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 15:51:13 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 15:51:13 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
+2025-12-09 15:51:13 - 增强版OMS客户端测试 - ERROR - ❌ 失败执行完成: 增强版OMS客户端测试 - 'ConfigLoader' object has no attribute 'environment'
+2025-12-09 15:52:27 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 15:52:27 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 15:52:27 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
+2025-12-09 15:52:27 - 增强版OMS客户端测试 - ERROR - ❌ 失败执行完成: 增强版OMS客户端测试 - 'test'
+2025-12-09 15:53:48 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 15:53:48 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 15:53:48 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
+2025-12-09 15:53:48 - 增强版OMS客户端测试 - ERROR - ❌ 失败执行完成: 增强版OMS客户端测试 - name 'Retry' is not defined
+2025-12-09 15:54:41 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 15:54:41 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 15:54:41 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
+2025-12-09 15:54:41 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 15:54:41 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 15:54:42 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 16:54:42.811569
+2025-12-09 15:54:42 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 15:54:43 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 16:54:43.209258
+2025-12-09 15:54:43 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
+2025-12-09 15:55:13 - oms - ERROR - ❌ 获取PGM分发状态失败 (网络错误): HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /bpms/test-pgm/module/distribute-status?factoryId=OSMOD&companyId=HITECH&beginDate=2025-11-28+07%3A00%3A00&endDate=2025-12-10+07%3A00%3A00 (Caused by ResponseError('too many 500 error responses'))
+2025-12-09 16:04:07 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:04:07 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:04:07 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
+2025-12-09 16:04:07 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 16:04:07 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 16:04:10 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:04:10.180706
+2025-12-09 16:04:10 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
+2025-12-09 16:04:10 - oms - INFO - ✅ 成功获取PGM分发状态，共31条记录
+2025-12-09 16:04:10 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
+2025-12-09 16:04:11 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.58秒
+2025-12-09 16:04:11 - oms - INFO - 📊 提取ET信息: 20条PGM记录
+2025-12-09 16:04:11 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
+2025-12-09 16:04:11 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.55秒
+2025-12-09 16:04:11 - oms - INFO - 📊 提取ET信息: 20条PGM记录
+2025-12-09 16:04:11 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
+2025-12-09 16:04:12 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.82秒
+2025-12-09 16:04:12 - oms - INFO - 📊 提取ET信息: 20条PGM记录
+2025-12-09 16:04:12 - 增强版OMS客户端测试 - ERROR - ❌ 失败执行完成: 增强版OMS客户端测试 - name 'Path' is not defined
+2025-12-09 16:05:16 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:05:16 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:05:16 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
+2025-12-09 16:05:16 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 16:05:16 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 16:05:18 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:05:18.385908
+2025-12-09 16:05:18 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
+2025-12-09 16:05:18 - oms - INFO - ✅ 成功获取PGM分发状态，共31条记录
+2025-12-09 16:05:18 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
+2025-12-09 16:05:18 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.20秒
+2025-12-09 16:05:18 - oms - INFO - 📊 提取ET信息: 20条PGM记录
+2025-12-09 16:05:18 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
+2025-12-09 16:05:19 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.28秒
+2025-12-09 16:05:19 - oms - INFO - 📊 提取ET信息: 20条PGM记录
+2025-12-09 16:05:19 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
+2025-12-09 16:05:19 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.20秒
+2025-12-09 16:05:19 - oms - INFO - 📊 提取ET信息: 20条PGM记录
+2025-12-09 16:05:19 - 增强版OMS客户端测试 - INFO - ✅ 成功执行完成: 增强版OMS客户端测试
+2025-12-09 16:06:49 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:06:49 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:06:49 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
+2025-12-09 16:06:49 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 16:06:49 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 16:06:50 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:06:50.208725
+2025-12-09 16:06:50 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
+2025-12-09 16:06:50 - oms - INFO - ✅ 成功获取PGM分发状态，共31条记录
+2025-12-09 16:06:50 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
+2025-12-09 16:06:50 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.24秒
+2025-12-09 16:06:50 - oms - INFO - 📊 提取ET信息: 20条PGM记录
+2025-12-09 16:06:50 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
+2025-12-09 16:06:50 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.21秒
+2025-12-09 16:06:50 - oms - INFO - 📊 提取ET信息: 20条PGM记录
+2025-12-09 16:06:50 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
+2025-12-09 16:06:51 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.19秒
+2025-12-09 16:06:51 - oms - INFO - 📊 提取ET信息: 20条PGM记录
+2025-12-09 16:06:51 - oms - INFO - 📥 开始下载文件: test.zip
+2025-12-09 16:30:32 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:30:32 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:30:32 - 文件下载功能测试 - INFO - 🚀 开始执行: 文件下载功能测试
+2025-12-09 16:30:32 - 文件下载功能测试 - ERROR - ❌ 失败执行完成: 文件下载功能测试 - name 'EnhancedOMSClient' is not defined
+2025-12-09 16:31:18 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:31:18 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:31:18 - 文件下载功能测试 - INFO - 🚀 开始执行: 文件下载功能测试
+2025-12-09 16:31:18 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 16:31:18 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 16:31:19 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:31:19.755583
+2025-12-09 16:31:19 - download_manager - INFO - 📁 创建目录结构: D:/Python/RPA Common/PGM Automation/pgm file
+2025-12-09 16:31:19 - download_manager - INFO - 📝 创建示例文件: D:\Python\RPA Common\PGM Automation\pgm file\test_example.txt
+2025-12-09 16:31:19 - 文件下载功能测试 - ERROR - ❌ 失败执行完成: 文件下载功能测试 - 'OMSClient' object has no attribute 'file_paths'
+2025-12-09 16:33:18 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:33:18 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:33:18 - 文件下载功能测试 - INFO - 🚀 开始执行: 文件下载功能测试
+2025-12-09 16:33:18 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 16:33:18 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 16:33:19 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:33:19.200513
+2025-12-09 16:33:19 - download_manager - INFO - 📁 创建目录结构: D:/Python/RPA Common/PGM Automation/pgm file
+2025-12-09 16:33:19 - download_manager - INFO - 📝 创建示例文件: D:\Python\RPA Common\PGM Automation\pgm file\test_example.txt
+2025-12-09 16:33:19 - 文件下载功能测试 - INFO - ✅ 成功执行完成: 文件下载功能测试
+2025-12-09 16:36:40 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:36:40 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:36:40 - 真实文件下载测试 - INFO - 🚀 开始执行: 真实文件下载测试
+2025-12-09 16:36:40 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 16:36:40 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 16:36:41 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:36:41.180733
+2025-12-09 16:36:41 - 真实文件下载测试 - ERROR - ❌ 失败执行完成: 真实文件下载测试 - 'OMSClient' object has no attribute 'get_pgm_list'
+2025-12-09 16:36:59 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:36:59 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:36:59 - 真实文件下载测试 - INFO - 🚀 开始执行: 真实文件下载测试
+2025-12-09 16:36:59 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 16:36:59 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 16:37:00 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:37:00.641141
+2025-12-09 16:37:00 - oms - INFO - 📋 获取PGM分发状态: 2025-12-08 16:37:00 到 2025-12-09 16:37:00
+2025-12-09 16:37:01 - oms - INFO - ✅ 成功获取PGM分发状态，共16条记录
+2025-12-09 16:37:01 - oms - INFO - 📊 发现 12 个新的PGM
+2025-12-09 16:37:51 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:37:51 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:37:51 - 真实文件下载测试 - INFO - 🚀 开始执行: 真实文件下载测试
+2025-12-09 16:37:51 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 16:37:51 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 16:37:52 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:37:52.799547
+2025-12-09 16:37:52 - oms - INFO - 📋 获取PGM分发状态: 2025-12-08 16:37:52 到 2025-12-09 16:37:52
+2025-12-09 16:37:53 - oms - INFO - ✅ 成功获取PGM分发状态，共16条记录
+2025-12-09 16:37:53 - oms - INFO - 📊 发现 12 个新的PGM
+2025-12-09 16:37:56 - oms - INFO - 📥 开始下载文件: downloaded_file_7186051
+2025-12-09 16:38:26 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=7186051&userId=Z130090&bpmsProcessId=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19&bpmsWorkSequence=1&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2025-12-09 16:38:26 - 真实文件下载测试 - ERROR - ❌ 失败执行完成: 真实文件下载测试
+2025-12-09 16:40:26 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:40:26 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:40:26 - 真实文件下载测试 - INFO - 🚀 开始执行: 真实文件下载测试
+2025-12-09 16:40:26 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 16:40:26 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 16:40:27 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:40:27.363369
+2025-12-09 16:40:27 - oms - INFO - 📋 获取PGM分发状态: 2025-12-08 16:40:27 到 2025-12-09 16:40:27
+2025-12-09 16:40:27 - oms - INFO - ✅ 成功获取PGM分发状态，共16条记录
+2025-12-09 16:40:27 - oms - INFO - 📊 发现 12 个新的PGM
+2025-12-09 16:42:06 - oms - INFO - 📥 开始下载文件: downloaded_file_7186051
+2025-12-09 16:42:38 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=7186051&userId=Z130090&bpmsProcessId=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19&bpmsWorkSequence=1&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2025-12-09 16:42:38 - 真实文件下载测试 - ERROR - ❌ 失败执行完成: 真实文件下载测试
+2025-12-09 16:42:53 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2025-12-09 16:42:53 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2025-12-09 16:42:53 - 真实文件下载测试 - INFO - 🚀 开始执行: 真实文件下载测试
+2025-12-09 16:42:53 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2025-12-09 16:42:53 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2025-12-09 16:42:54 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:42:54.251846
+2025-12-09 16:42:54 - oms - INFO - 📋 获取PGM分发状态: 2025-12-08 16:42:54 到 2025-12-09 16:42:54
+2025-12-09 16:42:54 - oms - INFO - ✅ 成功获取PGM分发状态，共16条记录
+2025-12-09 16:42:54 - oms - INFO - 📊 发现 12 个新的PGM
+2025-12-09 16:43:01 - oms - INFO - 📥 开始下载文件: downloaded_file_7186051

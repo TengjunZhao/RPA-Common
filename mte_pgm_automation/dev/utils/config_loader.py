@@ -110,11 +110,20 @@ class ConfigLoader:
 
         return {
             'api_base': oms_config.get('api_base', ''),
-            'auth_endpoint': oms_config.get('auth_endpoint', ''),
-            'data_endpoint': oms_config.get('data_endpoint', ''),
-            'user_id': creds.get('user_id', ''),
-            'password': creds.get('password', ''),
-            'headers': oms_config.get('headers', {})
+            'endpoints': oms_config.get('endpoints', {}),
+            'credentials': creds,
+            'headers': oms_config.get('headers', {}),
+            'request_timeout': oms_config.get('request_timeout', {
+                'login': 30,
+                'list': 60,
+                'detail': 60,
+                'download': 300
+            }),
+            'retry_settings': oms_config.get('retry_settings', {
+                'max_retries': 3,
+                'retry_delay_seconds': 5,
+                'retry_on_status_codes': [408, 429, 500, 502, 503, 504]
+            })
         }
 
     def get_file_paths(self) -> Dict[str, str]:

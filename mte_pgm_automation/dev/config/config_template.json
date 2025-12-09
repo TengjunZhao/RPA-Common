@@ -22,8 +22,13 @@
   },
   "oms": {
     "api_base": "https://apihtts.skhynix.com",
-    "auth_endpoint": "/auth/sign/in",
-    "data_endpoint": "/bpms/test-pgm/module/distribute-status",
+    "endpoints": {
+      "auth": "/auth/sign/in",
+      "distribute_status": "/bpms/test-pgm/module/distribute-status",
+      "et_detail": "/bpms/test-pgm/module/dram-et/process-id",
+      "at_detail": "/bpms/test-pgm/module/dram-at/process-id",
+      "file_download": "/mes/file/download"
+    },
     "credentials": {
       "test": {
         "user_id": "Z130090",
@@ -37,9 +42,47 @@
       }
     },
     "headers": {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0",
-      "Content-Type": "application/json",
-      "Accept": "application/json, text/plain, */*"
+    "common": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0",
+        "Content-Type": "application/json;charset=UTF-8",
+        "Accept": "application/json, text/plain, */*",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-ch-ua": "\"Microsoft Edge\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+        "sec-ch-ua-mobile": "?0",
+        "Sec-Fetch-Site": "same-site",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Dest": "empty"
+    },
+    "endpoint_specific": {
+        "distribute_status": {
+            "uiId": "ModuleTestPgmDistributeStatus",
+            "uiName": "BPM%20%3E%20MOD%20Test%20PGM%20Distribute%20Status"
+        },
+        "et_detail": {
+            "uiId": "TestPgmModuleDramET",
+            "uiName": "BPM%20%3E%20%5BModule%5D%20DRAM%20E%2FT%20PGM"
+        },
+        "at_detail": {
+            "uiId": "ModuleTestPgmDistributeStatus",
+            "uiName": "BPM%20%3E%20MOD%20Test%20PGM%20Distribute%20Status"
+        },
+        "file_download": {
+            "uiId": "ModuleTestPgmDistributeStatus",
+            "uiName": "BPM%20%3E%20MOD%20Test%20PGM%20Distribute%20Status",
+            "Accept": "*/*"
+        }
+    }
+},
+    "request_timeout": {
+      "login": 30,
+      "list": 60,
+      "detail": 60,
+      "download": 300
+    },
+    "retry_settings": {
+      "max_retries": 3,
+      "retry_delay_seconds": 5,
+      "retry_on_status_codes": [408, 429, 500, 502, 503, 504]
     }
   },
   "file_paths": {
