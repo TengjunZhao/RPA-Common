@@ -290,7 +290,8 @@ def get_product_production_data(db_config, product, additional_conditions, time_
             group_by = "dt, oper_old"
         else:  # monthly
             last_month_last_day = datetime.now().replace(day=1) - timedelta(days=1)
-            start_date = (last_month_last_day - dateutil.relativedelta.relativedelta(months=11)).strftime('%Y%m%d')
+            start_date = (last_month_last_day - dateutil.relativedelta.relativedelta(months=11))
+            start_date = start_date.replace(day=1).strftime('%Y%m%d')
             end_date = last_month_last_day.strftime('%Y%m%d')
             date_format = "SUBSTRING(dy.workdt, 1, 6)"
             group_by = "dt, oper_old"
