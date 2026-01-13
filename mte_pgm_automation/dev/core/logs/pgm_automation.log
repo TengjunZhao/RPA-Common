@@ -1,224 +1,674 @@
-2025-12-08 10:16:54 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-08 10:16:54 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-08 10:16:54 - 文件处理器测试 - INFO - 🚀 开始执行: 文件处理器测试
-2025-12-08 10:16:54 - file_processor - INFO - 🔧 文件处理器初始化完成
-2025-12-08 10:16:54 - file_processor - INFO - 📥 开始下载PGM文件: TEST_FP_1765160214
-2025-12-08 10:16:54 - file_processor - INFO - 📍 目标本地路径: /tmp/test_download
-2025-12-08 10:16:54 - file_processor - INFO - 🌐 从网络共享复制: \\test\share\pgm -> /tmp/test_download
-2025-12-08 10:16:57 - file_processor - ERROR - ❌ 远程路径不存在: \\test\share\pgm
-2025-12-08 10:16:57 - database - INFO - ✅ 安全更新PGM记录: TEST_FP_1765160214
-2025-12-08 10:16:57 - file_processor - INFO - ✅ PGM文件下载完成: TEST_FP_1765160214
-2025-12-08 10:16:57 - database - INFO - ✅ 安全更新PGM记录: TEST_FP_1765160214
-2025-12-08 10:16:57 - file_processor - INFO - 🔍 开始验证PGM结构: TEST_FP_1765160214
-2025-12-08 10:16:57 - file_processor - INFO - 🗂️ 开始整理PGM文件: TEST_FP_1765160214 - 类型: verify
-2025-12-08 10:16:57 - file_processor - WARNING - ⚠️ 未找到HESS文件，跳过verify整理
-2025-12-08 10:16:57 - hess_analyzer - INFO - 📊 分析Excel HESS文件: /tmp/test_hess.xlsx
-2025-12-08 10:16:57 - hess_analyzer - INFO - ✅ HESS分析完成: ET - 2条记录
-2025-12-08 10:16:57 - 文件处理器测试 - ERROR - ❌ 失败执行完成: 文件处理器测试 - 'PGMMainRepository' object has no attribute 'delete'
-2025-12-08 10:17:15 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-08 10:17:15 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-08 10:17:15 - OMS客户端测试 - INFO - 🚀 开始执行: OMS客户端测试
-2025-12-08 10:17:15 - oms - INFO - 🔧 OMS客户端初始化完成
-2025-12-08 10:17:15 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-08 10:17:16 - oms - INFO - ✅ OMS登录成功
-2025-12-08 10:17:16 - oms - INFO - 📋 获取PGM分发状态: 2025-11-27 07:00:00 到 2025-12-09 07:00:00
-2025-12-08 10:17:18 - oms - INFO - ✅ 成功获取PGM分发状态，共25条记录
-2025-12-08 10:17:18 - oms - INFO - 🔧 OMS客户端初始化完成
-2025-12-08 10:17:18 - oms_processor - INFO - 🔄 开始获取最新OMS数据
-2025-12-08 10:17:18 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-08 10:17:18 - oms - INFO - ✅ OMS登录成功
-2025-12-08 10:17:18 - oms - INFO - 📋 获取PGM分发状态: 2025-11-27 07:00:00 到 2025-12-09 07:00:00
-2025-12-08 10:17:19 - oms - INFO - ✅ 成功获取PGM分发状态，共25条记录
-2025-12-08 10:17:19 - oms_processor - INFO - 📊 获取到 25 条OMS记录
-2025-12-08 10:17:19 - oms_processor - INFO - ✅ OMS数据处理完成 - 成功: 25, 失败: 0
-2025-12-08 10:17:19 - oms_processor - INFO - 🔍 检查TAT超时报警
-2025-12-08 10:17:19 - oms_processor - INFO - ⚠️ 发现 30 个TAT超时报警
-2025-12-08 10:17:19 - OMS客户端测试 - INFO - ✅ 成功执行完成: OMS客户端测试
-2025-12-08 10:18:53 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-08 10:18:53 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-08 10:18:53 - 文件处理器测试 - INFO - 🚀 开始执行: 文件处理器测试
-2025-12-08 10:18:53 - file_processor - INFO - 🔧 文件处理器初始化完成
-2025-12-08 10:18:53 - file_processor - INFO - 📥 开始下载PGM文件: TEST_FP_1765160333
-2025-12-08 10:18:53 - file_processor - INFO - 📍 目标本地路径: /tmp/test_download
-2025-12-08 10:18:53 - file_processor - INFO - 🌐 从网络共享复制: \\test\share\pgm -> /tmp/test_download
-2025-12-08 10:18:56 - file_processor - ERROR - ❌ 远程路径不存在: \\test\share\pgm
-2025-12-08 10:18:56 - database - INFO - ✅ 安全更新PGM记录: TEST_FP_1765160333
-2025-12-08 10:18:56 - file_processor - INFO - ✅ PGM文件下载完成: TEST_FP_1765160333
-2025-12-08 10:18:56 - database - INFO - ✅ 安全更新PGM记录: TEST_FP_1765160333
-2025-12-08 10:18:56 - file_processor - INFO - 🔍 开始验证PGM结构: TEST_FP_1765160333
-2025-12-08 10:18:56 - file_processor - INFO - 🗂️ 开始整理PGM文件: TEST_FP_1765160333 - 类型: verify
-2025-12-08 10:18:56 - file_processor - WARNING - ⚠️ 未找到HESS文件，跳过verify整理
-2025-12-08 10:18:56 - hess_analyzer - INFO - 📊 分析Excel HESS文件: /tmp/test_hess.xlsx
-2025-12-08 10:18:56 - hess_analyzer - INFO - ✅ HESS分析完成: ET - 2条记录
-2025-12-08 10:18:56 - 文件处理器测试 - ERROR - ❌ 失败执行完成: 文件处理器测试 - 'PGMMainRepository' object has no attribute 'delete'
-2025-12-09 13:47:25 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 13:47:25 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 13:47:25 - OMS客户端测试 - INFO - 🚀 开始执行: OMS客户端测试
-2025-12-09 13:47:25 - oms - INFO - 🔧 OMS客户端初始化完成
-2025-12-09 13:47:25 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 13:47:26 - oms - INFO - ✅ OMS登录成功
-2025-12-09 13:47:26 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
-2025-12-09 13:47:27 - oms - INFO - ✅ 成功获取PGM分发状态，共31条记录
-2025-12-09 13:47:27 - oms - INFO - 🔧 OMS客户端初始化完成
-2025-12-09 13:47:27 - oms_processor - INFO - 🔄 开始获取最新OMS数据
-2025-12-09 13:47:27 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 13:47:27 - oms - INFO - ✅ OMS登录成功
-2025-12-09 13:47:27 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
-2025-12-09 13:47:29 - oms - INFO - ✅ 成功获取PGM分发状态，共31条记录
-2025-12-09 13:47:29 - oms_processor - INFO - 📊 获取到 31 条OMS记录
-2025-12-09 13:47:29 - oms_processor - INFO - ✅ OMS数据处理完成 - 成功: 31, 失败: 0
-2025-12-09 13:47:29 - oms_processor - INFO - 🔍 检查TAT超时报警
-2025-12-09 13:47:29 - oms_processor - INFO - ⚠️ 发现 31 个TAT超时报警
-2025-12-09 13:47:29 - OMS客户端测试 - INFO - ✅ 成功执行完成: OMS客户端测试
-2025-12-09 15:47:37 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 15:47:37 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 15:47:37 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
-2025-12-09 15:47:37 - 增强版OMS客户端测试 - ERROR - ❌ 失败执行完成: 增强版OMS客户端测试 - 'endpoints'
-2025-12-09 15:51:13 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 15:51:13 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 15:51:13 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
-2025-12-09 15:51:13 - 增强版OMS客户端测试 - ERROR - ❌ 失败执行完成: 增强版OMS客户端测试 - 'ConfigLoader' object has no attribute 'environment'
-2025-12-09 15:52:27 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 15:52:27 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 15:52:27 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
-2025-12-09 15:52:27 - 增强版OMS客户端测试 - ERROR - ❌ 失败执行完成: 增强版OMS客户端测试 - 'test'
-2025-12-09 15:53:48 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 15:53:48 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 15:53:48 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
-2025-12-09 15:53:48 - 增强版OMS客户端测试 - ERROR - ❌ 失败执行完成: 增强版OMS客户端测试 - name 'Retry' is not defined
-2025-12-09 15:54:41 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 15:54:41 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 15:54:41 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
-2025-12-09 15:54:41 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 15:54:41 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 15:54:42 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 16:54:42.811569
-2025-12-09 15:54:42 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 15:54:43 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 16:54:43.209258
-2025-12-09 15:54:43 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
-2025-12-09 15:55:13 - oms - ERROR - ❌ 获取PGM分发状态失败 (网络错误): HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /bpms/test-pgm/module/distribute-status?factoryId=OSMOD&companyId=HITECH&beginDate=2025-11-28+07%3A00%3A00&endDate=2025-12-10+07%3A00%3A00 (Caused by ResponseError('too many 500 error responses'))
-2025-12-09 16:04:07 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:04:07 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:04:07 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
-2025-12-09 16:04:07 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 16:04:07 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 16:04:10 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:04:10.180706
-2025-12-09 16:04:10 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
-2025-12-09 16:04:10 - oms - INFO - ✅ 成功获取PGM分发状态，共31条记录
-2025-12-09 16:04:10 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
-2025-12-09 16:04:11 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.58秒
-2025-12-09 16:04:11 - oms - INFO - 📊 提取ET信息: 20条PGM记录
-2025-12-09 16:04:11 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
-2025-12-09 16:04:11 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.55秒
-2025-12-09 16:04:11 - oms - INFO - 📊 提取ET信息: 20条PGM记录
-2025-12-09 16:04:11 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
-2025-12-09 16:04:12 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.82秒
-2025-12-09 16:04:12 - oms - INFO - 📊 提取ET信息: 20条PGM记录
-2025-12-09 16:04:12 - 增强版OMS客户端测试 - ERROR - ❌ 失败执行完成: 增强版OMS客户端测试 - name 'Path' is not defined
-2025-12-09 16:05:16 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:05:16 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:05:16 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
-2025-12-09 16:05:16 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 16:05:16 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 16:05:18 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:05:18.385908
-2025-12-09 16:05:18 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
-2025-12-09 16:05:18 - oms - INFO - ✅ 成功获取PGM分发状态，共31条记录
-2025-12-09 16:05:18 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
-2025-12-09 16:05:18 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.20秒
-2025-12-09 16:05:18 - oms - INFO - 📊 提取ET信息: 20条PGM记录
-2025-12-09 16:05:18 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
-2025-12-09 16:05:19 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.28秒
-2025-12-09 16:05:19 - oms - INFO - 📊 提取ET信息: 20条PGM记录
-2025-12-09 16:05:19 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
-2025-12-09 16:05:19 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.20秒
-2025-12-09 16:05:19 - oms - INFO - 📊 提取ET信息: 20条PGM记录
-2025-12-09 16:05:19 - 增强版OMS客户端测试 - INFO - ✅ 成功执行完成: 增强版OMS客户端测试
-2025-12-09 16:06:49 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:06:49 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:06:49 - 增强版OMS客户端测试 - INFO - 🚀 开始执行: 增强版OMS客户端测试
-2025-12-09 16:06:49 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 16:06:49 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 16:06:50 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:06:50.208725
-2025-12-09 16:06:50 - oms - INFO - 📋 获取PGM分发状态: 2025-11-28 07:00:00 到 2025-12-10 07:00:00
-2025-12-09 16:06:50 - oms - INFO - ✅ 成功获取PGM分发状态，共31条记录
-2025-12-09 16:06:50 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
-2025-12-09 16:06:50 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.24秒
-2025-12-09 16:06:50 - oms - INFO - 📊 提取ET信息: 20条PGM记录
-2025-12-09 16:06:50 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
-2025-12-09 16:06:50 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.21秒
-2025-12-09 16:06:50 - oms - INFO - 📊 提取ET信息: 20条PGM记录
-2025-12-09 16:06:50 - oms - INFO - 📋 获取ET PGM详情: process_id=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19, work_sequence=1
-2025-12-09 16:06:51 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.19秒
-2025-12-09 16:06:51 - oms - INFO - 📊 提取ET信息: 20条PGM记录
-2025-12-09 16:06:51 - oms - INFO - 📥 开始下载文件: test.zip
-2025-12-09 16:30:32 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:30:32 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:30:32 - 文件下载功能测试 - INFO - 🚀 开始执行: 文件下载功能测试
-2025-12-09 16:30:32 - 文件下载功能测试 - ERROR - ❌ 失败执行完成: 文件下载功能测试 - name 'EnhancedOMSClient' is not defined
-2025-12-09 16:31:18 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:31:18 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:31:18 - 文件下载功能测试 - INFO - 🚀 开始执行: 文件下载功能测试
-2025-12-09 16:31:18 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 16:31:18 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 16:31:19 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:31:19.755583
-2025-12-09 16:31:19 - download_manager - INFO - 📁 创建目录结构: D:/Python/RPA Common/PGM Automation/pgm file
-2025-12-09 16:31:19 - download_manager - INFO - 📝 创建示例文件: D:\Python\RPA Common\PGM Automation\pgm file\test_example.txt
-2025-12-09 16:31:19 - 文件下载功能测试 - ERROR - ❌ 失败执行完成: 文件下载功能测试 - 'OMSClient' object has no attribute 'file_paths'
-2025-12-09 16:33:18 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:33:18 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:33:18 - 文件下载功能测试 - INFO - 🚀 开始执行: 文件下载功能测试
-2025-12-09 16:33:18 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 16:33:18 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 16:33:19 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:33:19.200513
-2025-12-09 16:33:19 - download_manager - INFO - 📁 创建目录结构: D:/Python/RPA Common/PGM Automation/pgm file
-2025-12-09 16:33:19 - download_manager - INFO - 📝 创建示例文件: D:\Python\RPA Common\PGM Automation\pgm file\test_example.txt
-2025-12-09 16:33:19 - 文件下载功能测试 - INFO - ✅ 成功执行完成: 文件下载功能测试
-2025-12-09 16:36:40 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:36:40 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:36:40 - 真实文件下载测试 - INFO - 🚀 开始执行: 真实文件下载测试
-2025-12-09 16:36:40 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 16:36:40 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 16:36:41 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:36:41.180733
-2025-12-09 16:36:41 - 真实文件下载测试 - ERROR - ❌ 失败执行完成: 真实文件下载测试 - 'OMSClient' object has no attribute 'get_pgm_list'
-2025-12-09 16:36:59 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:36:59 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:36:59 - 真实文件下载测试 - INFO - 🚀 开始执行: 真实文件下载测试
-2025-12-09 16:36:59 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 16:36:59 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 16:37:00 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:37:00.641141
-2025-12-09 16:37:00 - oms - INFO - 📋 获取PGM分发状态: 2025-12-08 16:37:00 到 2025-12-09 16:37:00
-2025-12-09 16:37:01 - oms - INFO - ✅ 成功获取PGM分发状态，共16条记录
-2025-12-09 16:37:01 - oms - INFO - 📊 发现 12 个新的PGM
-2025-12-09 16:37:51 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:37:51 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:37:51 - 真实文件下载测试 - INFO - 🚀 开始执行: 真实文件下载测试
-2025-12-09 16:37:51 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 16:37:51 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 16:37:52 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:37:52.799547
-2025-12-09 16:37:52 - oms - INFO - 📋 获取PGM分发状态: 2025-12-08 16:37:52 到 2025-12-09 16:37:52
-2025-12-09 16:37:53 - oms - INFO - ✅ 成功获取PGM分发状态，共16条记录
-2025-12-09 16:37:53 - oms - INFO - 📊 发现 12 个新的PGM
-2025-12-09 16:37:56 - oms - INFO - 📥 开始下载文件: downloaded_file_7186051
-2025-12-09 16:38:26 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=7186051&userId=Z130090&bpmsProcessId=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19&bpmsWorkSequence=1&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
-2025-12-09 16:38:26 - 真实文件下载测试 - ERROR - ❌ 失败执行完成: 真实文件下载测试
-2025-12-09 16:40:26 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:40:26 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:40:26 - 真实文件下载测试 - INFO - 🚀 开始执行: 真实文件下载测试
-2025-12-09 16:40:26 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 16:40:26 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 16:40:27 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:40:27.363369
-2025-12-09 16:40:27 - oms - INFO - 📋 获取PGM分发状态: 2025-12-08 16:40:27 到 2025-12-09 16:40:27
-2025-12-09 16:40:27 - oms - INFO - ✅ 成功获取PGM分发状态，共16条记录
-2025-12-09 16:40:27 - oms - INFO - 📊 发现 12 个新的PGM
-2025-12-09 16:42:06 - oms - INFO - 📥 开始下载文件: downloaded_file_7186051
-2025-12-09 16:42:38 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=7186051&userId=Z130090&bpmsProcessId=85c7d1b3-aabb-4aef-88e1-b3a0e3de6d19&bpmsWorkSequence=1&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
-2025-12-09 16:42:38 - 真实文件下载测试 - ERROR - ❌ 失败执行完成: 真实文件下载测试
-2025-12-09 16:42:53 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
-2025-12-09 16:42:53 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
-2025-12-09 16:42:53 - 真实文件下载测试 - INFO - 🚀 开始执行: 真实文件下载测试
-2025-12-09 16:42:53 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
-2025-12-09 16:42:53 - oms - INFO - 🔑 正在登录OMS系统: Z130090
-2025-12-09 16:42:54 - oms - INFO - ✅ OMS登录成功，token有效期至: 2025-12-09 17:42:54.251846
-2025-12-09 16:42:54 - oms - INFO - 📋 获取PGM分发状态: 2025-12-08 16:42:54 到 2025-12-09 16:42:54
-2025-12-09 16:42:54 - oms - INFO - ✅ 成功获取PGM分发状态，共16条记录
-2025-12-09 16:42:54 - oms - INFO - 📊 发现 12 个新的PGM
-2025-12-09 16:43:01 - oms - INFO - 📥 开始下载文件: downloaded_file_7186051
+2026-01-13 14:53:21 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 14:53:21 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 14:53:21 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 14:53:21 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 14:53:33 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 15:53:33.051634
+2026-01-13 14:53:33 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 14:53:34 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 14:53:34 - oms - INFO - 📋 获取PGM分发状态: 2026-01-12 14:53:34 到 2026-01-13 14:53:34
+2026-01-13 14:53:36 - oms - INFO - ✅ 成功获取PGM分发状态，共13条记录
+2026-01-13 14:53:36 - oms - INFO - 📊 发现 11 个新的PGM
+2026-01-13 14:54:21 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 14:54:21 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 14:54:21 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 14:54:21 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 14:54:32 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 15:54:32.207800
+2026-01-13 14:54:32 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 14:54:33 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 14:54:34 - oms - INFO - 📋 获取PGM分发状态: 2026-01-12 14:54:34 到 2026-01-13 14:54:34
+2026-01-13 14:54:34 - oms - INFO - ✅ 成功获取PGM分发状态，共13条记录
+2026-01-13 14:54:34 - oms - INFO - 📊 发现 11 个新的PGM
+2026-01-13 15:15:17 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:15:17 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:15:17 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:15:17 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:15:18 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:15:18.033307
+2026-01-13 15:15:18 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:15:19 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:16:07 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:16:07 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:16:07 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:16:07 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:16:08 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:16:08.270088
+2026-01-13 15:16:08 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:16:09 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:17:06 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:17:06 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:17:06 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:17:06 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:17:09 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:17:09.059057
+2026-01-13 15:17:09 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:17:10 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:21:27 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:21:27 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:21:27 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:21:27 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:21:28 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:21:28.982531
+2026-01-13 15:21:28 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:21:29 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:22:50 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:22:50 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:22:50 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:22:50 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:22:51 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:22:51.374133
+2026-01-13 15:22:51 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:22:53 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:36:52 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:36:52 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:36:52 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:36:52 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:36:53 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:36:53.523275
+2026-01-13 15:36:53 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:36:54 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:38:13 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:38:13 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:38:13 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:38:13 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:38:14 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:38:14.012612
+2026-01-13 15:38:14 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:38:14 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:38:33 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:38:33 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:38:33 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:38:33 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:38:34 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:38:34.454080
+2026-01-13 15:38:34 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:38:35 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:41:58 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:41:58 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:41:58 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:41:58 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:42:03 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:42:03.440044
+2026-01-13 15:42:03 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:42:03 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:43:33 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:43:33 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:43:33 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:43:33 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:43:33 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:43:33.949268
+2026-01-13 15:43:33 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:43:34 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:43:34 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:34 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:44:34 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:44:34 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:44:34 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:44:35 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:44:35.547484
+2026-01-13 15:44:35 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:44:36 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:44:36 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:45:01 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:45:01 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:45:01 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:45:01 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:45:05 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:45:05.925881
+2026-01-13 15:45:05 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:45:06 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:46:05 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取ET PGM详情失败 (未知错误): 'ET_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:06 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:24 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:46:24 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:46:24 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:46:24 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:46:24 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:46:24.903062
+2026-01-13 15:46:24 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:46:25 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:46:30 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:41 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:46:57 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:47:07 - oms - ERROR - ❌ 获取AT详情失败: 登录无效
+2026-01-13 15:47:29 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:47:37 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:47:48 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:47:48 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:47:48 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:47:48 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:47:49 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:47:49.104667
+2026-01-13 15:47:49 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:47:51 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:48:01 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:48:05 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:48:24 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:48:26 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:49:07 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'AT_detail'
+2026-01-13 15:51:42 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:51:42 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:51:42 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:51:42 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:51:43 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:51:43.316203
+2026-01-13 15:51:43 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:51:44 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:52:53 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=1
+2026-01-13 15:53:19 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 25.80秒
+2026-01-13 15:53:19 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 15:53:19 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=3
+2026-01-13 15:53:40 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 12.67秒
+2026-01-13 15:54:02 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 15:54:48 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 15:55:14 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 15:55:14 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 15:55:14 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 15:55:14 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 15:55:15 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 16:55:15.206021
+2026-01-13 15:55:15 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 15:55:15 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 15:55:15 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=1
+2026-01-13 15:55:16 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.37秒
+2026-01-13 15:55:16 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 15:55:16 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=3
+2026-01-13 15:55:16 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.51秒
+2026-01-13 15:55:16 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 15:55:16 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=28
+2026-01-13 15:55:17 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.56秒
+2026-01-13 15:55:17 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 15:55:17 - oms - INFO - 📋 获取AT PGM详情: process_id=0734f84a-c5c6-40bf-98dd-00673d64aac9, work_sequence=1
+2026-01-13 15:55:18 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.93秒
+2026-01-13 15:55:18 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 15:55:18 - oms - INFO - 📋 获取AT PGM详情: process_id=0734f84a-c5c6-40bf-98dd-00673d64aac9, work_sequence=3
+2026-01-13 15:55:19 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.88秒
+2026-01-13 15:55:19 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 15:55:19 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=1
+2026-01-13 15:55:19 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.50秒
+2026-01-13 15:55:19 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 15:55:19 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=3
+2026-01-13 15:55:20 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.65秒
+2026-01-13 15:55:20 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 15:55:20 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=28
+2026-01-13 15:55:21 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.23秒
+2026-01-13 15:55:21 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 15:55:21 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=29
+2026-01-13 15:55:22 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.93秒
+2026-01-13 15:55:22 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 15:55:22 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=1
+2026-01-13 15:55:23 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.70秒
+2026-01-13 15:55:23 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 15:55:23 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=10
+2026-01-13 15:55:24 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.13秒
+2026-01-13 15:55:24 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 15:55:24 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=28
+2026-01-13 15:55:25 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.15秒
+2026-01-13 15:55:25 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 15:55:25 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=29
+2026-01-13 15:55:26 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.81秒
+2026-01-13 15:55:26 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 15:55:26 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=1
+2026-01-13 15:55:26 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.19秒
+2026-01-13 15:55:26 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 15:55:26 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=3
+2026-01-13 15:55:27 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.71秒
+2026-01-13 15:55:27 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 15:55:27 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=4
+2026-01-13 15:55:27 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.78秒
+2026-01-13 15:55:27 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 15:55:27 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=5
+2026-01-13 15:55:28 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.71秒
+2026-01-13 15:55:28 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 15:55:28 - oms - INFO - 📋 获取ET PGM详情: process_id=cca4b4ab-94ef-46c7-923d-3b2353f81282, work_sequence=1
+2026-01-13 15:55:29 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.36秒
+2026-01-13 15:55:29 - oms - INFO - 📊 提取AT信息: 0条PGM记录
+2026-01-13 15:55:29 - oms - INFO - 📋 获取ET PGM详情: process_id=cca4b4ab-94ef-46c7-923d-3b2353f81282, work_sequence=8
+2026-01-13 15:55:29 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.29秒
+2026-01-13 15:55:29 - oms - INFO - 📊 提取AT信息: 0条PGM记录
+2026-01-13 15:55:29 - oms - INFO - 📋 获取ET PGM详情: process_id=cca4b4ab-94ef-46c7-923d-3b2353f81282, work_sequence=28
+2026-01-13 15:55:30 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.69秒
+2026-01-13 15:55:30 - oms - INFO - 📊 提取AT信息: 0条PGM记录
+2026-01-13 15:55:30 - oms - INFO - 📋 获取ET PGM详情: process_id=cca4b4ab-94ef-46c7-923d-3b2353f81282, work_sequence=31
+2026-01-13 15:55:31 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 1.22秒
+2026-01-13 15:55:31 - oms - INFO - 📊 提取AT信息: 0条PGM记录
+2026-01-13 15:55:31 - oms - INFO - 📋 获取AT PGM详情: process_id=13eca684-267f-4115-8ee2-8af52d149b0d, work_sequence=1
+2026-01-13 15:55:33 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.31秒
+2026-01-13 15:55:33 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 15:55:33 - oms - INFO - 📋 获取AT PGM详情: process_id=13eca684-267f-4115-8ee2-8af52d149b0d, work_sequence=3
+2026-01-13 15:55:38 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 4.76秒
+2026-01-13 15:55:38 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 15:55:38 - oms - INFO - 📋 获取AT PGM详情: process_id=13eca684-267f-4115-8ee2-8af52d149b0d, work_sequence=28
+2026-01-13 15:55:40 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.55秒
+2026-01-13 15:55:40 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 15:55:40 - oms - INFO - 📋 获取AT PGM详情: process_id=13eca684-267f-4115-8ee2-8af52d149b0d, work_sequence=29
+2026-01-13 15:55:43 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.30秒
+2026-01-13 15:55:43 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 15:55:43 - oms - INFO - 📋 获取ET PGM详情: process_id=a3430eab-bb98-423d-a101-359992e67329, work_sequence=1
+2026-01-13 15:55:43 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.46秒
+2026-01-13 15:55:43 - oms - INFO - 📊 提取AT信息: 0条PGM记录
+2026-01-13 15:55:43 - oms - INFO - 📋 获取ET PGM详情: process_id=a3430eab-bb98-423d-a101-359992e67329, work_sequence=8
+2026-01-13 15:55:45 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 1.76秒
+2026-01-13 15:55:45 - oms - INFO - 📊 提取AT信息: 0条PGM记录
+2026-01-13 15:55:45 - oms - INFO - 📋 获取ET PGM详情: process_id=a3430eab-bb98-423d-a101-359992e67329, work_sequence=28
+2026-01-13 15:55:47 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 1.63秒
+2026-01-13 15:55:47 - oms - INFO - 📊 提取AT信息: 0条PGM记录
+2026-01-13 15:55:47 - oms - INFO - 📋 获取ET PGM详情: process_id=a3430eab-bb98-423d-a101-359992e67329, work_sequence=29
+2026-01-13 15:55:48 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 1.03秒
+2026-01-13 15:55:48 - oms - INFO - 📊 提取AT信息: 0条PGM记录
+2026-01-13 15:55:48 - oms - INFO - 📋 获取AT PGM详情: process_id=8a0708b5-3eec-451e-8852-56f6fcb4b015, work_sequence=1
+2026-01-13 15:55:50 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.42秒
+2026-01-13 15:55:50 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 15:55:50 - oms - INFO - 📋 获取AT PGM详情: process_id=8a0708b5-3eec-451e-8852-56f6fcb4b015, work_sequence=3
+2026-01-13 15:55:53 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.70秒
+2026-01-13 15:55:53 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 15:55:53 - oms - INFO - 📋 获取AT PGM详情: process_id=8a0708b5-3eec-451e-8852-56f6fcb4b015, work_sequence=28
+2026-01-13 15:55:55 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.45秒
+2026-01-13 15:55:55 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 15:55:55 - oms - INFO - 📋 获取AT PGM详情: process_id=8a0708b5-3eec-451e-8852-56f6fcb4b015, work_sequence=29
+2026-01-13 15:55:59 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 3.30秒
+2026-01-13 15:55:59 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 15:55:59 - oms - INFO - 📋 获取AT PGM详情: process_id=eb05ddbc-8be3-432d-8e9d-f5f139ee72a8, work_sequence=1
+2026-01-13 15:56:00 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.85秒
+2026-01-13 15:56:00 - oms - INFO - 📊 提取AT信息: 44条PGM记录
+2026-01-13 15:56:00 - oms - INFO - 📋 获取AT PGM详情: process_id=eb05ddbc-8be3-432d-8e9d-f5f139ee72a8, work_sequence=10
+2026-01-13 15:56:02 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.44秒
+2026-01-13 15:56:02 - oms - INFO - 📊 提取AT信息: 44条PGM记录
+2026-01-13 15:56:02 - oms - INFO - 📋 获取AT PGM详情: process_id=eb05ddbc-8be3-432d-8e9d-f5f139ee72a8, work_sequence=28
+2026-01-13 15:56:03 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.96秒
+2026-01-13 15:56:03 - oms - INFO - 📊 提取AT信息: 44条PGM记录
+2026-01-13 15:56:03 - oms - INFO - 📋 获取AT PGM详情: process_id=eb05ddbc-8be3-432d-8e9d-f5f139ee72a8, work_sequence=29
+2026-01-13 15:56:04 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.34秒
+2026-01-13 15:56:04 - oms - INFO - 📊 提取AT信息: 44条PGM记录
+2026-01-13 15:56:04 - oms - INFO - 📋 获取AT PGM详情: process_id=5dbc4686-395a-4b2e-9351-e3e132d4b021, work_sequence=1
+2026-01-13 15:56:05 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.36秒
+2026-01-13 15:56:05 - oms - INFO - 📊 提取AT信息: 2条PGM记录
+2026-01-13 15:56:05 - oms - INFO - 📋 获取AT PGM详情: process_id=e173557c-c5cb-47bb-b714-8eb1b664417a, work_sequence=1
+2026-01-13 15:56:05 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.44秒
+2026-01-13 15:56:05 - oms - INFO - 📊 提取AT信息: 12条PGM记录
+2026-01-13 15:56:05 - oms - INFO - 📋 获取AT PGM详情: process_id=7b326a86-eadc-4dfd-a92c-dcc502d67bfc, work_sequence=1
+2026-01-13 15:56:05 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.37秒
+2026-01-13 15:56:05 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 15:56:05 - oms - INFO - 📋 获取AT PGM详情: process_id=4f71f644-75a9-4bda-bc2a-58521c7c8657, work_sequence=1
+2026-01-13 15:56:06 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.71秒
+2026-01-13 15:56:06 - oms - INFO - 📊 提取AT信息: 6条PGM记录
+2026-01-13 16:14:55 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 16:14:55 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 16:14:55 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 16:14:55 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 16:14:55 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 17:14:55.966527
+2026-01-13 16:14:55 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 16:14:56 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 16:14:56 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'at_hess'
+2026-01-13 16:15:34 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 16:15:34 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 16:15:34 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 16:15:34 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 16:15:36 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 17:15:36.419511
+2026-01-13 16:15:36 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 16:15:38 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 16:15:38 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'at_hess'
+2026-01-13 16:15:57 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 16:15:57 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 16:15:57 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 16:15:57 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 16:15:58 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 17:15:58.462961
+2026-01-13 16:15:58 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 16:15:59 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 16:15:59 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'at_hess'
+2026-01-13 16:16:12 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'at_hess'
+2026-01-13 16:16:15 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'at_hess'
+2026-01-13 16:16:20 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'at_hess'
+2026-01-13 16:16:38 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 16:16:38 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 16:16:38 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 16:16:38 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 16:16:38 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 17:16:38.969389
+2026-01-13 16:16:38 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 16:16:39 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 16:16:39 - oms - ERROR - ❌ 获取AT PGM详情失败 (未知错误): 'at_hess'
+2026-01-13 16:17:04 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 16:17:04 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 16:17:04 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 16:17:04 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 16:17:05 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 17:17:05.869017
+2026-01-13 16:17:05 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 16:17:06 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 16:18:15 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 16:18:15 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 16:18:15 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 16:18:15 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 16:18:16 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 17:18:16.237502
+2026-01-13 16:18:16 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 16:18:18 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 16:18:18 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=1
+2026-01-13 16:18:19 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.52秒
+2026-01-13 16:18:19 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 16:18:19 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=3
+2026-01-13 16:18:19 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.36秒
+2026-01-13 16:18:19 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 16:18:19 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=28
+2026-01-13 16:18:20 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.59秒
+2026-01-13 16:18:20 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 16:18:20 - oms - INFO - 📋 获取AT PGM详情: process_id=0734f84a-c5c6-40bf-98dd-00673d64aac9, work_sequence=1
+2026-01-13 16:18:20 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.45秒
+2026-01-13 16:18:20 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:18:20 - oms - INFO - 📋 获取AT PGM详情: process_id=0734f84a-c5c6-40bf-98dd-00673d64aac9, work_sequence=3
+2026-01-13 16:18:21 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.69秒
+2026-01-13 16:18:21 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:18:21 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=1
+2026-01-13 16:18:22 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.79秒
+2026-01-13 16:18:22 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 16:18:22 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=3
+2026-01-13 16:18:22 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.79秒
+2026-01-13 16:18:22 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 16:18:22 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=28
+2026-01-13 16:18:23 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.90秒
+2026-01-13 16:18:23 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 16:18:23 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=29
+2026-01-13 16:18:24 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.94秒
+2026-01-13 16:18:24 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 16:18:24 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=1
+2026-01-13 16:18:25 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.70秒
+2026-01-13 16:18:25 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 16:18:25 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=10
+2026-01-13 16:18:26 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.89秒
+2026-01-13 16:18:26 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 16:18:26 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=28
+2026-01-13 16:18:27 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.64秒
+2026-01-13 16:18:27 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 16:18:27 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=29
+2026-01-13 16:18:27 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.61秒
+2026-01-13 16:18:27 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 16:18:27 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=1
+2026-01-13 16:18:28 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.48秒
+2026-01-13 16:18:28 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:18:28 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=3
+2026-01-13 16:18:28 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.82秒
+2026-01-13 16:18:28 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:18:28 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=4
+2026-01-13 16:18:29 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.90秒
+2026-01-13 16:18:29 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:18:29 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=5
+2026-01-13 16:18:30 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.09秒
+2026-01-13 16:18:30 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:18:30 - oms - INFO - 📋 获取ET PGM详情: process_id=cca4b4ab-94ef-46c7-923d-3b2353f81282, work_sequence=1
+2026-01-13 16:18:31 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.84秒
+2026-01-13 16:18:31 - oms - INFO - 📊 提取ET信息: 4条PGM记录
+2026-01-13 16:18:31 - oms - INFO - 📋 获取ET PGM详情: process_id=cca4b4ab-94ef-46c7-923d-3b2353f81282, work_sequence=8
+2026-01-13 16:18:32 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.47秒
+2026-01-13 16:18:32 - oms - INFO - 📊 提取ET信息: 4条PGM记录
+2026-01-13 16:18:32 - oms - INFO - 📋 获取ET PGM详情: process_id=cca4b4ab-94ef-46c7-923d-3b2353f81282, work_sequence=28
+2026-01-13 16:18:33 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 1.03秒
+2026-01-13 16:18:33 - oms - INFO - 📊 提取ET信息: 4条PGM记录
+2026-01-13 16:18:33 - oms - INFO - 📋 获取ET PGM详情: process_id=cca4b4ab-94ef-46c7-923d-3b2353f81282, work_sequence=31
+2026-01-13 16:18:34 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 1.57秒
+2026-01-13 16:18:34 - oms - INFO - 📊 提取ET信息: 4条PGM记录
+2026-01-13 16:18:34 - oms - INFO - 📋 获取AT PGM详情: process_id=13eca684-267f-4115-8ee2-8af52d149b0d, work_sequence=1
+2026-01-13 16:18:37 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.50秒
+2026-01-13 16:18:37 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 16:18:37 - oms - INFO - 📋 获取AT PGM详情: process_id=13eca684-267f-4115-8ee2-8af52d149b0d, work_sequence=3
+2026-01-13 16:18:40 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 3.27秒
+2026-01-13 16:18:40 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 16:18:40 - oms - INFO - 📋 获取AT PGM详情: process_id=13eca684-267f-4115-8ee2-8af52d149b0d, work_sequence=28
+2026-01-13 16:18:42 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.31秒
+2026-01-13 16:18:42 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 16:18:42 - oms - INFO - 📋 获取AT PGM详情: process_id=13eca684-267f-4115-8ee2-8af52d149b0d, work_sequence=29
+2026-01-13 16:18:45 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.36秒
+2026-01-13 16:18:45 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 16:18:45 - oms - INFO - 📋 获取ET PGM详情: process_id=a3430eab-bb98-423d-a101-359992e67329, work_sequence=1
+2026-01-13 16:18:45 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.33秒
+2026-01-13 16:18:45 - oms - INFO - 📊 提取ET信息: 4条PGM记录
+2026-01-13 16:18:45 - oms - INFO - 📋 获取ET PGM详情: process_id=a3430eab-bb98-423d-a101-359992e67329, work_sequence=8
+2026-01-13 16:18:46 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.41秒
+2026-01-13 16:18:46 - oms - INFO - 📊 提取ET信息: 4条PGM记录
+2026-01-13 16:18:46 - oms - INFO - 📋 获取ET PGM详情: process_id=a3430eab-bb98-423d-a101-359992e67329, work_sequence=28
+2026-01-13 16:18:46 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.65秒
+2026-01-13 16:18:46 - oms - INFO - 📊 提取ET信息: 4条PGM记录
+2026-01-13 16:18:46 - oms - INFO - 📋 获取ET PGM详情: process_id=a3430eab-bb98-423d-a101-359992e67329, work_sequence=29
+2026-01-13 16:18:47 - oms - INFO - ✅ 成功获取ET PGM详情，响应时间: 0.74秒
+2026-01-13 16:18:47 - oms - INFO - 📊 提取ET信息: 4条PGM记录
+2026-01-13 16:18:47 - oms - INFO - 📋 获取AT PGM详情: process_id=8a0708b5-3eec-451e-8852-56f6fcb4b015, work_sequence=1
+2026-01-13 16:18:52 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 4.70秒
+2026-01-13 16:18:52 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 16:18:52 - oms - INFO - 📋 获取AT PGM详情: process_id=8a0708b5-3eec-451e-8852-56f6fcb4b015, work_sequence=3
+2026-01-13 16:18:55 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 3.03秒
+2026-01-13 16:18:55 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 16:18:55 - oms - INFO - 📋 获取AT PGM详情: process_id=8a0708b5-3eec-451e-8852-56f6fcb4b015, work_sequence=28
+2026-01-13 16:18:57 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.06秒
+2026-01-13 16:18:57 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 16:18:57 - oms - INFO - 📋 获取AT PGM详情: process_id=8a0708b5-3eec-451e-8852-56f6fcb4b015, work_sequence=29
+2026-01-13 16:18:59 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.15秒
+2026-01-13 16:18:59 - oms - INFO - 📊 提取AT信息: 145条PGM记录
+2026-01-13 16:18:59 - oms - INFO - 📋 获取AT PGM详情: process_id=eb05ddbc-8be3-432d-8e9d-f5f139ee72a8, work_sequence=1
+2026-01-13 16:19:00 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.76秒
+2026-01-13 16:19:00 - oms - INFO - 📊 提取AT信息: 44条PGM记录
+2026-01-13 16:19:00 - oms - INFO - 📋 获取AT PGM详情: process_id=eb05ddbc-8be3-432d-8e9d-f5f139ee72a8, work_sequence=10
+2026-01-13 16:19:01 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.77秒
+2026-01-13 16:19:01 - oms - INFO - 📊 提取AT信息: 44条PGM记录
+2026-01-13 16:19:01 - oms - INFO - 📋 获取AT PGM详情: process_id=eb05ddbc-8be3-432d-8e9d-f5f139ee72a8, work_sequence=28
+2026-01-13 16:19:04 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 2.89秒
+2026-01-13 16:19:04 - oms - INFO - 📊 提取AT信息: 44条PGM记录
+2026-01-13 16:19:04 - oms - INFO - 📋 获取AT PGM详情: process_id=eb05ddbc-8be3-432d-8e9d-f5f139ee72a8, work_sequence=29
+2026-01-13 16:19:06 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.27秒
+2026-01-13 16:19:06 - oms - INFO - 📊 提取AT信息: 44条PGM记录
+2026-01-13 16:19:06 - oms - INFO - 📋 获取AT PGM详情: process_id=5dbc4686-395a-4b2e-9351-e3e132d4b021, work_sequence=1
+2026-01-13 16:19:06 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.46秒
+2026-01-13 16:19:06 - oms - INFO - 📊 提取AT信息: 2条PGM记录
+2026-01-13 16:19:06 - oms - INFO - 📋 获取AT PGM详情: process_id=e173557c-c5cb-47bb-b714-8eb1b664417a, work_sequence=1
+2026-01-13 16:19:06 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.37秒
+2026-01-13 16:19:06 - oms - INFO - 📊 提取AT信息: 12条PGM记录
+2026-01-13 16:19:06 - oms - INFO - 📋 获取AT PGM详情: process_id=7b326a86-eadc-4dfd-a92c-dcc502d67bfc, work_sequence=1
+2026-01-13 16:19:08 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.96秒
+2026-01-13 16:19:08 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 16:19:08 - oms - INFO - 📋 获取AT PGM详情: process_id=4f71f644-75a9-4bda-bc2a-58521c7c8657, work_sequence=1
+2026-01-13 16:19:09 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.55秒
+2026-01-13 16:19:09 - oms - INFO - 📊 提取AT信息: 6条PGM记录
+2026-01-13 16:25:52 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-13 16:25:52 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-13 16:25:52 - oms - INFO - 🔧 OMS客户端初始化完成，环境: test
+2026-01-13 16:25:52 - oms - INFO - 🔑 正在登录OMS系统: Z130090
+2026-01-13 16:25:53 - oms - INFO - ✅ OMS登录成功，token有效期至: 2026-01-13 17:25:53.018092
+2026-01-13 16:25:53 - oms - INFO - 📋 获取PGM分发状态: 2026-01-02 07:00:00 到 2026-01-14 07:00:00
+2026-01-13 16:25:53 - oms - INFO - ✅ 成功获取PGM分发状态，共41条记录
+2026-01-13 16:25:53 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=1
+2026-01-13 16:25:54 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.47秒
+2026-01-13 16:25:54 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 16:25:54 - oms - INFO - 📥 开始下载文件: SERVER.zip
+2026-01-13 16:25:54 - oms - INFO - 📝 使用服务器提供的文件名: SERVER.zip
+2026-01-13 16:25:54 - oms - INFO - 📄 文件类型: application/octet-stream, 大小: 0B
+2026-01-13 16:25:54 - oms - INFO - ✅ 文件大小验证通过
+2026-01-13 16:25:54 - oms - INFO - ✅ 文件下载完成: D:\Python\RPA Common\PGM Automation\pgm file\SERVER.zip
+2026-01-13 16:25:54 - oms - INFO - 📊 下载统计 - 大小: 3.14 KB, 时间: 0.00秒, 速度: 3145.8 KB/s
+2026-01-13 16:25:54 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=3
+2026-01-13 16:25:56 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.81秒
+2026-01-13 16:25:56 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 16:25:56 - oms - INFO - 📥 开始下载文件: SERVER.zip
+2026-01-13 16:26:27 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=f03a3ada-a20e-491a-9663-d8491b69e307&userId=Z130090&bpmsProcessId=2f943136-1b19-43ce-b7b3-5f3c9985f1df&bpmsWorkSequence=3&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2026-01-13 16:26:27 - oms - INFO - 📋 获取AT PGM详情: process_id=2f943136-1b19-43ce-b7b3-5f3c9985f1df, work_sequence=28
+2026-01-13 16:26:27 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.63秒
+2026-01-13 16:26:27 - oms - INFO - 📊 提取AT信息: 8条PGM记录
+2026-01-13 16:26:27 - oms - INFO - 📥 开始下载文件: SERVER.zip
+2026-01-13 16:26:58 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=f03a3ada-a20e-491a-9663-d8491b69e307&userId=Z130090&bpmsProcessId=2f943136-1b19-43ce-b7b3-5f3c9985f1df&bpmsWorkSequence=28&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2026-01-13 16:26:58 - oms - INFO - 📋 获取AT PGM详情: process_id=0734f84a-c5c6-40bf-98dd-00673d64aac9, work_sequence=1
+2026-01-13 16:26:59 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.81秒
+2026-01-13 16:26:59 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:26:59 - oms - INFO - 📥 开始下载文件: 적용.zip
+2026-01-13 16:26:59 - oms - INFO - 📝 使用服务器提供的文件名: ì ì©.zip
+2026-01-13 16:26:59 - oms - INFO - 📄 文件类型: application/octet-stream, 大小: 0B
+2026-01-13 16:26:59 - oms - INFO - ✅ 文件大小验证通过
+2026-01-13 16:26:59 - oms - INFO - ✅ 文件下载完成: D:\Python\RPA Common\PGM Automation\pgm file\ì ì©.zip
+2026-01-13 16:26:59 - oms - INFO - 📊 下载统计 - 大小: 8.89 KB, 时间: 0.13秒, 速度: 70.1 KB/s
+2026-01-13 16:26:59 - oms - INFO - 📋 获取AT PGM详情: process_id=0734f84a-c5c6-40bf-98dd-00673d64aac9, work_sequence=3
+2026-01-13 16:27:00 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.65秒
+2026-01-13 16:27:00 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:27:00 - oms - INFO - 📥 开始下载文件: 적용.zip
+2026-01-13 16:27:31 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=c935109f-2bb2-4999-9bf8-5b7b058a0e4d&userId=Z130090&bpmsProcessId=0734f84a-c5c6-40bf-98dd-00673d64aac9&bpmsWorkSequence=3&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2026-01-13 16:27:31 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=1
+2026-01-13 16:27:32 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.65秒
+2026-01-13 16:27:32 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 16:27:32 - oms - INFO - 📥 开始下载文件: code_260108.zip
+2026-01-13 16:27:32 - oms - INFO - 📝 使用服务器提供的文件名: code_260108.zip
+2026-01-13 16:27:32 - oms - INFO - 📄 文件类型: application/octet-stream, 大小: 0B
+2026-01-13 16:27:32 - oms - INFO - ✅ 文件大小验证通过
+2026-01-13 16:27:32 - oms - INFO - ✅ 文件下载完成: D:\Python\RPA Common\PGM Automation\pgm file\code_260108.zip
+2026-01-13 16:27:32 - oms - INFO - 📊 下载统计 - 大小: 1.08 KB, 时间: 0.00秒, 速度: 431.8 KB/s
+2026-01-13 16:27:32 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=3
+2026-01-13 16:27:32 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.60秒
+2026-01-13 16:27:32 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 16:27:32 - oms - INFO - 📥 开始下载文件: code_260108.zip
+2026-01-13 16:28:03 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=b040abf5-326f-4cf5-843f-a04c8ce11fff&userId=Z130090&bpmsProcessId=8846fb1a-1883-464a-89fe-5b5dfd9857fe&bpmsWorkSequence=3&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2026-01-13 16:28:03 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=28
+2026-01-13 16:28:05 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.95秒
+2026-01-13 16:28:05 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 16:28:05 - oms - INFO - 📥 开始下载文件: code_260108.zip
+2026-01-13 16:28:36 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=b040abf5-326f-4cf5-843f-a04c8ce11fff&userId=Z130090&bpmsProcessId=8846fb1a-1883-464a-89fe-5b5dfd9857fe&bpmsWorkSequence=28&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2026-01-13 16:28:36 - oms - INFO - 📋 获取AT PGM详情: process_id=8846fb1a-1883-464a-89fe-5b5dfd9857fe, work_sequence=29
+2026-01-13 16:28:37 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.95秒
+2026-01-13 16:28:37 - oms - INFO - 📊 提取AT信息: 15条PGM记录
+2026-01-13 16:28:37 - oms - INFO - 📥 开始下载文件: code_260108.zip
+2026-01-13 16:29:08 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=b040abf5-326f-4cf5-843f-a04c8ce11fff&userId=Z130090&bpmsProcessId=8846fb1a-1883-464a-89fe-5b5dfd9857fe&bpmsWorkSequence=29&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2026-01-13 16:29:08 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=1
+2026-01-13 16:29:08 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.62秒
+2026-01-13 16:29:08 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 16:29:08 - oms - INFO - 📥 开始下载文件: EASY6.zip
+2026-01-13 16:29:08 - oms - INFO - 📝 使用服务器提供的文件名: EASY6.zip
+2026-01-13 16:29:08 - oms - INFO - 📄 文件类型: application/octet-stream, 大小: 0B
+2026-01-13 16:29:08 - oms - INFO - ✅ 文件大小验证通过
+2026-01-13 16:29:08 - oms - INFO - ✅ 文件下载完成: D:\Python\RPA Common\PGM Automation\pgm file\EASY6.zip
+2026-01-13 16:29:08 - oms - INFO - 📊 下载统计 - 大小: 740.00 B, 时间: 0.00秒, 速度: 243.8 KB/s
+2026-01-13 16:29:08 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=10
+2026-01-13 16:29:09 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.50秒
+2026-01-13 16:29:09 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 16:29:09 - oms - INFO - 📥 开始下载文件: EASY6.zip
+2026-01-13 16:29:39 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=8c7d2709-4fb1-4fb9-b5ae-96b57a8c4337&userId=Z130090&bpmsProcessId=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912&bpmsWorkSequence=10&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2026-01-13 16:29:39 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=28
+2026-01-13 16:29:40 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.86秒
+2026-01-13 16:29:40 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 16:29:40 - oms - INFO - 📥 开始下载文件: EASY6.zip
+2026-01-13 16:30:11 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=8c7d2709-4fb1-4fb9-b5ae-96b57a8c4337&userId=Z130090&bpmsProcessId=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912&bpmsWorkSequence=28&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2026-01-13 16:30:11 - oms - INFO - 📋 获取AT PGM详情: process_id=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912, work_sequence=29
+2026-01-13 16:30:12 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.17秒
+2026-01-13 16:30:12 - oms - INFO - 📊 提取AT信息: 22条PGM记录
+2026-01-13 16:30:12 - oms - INFO - 📥 开始下载文件: EASY6.zip
+2026-01-13 16:30:43 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=8c7d2709-4fb1-4fb9-b5ae-96b57a8c4337&userId=Z130090&bpmsProcessId=1930a7da-81ff-4cf3-aa0d-3d7ece1a5912&bpmsWorkSequence=29&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2026-01-13 16:30:43 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=1
+2026-01-13 16:30:45 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 1.36秒
+2026-01-13 16:30:45 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:30:45 - oms - INFO - 📥 开始下载文件: C2RG16G64GB_PCD3.zip
+2026-01-13 16:30:45 - oms - INFO - 📝 使用服务器提供的文件名: C2RG16G64GB_PCD3.zip
+2026-01-13 16:30:45 - oms - INFO - 📄 文件类型: application/octet-stream, 大小: 0B
+2026-01-13 16:30:45 - oms - INFO - ✅ 文件大小验证通过
+2026-01-13 16:30:45 - oms - INFO - ✅ 文件下载完成: D:\Python\RPA Common\PGM Automation\pgm file\C2RG16G64GB_PCD3.zip
+2026-01-13 16:30:45 - oms - INFO - 📊 下载统计 - 大小: 8.90 KB, 时间: 0.24秒, 速度: 37.6 KB/s
+2026-01-13 16:30:45 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=3
+2026-01-13 16:30:45 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.29秒
+2026-01-13 16:30:45 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:30:45 - oms - INFO - 📥 开始下载文件: C2RG16G64GB_PCD3.zip
+2026-01-13 16:31:16 - oms - ERROR - ❌ 下载失败: HTTPSConnectionPool(host='apihtts.skhynix.com', port=443): Max retries exceeded with url: /mes/file/download?id=4b37b218-f5f4-4c17-a6f5-622e0a825690&userId=Z130090&bpmsProcessId=413051f8-ec56-43ab-acdd-24315baac147&bpmsWorkSequence=3&uiId=ModuleTestPgmDistributeStatus (Caused by ResponseError('too many 500 error responses'))
+2026-01-13 16:31:16 - oms - INFO - 📋 获取AT PGM详情: process_id=413051f8-ec56-43ab-acdd-24315baac147, work_sequence=4
+2026-01-13 16:31:17 - oms - INFO - ✅ 成功获取AT PGM详情，响应时间: 0.71秒
+2026-01-13 16:31:17 - oms - INFO - 📊 提取AT信息: 4条PGM记录
+2026-01-13 16:31:17 - oms - INFO - 📥 开始下载文件: C2RG16G64GB_PCD3.zip

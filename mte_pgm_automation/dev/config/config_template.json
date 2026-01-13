@@ -25,8 +25,8 @@
     "endpoints": {
       "auth": "/auth/sign/in",
       "distribute_status": "/bpms/test-pgm/module/distribute-status",
-      "et_detail": "/bpms/test-pgm/module/dram-et/process-id",
-      "at_detail": "/bpms/test-pgm/module/dram-at/process-id",
+      "et_hess": "/bpms/test-pgm/module/dram-et/process-id",
+      "at_hess": "/bpms/test-pgm/module/dram-at/process-id",
       "file_download": "/mes/file/download"
     },
     "credentials": {
@@ -58,11 +58,11 @@
             "uiId": "ModuleTestPgmDistributeStatus",
             "uiName": "BPM%20%3E%20MOD%20Test%20PGM%20Distribute%20Status"
         },
-        "et_detail": {
+        "et_hess": {
             "uiId": "TestPgmModuleDramET",
             "uiName": "BPM%20%3E%20%5BModule%5D%20DRAM%20E%2FT%20PGM"
         },
-        "at_detail": {
+        "at_hess": {
             "uiId": "ModuleTestPgmDistributeStatus",
             "uiName": "BPM%20%3E%20MOD%20Test%20PGM%20Distribute%20Status"
         },

@@ -1,0 +1,40 @@
+<mxfile host="Electron" modified="2026-01-13T04:14:50.508Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.2.5 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="s4d5OQOxD-xVFsjr4Anp" version="24.2.5" type="device">
+  <diagram name="第 1 页" id="8coO2l1rG9b5eKASBp38">
+    <mxGraphModel dx="965" dy="707" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="9_aMQtPhziI7pXjMOhj0-1" value="build" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="30" y="70" width="170" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="9_aMQtPhziI7pXjMOhj0-2" value="db_creation.sql" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="110" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="9_aMQtPhziI7pXjMOhj0-3" value="script_builder.py" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="190" width="110" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="9_aMQtPhziI7pXjMOhj0-4" value="dev" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="251" y="70" width="250" height="510" as="geometry" />
+        </mxCell>
+        <mxCell id="9_aMQtPhziI7pXjMOhj0-6" value="config：配置文件" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="251" y="110" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="9_aMQtPhziI7pXjMOhj0-5" value="&lt;div style=&quot;&quot;&gt;&lt;pre style=&quot;font-family: &amp;quot;Microsoft YaHei UI&amp;quot;; font-size: 9pt;&quot;&gt;&lt;font color=&quot;#ffffff&quot;&gt;config_template.json&lt;/font&gt;&lt;/pre&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="261" y="140" width="130" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="9_aMQtPhziI7pXjMOhj0-7" value="core：核心功能模块&lt;div&gt;&lt;br&gt;&lt;div&gt;log/pgm_automation.log&lt;/div&gt;&lt;div&gt;data_processor.py: 数据处理&lt;/div&gt;&lt;div&gt;file_processor.py：文件处理&lt;/div&gt;&lt;div&gt;oms_client.py：OMS客户端处理&lt;/div&gt;&lt;div&gt;pgm_verifier.py：PGM Verify相关&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="251" y="200" width="230" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="9_aMQtPhziI7pXjMOhj0-8" value="&lt;div&gt;database数据库模块&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;div&gt;models.py：数据库模型&lt;/div&gt;&lt;/div&gt;&lt;div&gt;sqlalchemy_manager.py：数据库驱动&lt;/div&gt;&lt;div&gt;repositorys.py：数据库业务层&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="251" y="340" width="230" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="9_aMQtPhziI7pXjMOhj0-9" value="scripts：开发脚本&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="250" y="460" width="230" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="9_aMQtPhziI7pXjMOhj0-10" value="prod&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;01_fetch_pgm.py&lt;br&gt;&lt;/div&gt;&lt;div&gt;02_verify_pgm.py&lt;br&gt;&lt;/div&gt;&lt;div&gt;03_apply_pgm.py&lt;br&gt;&lt;/div&gt;&lt;div&gt;04_alarm_check.py&lt;br&gt;&lt;/div&gt;&lt;div&gt;05_monitor_lot.py&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="550" y="70" width="250" height="140" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
