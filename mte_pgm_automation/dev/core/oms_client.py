@@ -796,17 +796,3 @@ class OMSClient:
 
         except Exception as e:
             self.logger.warning(f"⚠️ 创建下载摘要失败: {str(e)}")
-
-
-# 保留原始的main函数，但简化为测试OMSClient功能
-if __name__ == "__main__":
-    print("Testing OMS Client...")
-    oms_client = OMSClient()
-    
-    # 示例：获取PGM分发状态
-    pgm_list = oms_client.get_pgm_distribution_status()
-    print(f"Retrieved {len(pgm_list)} PGM records")
-    for pgm in pgm_list:
-        process_id = pgm.get('processId')
-        if process_id == '0734f84a-c5c6-40bf-98dd-00673d64aac9':
-            oms_client.download_pgm(pgm)

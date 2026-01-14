@@ -18,11 +18,8 @@ class ScriptBuilder:
         self.dependency_map = {
             '01_fetch_pgm.py': [
                 'core/oms_client.py',
-                'core/file_downloader.py',
-                'database/repositories.py',
                 'utils/config_loader.py',
                 'utils/logger.py',
-                'utils/db_connection.py'
             ],
             '02_verify_pgm.py': [
                 'core/file_processor.py',
@@ -106,7 +103,24 @@ class ScriptBuilder:
 
         # 移除本地模块导入
         content = self.remove_local_imports(content)
-
+        
+        # 移除可能的路径设置代码行
+        lines = content.split('\n')
+        filtered_lines = []
+        for line in lines:
+            # 跳过可能影响生产环境运行的路径设置代码
+            if not any(skip_pattern in line for skip_pattern in [
+                'os.path.dirname(os.path.abspath(__file__))',
+                'sys.path.insert',
+                'dev_dir =',
+                'project_root =',
+                '添加项目根目录到Python路径',
+                'import'
+            ]):
+                filtered_lines.append(line)
+        
+        content = '\n'.join(filtered_lines)
+        
         # 移除可能的重复函数定义（如果有）
         return content
 
@@ -139,24 +153,33 @@ MTE PGM Automation - 生产环境独立脚本
         # 3.1 添加头部信息
         content_parts.append(self.generate_header())
 
-        # 3.2 收集所有导入（去重）
+        # 3.2 检查是否存在模板文件，否则使用原文件
+        template_file = self.dev_root / 'scripts' / f"{script_name.replace('.py', '.tpl')}"
+        main_script = self.dev_root / 'scripts' / script_name
+        
+        # 3.3 收集所有导入（去重）
         all_std_imports = set()
         all_third_party_imports = set()
-
-        # 添加主脚本的导入
-        main_script = self.dev_root / 'scripts' / script_name
-        if main_script.exists():
-            std_imp, third_imp, _ = self.extract_imports(main_script)
+        processed_deps = set()
+        
+        # 使用模板文件或原文件获取导入信息
+        source_script = template_file if template_file.exists() else main_script
+        if source_script.exists():
+            std_imp, third_imp, _ = self.extract_imports(source_script)
             all_std_imports.update(std_imp)
             all_third_party_imports.update(third_imp)
 
         # 添加依赖模块的导入
         for dep in self.dependency_map.get(script_name, []):
+            if dep in processed_deps:  # 如果已处理过，跳过
+                continue
+                
             dep_path = self.dev_root / dep
             if dep_path.exists():
                 std_imp, third_imp, _ = self.extract_imports(dep_path)
                 all_std_imports.update(std_imp)
                 all_third_party_imports.update(third_imp)
+                processed_deps.add(dep)  # 标记为已处理
 
         # 添加导入部分
         if all_std_imports:
@@ -178,9 +201,11 @@ MTE PGM Automation - 生产环境独立脚本
                 content_parts.append(self.get_file_content(dep_path))
 
         # 3.4 添加主脚本内容（移除导入）
-        if main_script.exists():
+        if source_script.exists():
             content_parts.append(f'\n# --- 主程序: {script_name} ---\n')
-            main_content = self.get_file_content(main_script)
+            main_content = self.get_file_content(source_script)
+            # 替换模板变量
+            main_content = main_content.replace('{{GENERATION_TIME}}', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             content_parts.append(main_content)
 
         # 4. 写入文件
