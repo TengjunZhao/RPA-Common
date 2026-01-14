@@ -1,0 +1,28 @@
+2026-01-14 16:11:06 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-14 16:11:06 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-14 16:11:06 - root - INFO - ✅ 数据库连接成功: localhost:3306
+2026-01-14 16:11:06 - root - INFO - 🔒 数据库连接已关闭
+2026-01-14 16:14:48 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-14 16:14:48 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-14 16:14:48 - root - INFO - ✅ 数据库连接成功: localhost:3306
+2026-01-14 16:14:48 - root - ERROR - ❌ 查询执行失败: (pymysql.err.ProgrammingError) (1146, "Table 'cmsalpha.oms_pgm_distribution' doesn't exist")
+[SQL: SELECT * , MAX(id) AS max_value FROM oms_pgm_distribution]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-01-14 16:14:48 - root - ERROR - ❌ 获取最大值记录失败: (pymysql.err.ProgrammingError) (1146, "Table 'cmsalpha.oms_pgm_distribution' doesn't exist")
+[SQL: SELECT * , MAX(id) AS max_value FROM oms_pgm_distribution]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-01-14 16:14:48 - root - INFO - 🔒 数据库连接已关闭
+2026-01-14 16:15:26 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-14 16:15:26 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-14 16:15:26 - root - INFO - ✅ 数据库连接成功: localhost:3306
+2026-01-14 16:15:26 - root - ERROR - ❌ 查询执行失败: (pymysql.err.OperationalError) (1054, "Unknown column 'create_at' in 'field list'")
+[SQL: SELECT * , MAX(create_at) AS max_value FROM pgm_main]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-01-14 16:15:26 - root - ERROR - ❌ 获取最大值记录失败: (pymysql.err.OperationalError) (1054, "Unknown column 'create_at' in 'field list'")
+[SQL: SELECT * , MAX(create_at) AS max_value FROM pgm_main]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-01-14 16:15:26 - root - INFO - 🔒 数据库连接已关闭
+2026-01-14 16:15:39 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-14 16:15:39 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-14 16:15:40 - root - INFO - ✅ 数据库连接成功: localhost:3306
+2026-01-14 16:15:40 - root - INFO - 🔒 数据库连接已关闭

@@ -24,8 +24,6 @@ sys.path.insert(0, dev_dir)
 sys.path.insert(0, project_root)
 from utils.config_loader import get_config
 from utils.logger import get_pgm_logger
-from database.models import PGMOmsHistory
-from database.repositories import PGMOmsHistoryRepository
 
 
 class OMSClient:
