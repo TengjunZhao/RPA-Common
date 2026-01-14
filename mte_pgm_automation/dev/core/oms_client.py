@@ -545,6 +545,7 @@ class OMSClient:
             self.logger.error(f"❌ 提取AT信息失败: {str(e)}")
             return {}
 
+    # 下载单个文件
     def _download_sigle_file(self,
                              file_download_id: str,
                              file_name: str,
@@ -621,10 +622,20 @@ class OMSClient:
                 match = re.search(r'filename="?([^"]+)"?', content_disposition)
                 if match:
                     server_filename = match.group(1)
+                    
+                    # 修复可能的编码问题：服务器返回的文件名可能是UTF-8被错误解释为Latin-1的情况
+                    # 例如：韩文 "적용.zip" 可能变成 "ì\xa0\x81ì\x9a.zip"
+                    try:
+                        # 将可能被错误解释的Latin-1字符串转换回正确的UTF-8
+                        server_filename_bytes = server_filename.encode('latin-1')
+                        server_filename = server_filename_bytes.decode('utf-8')
+                    except (UnicodeEncodeError, UnicodeDecodeError):
+                        # 如果转换失败，保持原样
+                        pass
+                    
                     filename = self._sanitize_filename(server_filename)
                     save_path = save_path_obj / filename
                     self.logger.info(f"📝 使用服务器提供的文件名: {filename}")
-
             # 获取文件大小
             total_size = int(response.headers.get('content-length', 0))
             content_type = response.headers.get('content-type', 'application/octet-stream')
@@ -688,6 +699,18 @@ class OMSClient:
             error_msg = f"下载失败: {str(e)}"
             self.logger.error(f"❌ {error_msg}")
             return False, error_msg
+    # 真实下载文件
+    def download_pgm(self, pgm):
+        pgm_type = self._determine_pgm_type(pgm)
+        process_id = pgm.get('processId')
+        self.logger.info(f"📊 开始下载PGM: {pgm_type} {process_id}")
+        work_squence = pgm.get('workSequence')
+        detail = self._get_pgm_hess(pgm_type, process_id, work_squence)
+        file_info_list = detail.get('file_info')
+        for file in file_info_list:
+            file_download_id = file.get('file_download_id')
+            file_name = file.get('file_name')
+            self._download_sigle_file(file_download_id, file_name, process_id,1)
 
     def _sanitize_filename(self, filename: str) -> str:
         """清理文件名，移除非法字符，同时保持韩文等Unicode字符"""
@@ -702,6 +725,14 @@ class OMSClient:
         # 处理可能的问题字符，但保留韩文字母
         # 使用正则表达式替换掉控制字符（除常见空白字符外）
         filename = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '_', filename)
+
+        # 确保字符串是有效的UTF-8编码，这对韩文等Unicode字符很重要
+        try:
+            # 先编码再解码以确保字符串的有效性
+            filename = filename.encode('utf-8').decode('utf-8')
+        except UnicodeDecodeError:
+            # 如果遇到解码错误，使用错误处理策略
+            filename = filename.encode('utf-8', errors='replace').decode('utf-8')
 
         # 限制长度，考虑长Unicode字符可能的影响
         if len(filename) > 255:
@@ -776,14 +807,6 @@ if __name__ == "__main__":
     pgm_list = oms_client.get_pgm_distribution_status()
     print(f"Retrieved {len(pgm_list)} PGM records")
     for pgm in pgm_list:
-        print (pgm)
-        pgm_type = oms_client._determine_pgm_type(pgm)
         process_id = pgm.get('processId')
-        work_squence = pgm.get('workSequence')
-        detail = oms_client._get_pgm_hess(pgm_type, process_id, work_squence)
-
-        file_info_list = detail.get('file_info')
-        for file in file_info_list:
-            file_download_id = file.get('file_download_id')
-            file_name = file.get('file_name')
-            oms_client._download_sigle_file(file_download_id, file_name, process_id, work_squence)
+        if process_id == '0734f84a-c5c6-40bf-98dd-00673d64aac9':
+            oms_client.download_pgm(pgm)
