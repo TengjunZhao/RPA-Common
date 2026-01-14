@@ -249,11 +249,12 @@ class OMSClient:
                 return []
 
             # 设置默认日期范围
-            if not begin_date or not end_date:
-                today = datetime.now()
+            today = datetime.now()
+            if not begin_date:
                 begin_date = (today - timedelta(days=11)).strftime("%Y-%m-%d 07:00:00")
+            if not end_date:
                 end_date = (today + timedelta(days=1)).strftime("%Y-%m-%d 07:00:00")
-
+            self.logger.info(f"📅 日期参数: beginDate={begin_date}, endDate={end_date}")
             # 构建URL和参数
             url = urljoin(self.api_base, self.endpoints['distribute_status'])
 

@@ -34,7 +34,12 @@ def main():
         latest_pgm = db.get_max_value("pgm_main", "created_at")
         latest_time = latest_pgm.get('step1_time') if latest_pgm.get('step1_time') else ""
     # Step2 根据时间获取OMS PGM记录
-
+    if latest_time:
+        pgm_list = oms_client.get_pgm_distribution_status(latest_time)
+    else:
+        pgm_list = oms_client.get_pgm_distribution_status()
+    for pgm in pgm_list:
+        print(pgm)
     # Step3 生成PGM记录并写入数据库
 
     # Step4 下载PGM文件到指定文件夹
