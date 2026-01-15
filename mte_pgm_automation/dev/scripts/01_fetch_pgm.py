@@ -24,7 +24,9 @@ from database.db_manager import DBManager
 from database.models import get_table_schema
 
 def main():
-    print("Testing 01_fetch_pgm...")
+    env = get_config().get_current_environment()
+    logger = get_pgm_logger()
+    logger.info(f"✅ 当前是{env}环境")
     oms_client = OMSClient()
 
     # Step1 获取数据库最近的PGM时间
@@ -80,11 +82,11 @@ def main():
             if not db.record_exists('pgm_oms_history', exists_condition, exists_params):
                 try:
                     result = db.insert_record('pgm_oms_history', pgm_oms_history)
-                    print(f"Inserted PGM record with draft_id: {pgm_oms_history['draft_id']}")
+                    logger.info(f"Inserted PGM record with draft_id: {pgm_oms_history['draft_id']}")
                 except Exception as e:
-                    print(f"Failed to insert PGM record with draft_id {pgm_oms_history['draft_id']}: {str(e)}")
+                    logger.info(f"Failed to insert PGM record with draft_id {pgm_oms_history['draft_id']}: {str(e)}")
             else:
-                print(f"PGM record with draft_id {pgm_oms_history['draft_id']} and work_type_desc {pgm_oms_history['work_type_desc']} already exists, skipping.")
+                logger.info(f"PGM record with draft_id {pgm_oms_history['draft_id']} and work_type_desc {pgm_oms_history['work_type_desc']} already exists, skipping.")
 
             # 初步更新pgm_main,新增填写基本信息
             pgm_main = get_table_schema('pgm_main').copy()
@@ -103,11 +105,11 @@ def main():
             if not db.record_exists('pgm_main', exists_condition, exists_params):
                 try:
                     result = db.insert_record('pgm_main', pgm_main)
-                    print(f"Inserted PGM record with draft_id: {pgm_main['draft_id']}")
+                    logger.info(f"Inserted PGM record with draft_id: {pgm_main['draft_id']}")
                 except Exception as e:
-                    print(f"Failed to insert PGM record with draft_id {pgm_main['draft_id']}: {str(e)}")
+                    logger.info(f"Failed to insert PGM record with draft_id {pgm_main['draft_id']}: {str(e)}")
             else:
-                print(
+                logger.info(
                     f"PGM record with draft_id {pgm_main['draft_id']} already exists, skipping.")
             # 细致更新pgm_main字段
             # step1时更新create_time, sk_user, pgm_type
@@ -145,7 +147,7 @@ def main():
                     result = db.update_records('pgm_main', update_pgm_main,
                                               'draft_id = :draft_id',
                                               {'draft_id': pgm_main['draft_id']})
-                    print(f"Updated PGM record with draft_id: {pgm_main['draft_id']}")
+                    logger.info(f"Updated PGM record with draft_id: {pgm_main['draft_id']}")
                 except Exception as e:
                     print()
 
@@ -158,19 +160,23 @@ def main():
                 'processType': pgm.get('pgm_type'),
                 'workSequence': '1'
             }
-            pgm_detial = oms_client.download_pgm(download_dict)
-            fileList = pgm_detial.get('file_info')
-            # 文件存放文件夹（待完成）
+            # 文件存放文件夹
             # 获取PGM日期，创建当前日期的文件夹“YYYYMMDD”
             folderDate = pgm.get('create_time').strftime("%Y%m%d")
-            # 获取配置文件存放的路径
-            # folderRoot = get_file_paths ()
-            print(folderRoot)
+            # 获取config_template中file_paths
+            folderRoot = get_config().get_file_paths().get('local_apply')
+            # 拼接文件存放路径
+            folderPath = os.path.join(folderRoot, folderDate, pgm.get('draft_id'))
+            # 如果路径不存在，则创建目录
+            if not os.path.exists(folderPath):
+                os.makedirs(folderPath)
+            pgm_detial = oms_client.download_pgm(download_dict, save_dir=folderPath)
+            fileList = pgm_detial.get('file_info')
 
 
     # step5 保存hess
             hess_list = pgm_detial.get('pgm_records')
-            print(hess)
+            # print(hess_list)
 
 if __name__ == '__main__':
     main()

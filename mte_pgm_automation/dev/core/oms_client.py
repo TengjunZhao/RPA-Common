@@ -737,7 +737,7 @@ class OMSClient:
             self.logger.error(f"❌ {error_msg}")
             return False, error_msg
     # 真实下载文件
-    def download_pgm(self, pgm):
+    def download_pgm(self, pgm, save_dir: str = None):
         pgm_type = self._determine_pgm_type(pgm)
         process_id = pgm.get('processId')
         self.logger.info(f"📊 开始下载PGM: {pgm_type} {process_id}")
@@ -747,7 +747,7 @@ class OMSClient:
         for file in file_info_list:
             file_download_id = file.get('file_download_id')
             file_name = file.get('file_name')
-            self._download_sigle_file(file_download_id, file_name, process_id,1)
+            self._download_sigle_file(file_download_id, file_name, process_id,1, save_dir)
         return detail
 
     def _sanitize_filename(self, filename: str) -> str:

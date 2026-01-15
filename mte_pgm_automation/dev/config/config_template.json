@@ -36,8 +36,8 @@
         "decryption_key": "test_key_123"
       },
       "production": {
-        "user_id": "生产用户ID",
-        "password": "生产加密密码",
+        "user_id": "Z130090",
+        "password": "MOqWPX1knyOY4up4Gezk3g==",
         "decryption_key": "production_key_456"
       }
     },
