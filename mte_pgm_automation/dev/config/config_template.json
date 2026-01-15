@@ -63,8 +63,8 @@
             "uiName": "BPM%20%3E%20%5BModule%5D%20DRAM%20E%2FT%20PGM"
         },
         "at_hess": {
-            "uiId": "ModuleTestPgmDistributeStatus",
-            "uiName": "BPM%20%3E%20MOD%20Test%20PGM%20Distribute%20Status"
+            "uiId": "TestPgmModuleDramAT",
+            "uiName": "BPM%20%3E%20%5BModule%5D%20A%2FT%20PGM"
         },
         "file_download": {
             "uiId": "ModuleTestPgmDistributeStatus",

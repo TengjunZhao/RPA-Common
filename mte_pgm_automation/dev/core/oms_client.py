@@ -336,10 +336,10 @@ class OMSClient:
             return 'UNKNOWN'
 
     # 根据PGM类型获取HESS详情
-    def _get_pgm_hess(self,
-                      pgm_type: str,
-                      process_id: str,
-                      work_sequence: int) -> Optional[Dict[str, Any]]:
+    def _get_pgm_detial(self,
+                        pgm_type: str,
+                        process_id: str,
+                        work_sequence: int) -> Optional[Dict[str, Any]]:
         """
         通用方法获取PGM详情
 
@@ -456,16 +456,35 @@ class OMSClient:
                         'pgm_dir2': pgm_record.get('pgmDir2'),
                         'pgm_dir3': pgm_record.get('pgmDir3'),
                         'pgm_dir4': pgm_record.get('pgmDir4'),
-                        'equipment_model_code': pgm_record.get('equipmentModelCode'),
+                        'pgm_dir5': pgm_record.get('pgmDir5'),
                         'operation_id': pgm_record.get('operationId'),
                         'module_type': pgm_record.get('moduleType'),
                         'product_type': pgm_record.get('productType'),
                         'tech_nm': pgm_record.get('techNm'),
                         'pkg_den_typ': pgm_record.get('pkgDenTyp'),
-                        'organiz_cd': pgm_record.get('organizCd'),
                         'den_typ': pgm_record.get('denTyp'),
                         'change_date_time': pgm_record.get('changeDateTime'),
-                        'factory_id': pgm_record.get('factoryId')
+                        'factory_id': pgm_record.get('factoryId'),
+                        'del_yn': pgm_record.get('delYn'),
+                        'organiz_cd': pgm_record.get('organizCd'),
+                        'special_cd': pgm_record.get('specialCd'),
+                        'timekey': pgm_record.get('timekey'),
+                        'controller_name_val': pgm_record.get('controllerNameVal'),
+                        'fab_id': pgm_record.get('fabId'),
+                        'fmw_ver_val': pgm_record.get('fmwVerVal'),
+                        'grade_code': pgm_record.get('gradeCode'),
+                        'mask_cd1': pgm_record.get('maskCd1'),
+                        'mod_section_typ': pgm_record.get('modSectionTyp'),
+                        'pkg_typ2': pgm_record.get('pkgTyp2'),
+                        'qual_opt_cd2': pgm_record.get('qualOptCd2'),
+                        'sap_history_code': pgm_record.get('sapHistoryCode'),
+                        'tranmit_bp_list': pgm_record.get('tranmitBpList'),
+                        'tsv_die_typ': pgm_record.get('tsvDieTyp'),
+                        'ver_typ': pgm_record.get('verTyp'),
+                        'drafted': pgm_record.get('drafted'),
+                        'equipment_model_code': pgm_record.get('equipmentModelCode'),
+                        'module_height_value': pgm_record.get('moduleHeightValue'),
+                        'owner_code': pgm_record.get('ownerCode')
                     }
                     extracted['pgm_records'].append(pgm_info)
 
@@ -520,6 +539,8 @@ class OMSClient:
                 for pgm_record in data['testProgramModuleDramAtViews']:
                     pgm_info = {
                         'draft_id': pgm_record.get('draftId'),
+                        'draft_seq': pgm_record.get('draftSeq'),
+                        'drafted': pgm_record.get('drafted'),
                         'pgm_id': pgm_record.get('pgmId'),
                         'pgm_rev_ver': pgm_record.get('pgmRevVer'),
                         'pgm_dir': pgm_record.get('pgmDir'),
@@ -533,7 +554,24 @@ class OMSClient:
                         'sap_history_code': pgm_record.get('sapHistoryCode'),
                         'temper_val': pgm_record.get('temperVal'),
                         'change_date_time': pgm_record.get('changeDateTime'),
-                        'factory_id': pgm_record.get('factoryId')
+                        'factory_id': pgm_record.get('factoryId'),
+                        'del_yn': pgm_record.get('delYn'),
+                        'organiz_cd': pgm_record.get('organizCd'),
+                        'qual_opt_cd2': pgm_record.get('qualOptCd2'),
+                        'special_cd': pgm_record.get('specialCd'),
+                        'timekey': pgm_record.get('timekey'),
+                        'controller_name_val': pgm_record.get('controllerNameVal'),
+                        'den_typ': pgm_record.get('denTyp'),
+                        'fab_id': pgm_record.get('fabId'),
+                        'fmw_ver_val': pgm_record.get('fmwVerVal'),
+                        'grade_code': pgm_record.get('gradeCode'),
+                        'mask_cd1': pgm_record.get('maskCd1'),
+                        'mod_section_typ': pgm_record.get('modSectionTyp'),
+                        'pkg_typ2': pgm_record.get('pkgTyp2'),
+                        'product_special_handle_value': pgm_record.get('productSpecialHandleValue'),
+                        'tranmit_bp_list': pgm_record.get('tranmitBpList'),
+                        'tsv_die_typ': pgm_record.get('tsvDieTyp'),
+                        'ver_typ': pgm_record.get('verTyp')
                     }
                     extracted['pgm_records'].append(pgm_info)
 
@@ -704,12 +742,13 @@ class OMSClient:
         process_id = pgm.get('processId')
         self.logger.info(f"📊 开始下载PGM: {pgm_type} {process_id}")
         work_squence = pgm.get('workSequence')
-        detail = self._get_pgm_hess(pgm_type, process_id, work_squence)
+        detail = self._get_pgm_detial(pgm_type, process_id, work_squence)
         file_info_list = detail.get('file_info')
         for file in file_info_list:
             file_download_id = file.get('file_download_id')
             file_name = file.get('file_name')
             self._download_sigle_file(file_download_id, file_name, process_id,1)
+        return detail
 
     def _sanitize_filename(self, filename: str) -> str:
         """清理文件名，移除非法字符，同时保持韩文等Unicode字符"""

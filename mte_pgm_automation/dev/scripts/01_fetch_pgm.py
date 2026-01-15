@@ -113,6 +113,7 @@ def main():
             # step1时更新create_time, sk_user, pgm_type
             step = pgm_oms_history['work_type_no']
             user = pgm_oms_history['user_name']
+            update_pgm_main = set()
             if step == '1':
                 # 创建时间格式'%Y-%m-%d %H:%M:%S'
                 create_time = pgm_oms_history['work_start_tm']
@@ -122,7 +123,8 @@ def main():
                     'current_step': step,''
                     'create_time': create_time,
                     'sk_user': user,
-                    'pgm_type': pgm_type
+                    'pgm_type': pgm_type,
+                    'status': '0'
                 }
             # step2时更新hitech_user
             elif step == '2':
@@ -135,7 +137,7 @@ def main():
                 update_pgm_main = {
                     'current_step': step
                 }
-            # 查询pgm_main中该draft_id中 current_step最大的记录
+            # 查询pgm_main中该draft_id中 current_step最大的记录, current_step<=step时才更新
             max_step_record_result = db.get_max_value_by_condition_with_params('pgm_main','current_step','draft_id = :draft_id',{'draft_id': pgm_main['draft_id']})
             max_step_record = max_step_record_result['current_step']
             if int(max_step_record) <= int(step):
@@ -149,7 +151,26 @@ def main():
 
     # Step4 下载PGM文件到指定文件夹
         # 从pgm_main 重新获取pgm_list
-        pgm_list = db.select_records('pgm_main', 'draft_id')
+        pgm_list = db.select_records('pgm_main', "*", 'status < :status', {'status': 1})
+        for pgm in pgm_list:
+            download_dict = {
+                'processId': pgm.get('process_id'),
+                'processType': pgm.get('pgm_type'),
+                'workSequence': '1'
+            }
+            pgm_detial = oms_client.download_pgm(download_dict)
+            fileList = pgm_detial.get('file_info')
+            # 文件存放文件夹（待完成）
+            # 获取PGM日期，创建当前日期的文件夹“YYYYMMDD”
+            folderDate = pgm.get('create_time').strftime("%Y%m%d")
+            # 获取配置文件存放的路径
+            # folderRoot = get_file_paths ()
+            print(folderRoot)
+
+
+    # step5 保存hess
+            hess_list = pgm_detial.get('pgm_records')
+            print(hess)
 
 if __name__ == '__main__':
     main()
