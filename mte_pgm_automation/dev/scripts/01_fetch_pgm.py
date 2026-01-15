@@ -21,28 +21,135 @@ from utils.config_loader import get_config
 from utils.logger import get_pgm_logger
 from core.oms_client import OMSClient
 from database.db_manager import DBManager
+from database.models import get_table_schema
 
 def main():
     print("Testing 01_fetch_pgm...")
     oms_client = OMSClient()
-    # 示例：获取PGM分发状态
-    # pgm_list = oms_client.get_pgm_distribution_status()
-    # print(f"Retrieved {len(pgm_list)} PGM records")
 
     # Step1 获取数据库最近的PGM时间
     with DBManager() as db:
-        latest_pgm = db.get_max_value("pgm_main", "created_at")
-        latest_time = latest_pgm.get('step1_time') if latest_pgm.get('step1_time') else ""
+        latest_pgm = db.get_max_value("pgm_main", "create_time")
+        latest_time = latest_pgm.get('max_value') if latest_pgm.get('create_time') not in [None, '0000-00-00 00:00:00'] else ""
+
     # Step2 根据时间获取OMS PGM记录
     if latest_time:
         pgm_list = oms_client.get_pgm_distribution_status(latest_time)
     else:
         pgm_list = oms_client.get_pgm_distribution_status()
-    for pgm in pgm_list:
-        print(pgm)
+
     # Step3 生成PGM记录并写入数据库
+    with DBManager() as db:
+        for pgm in pgm_list:
+            # 插入pgm_oms_history
+            pgm_oms_history = get_table_schema('pgm_oms_history').copy()
+            
+            # 将PGM数据映射到数据库字段
+            pgm_oms_history.update({
+                'process_id': pgm.get('processId'),
+                'process_type': pgm.get('processType'),
+                'process_type_desc': pgm.get('processTypeDesc'),
+                'fac_id': pgm.get('facId'),
+                'process_name': pgm.get('processName'),
+                'draft_id': pgm.get('draftId'),
+                'complete_yn': pgm.get('completeYn'),
+                'process_status_code': pgm.get('processStatusCode'),
+                'work_type_desc': pgm.get('workTypeDesc'),
+                'work_prgs_mag_cd': pgm.get('workPrgsMagCd'),
+                'work_sequence': pgm.get('workSequence'),
+                'prev_work_sequence': pgm.get('prevWorkSequence'),
+                'work_type': pgm.get('workType'),
+                'work_status': pgm.get('workStatus'),
+                'organ_name': pgm.get('organName'),
+                'user_name': pgm.get('userName'),
+                'user_id': pgm.get('userId'),
+                'work_start_tm': pgm.get('workStartTm'),
+                'bp_id': pgm.get('bpId'),
+                'linked_bp_id': pgm.get('linkedBpId'),
+                # work_type_no为work_type_desc '[1Step] 기안'的数字编号
+                'work_type_no': re.search(r'\[(\d+)', pgm.get('workTypeDesc')).group(1) if pgm.get('workTypeDesc') else None,
+            })
+            
+            # 检查记录是否已存在，避免重复插入
+            exists_condition = "draft_id = :draft_id AND work_type_desc = :work_type_desc"
+            exists_params = {
+                'draft_id': pgm_oms_history['draft_id'],
+                'work_type_desc': pgm_oms_history['work_type_desc']
+            }
+            
+            if not db.record_exists('pgm_oms_history', exists_condition, exists_params):
+                try:
+                    result = db.insert_record('pgm_oms_history', pgm_oms_history)
+                    print(f"Inserted PGM record with draft_id: {pgm_oms_history['draft_id']}")
+                except Exception as e:
+                    print(f"Failed to insert PGM record with draft_id {pgm_oms_history['draft_id']}: {str(e)}")
+            else:
+                print(f"PGM record with draft_id {pgm_oms_history['draft_id']} and work_type_desc {pgm_oms_history['work_type_desc']} already exists, skipping.")
+
+            # 初步更新pgm_main,新增填写基本信息
+            pgm_main = get_table_schema('pgm_main').copy()
+            pgm_main.update({
+                'draft_id': pgm.get('draftId'),
+                'process_id': pgm.get('processId'),
+                'pgm_type': '',
+                'status': '',
+                'pgm_name': pgm.get('processName'),
+                'tat': '',
+            })
+            exists_condition = "draft_id = :draft_id"
+            exists_params = {
+                'draft_id': pgm_main['draft_id']
+            }
+            if not db.record_exists('pgm_main', exists_condition, exists_params):
+                try:
+                    result = db.insert_record('pgm_main', pgm_main)
+                    print(f"Inserted PGM record with draft_id: {pgm_main['draft_id']}")
+                except Exception as e:
+                    print(f"Failed to insert PGM record with draft_id {pgm_main['draft_id']}: {str(e)}")
+            else:
+                print(
+                    f"PGM record with draft_id {pgm_main['draft_id']} already exists, skipping.")
+            # 细致更新pgm_main字段
+            # step1时更新create_time, sk_user, pgm_type
+            step = pgm_oms_history['work_type_no']
+            user = pgm_oms_history['user_name']
+            if step == '1':
+                # 创建时间格式'%Y-%m-%d %H:%M:%S'
+                create_time = pgm_oms_history['work_start_tm']
+                #work_type_desc中有E/T则为ET， AT则为AT
+                pgm_type = 'AT' if 'AT' in pgm_oms_history['process_type_desc'] else 'ET'
+                update_pgm_main = {
+                    'current_step': step,''
+                    'create_time': create_time,
+                    'sk_user': user,
+                    'pgm_type': pgm_type
+                }
+            # step2时更新hitech_user
+            elif step == '2':
+                update_pgm_main = {
+                    'current_step': step,
+                    'hitech_user': user
+                }
+            # 其他情况更新current_step
+            else:
+                update_pgm_main = {
+                    'current_step': step
+                }
+            # 查询pgm_main中该draft_id中 current_step最大的记录
+            max_step_record_result = db.get_max_value_by_condition_with_params('pgm_main','current_step','draft_id = :draft_id',{'draft_id': pgm_main['draft_id']})
+            max_step_record = max_step_record_result['current_step']
+            if int(max_step_record) <= int(step):
+                try:
+                    result = db.update_records('pgm_main', update_pgm_main,
+                                              'draft_id = :draft_id',
+                                              {'draft_id': pgm_main['draft_id']})
+                    print(f"Updated PGM record with draft_id: {pgm_main['draft_id']}")
+                except Exception as e:
+                    print()
 
     # Step4 下载PGM文件到指定文件夹
+        # 从pgm_main 重新获取pgm_list
+        pgm_list = db.select_records('pgm_main', 'draft_id')
 
 if __name__ == '__main__':
     main()

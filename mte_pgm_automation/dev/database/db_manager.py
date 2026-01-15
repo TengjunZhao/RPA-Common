@@ -282,6 +282,16 @@ class DBManager:
             self.logger.error(f"❌ 获取最大值记录失败: {str(e)}")
             raise
 
+    # 获取某表指定条件下的最大字段记录（带参数版本）
+    def get_max_value_by_condition_with_params(self, table: str, column: str, condition: str, params: Optional[Dict] = None) -> Optional[Dict]:
+        try:
+            query = f"SELECT * , MAX({column}) AS max_value FROM {table} WHERE {condition}"
+            result = self._execute_query(query, params)
+            return result[0] if result else None
+        except Exception as e:
+            self.logger.error(f"❌ 获取最大值记录失败: {str(e)}")
+            raise
+
     def close(self):
         """关闭数据库连接"""
         try:
