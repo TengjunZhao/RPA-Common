@@ -1,0 +1,14 @@
+2026-01-16 19:08:48 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-16 19:08:48 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-16 19:08:48 - database - INFO - 🔌 数据库连接池初始化 - 主机: localhost
+2026-01-16 19:08:48 - database - INFO - 📊 数据库: cmsalpha
+2026-01-16 19:09:21 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-16 19:09:21 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-16 19:09:21 - database - INFO - 🔌 数据库连接池初始化 - 主机: localhost
+2026-01-16 19:09:21 - database - INFO - 📊 数据库: cmsalpha
+2026-01-16 19:25:44 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-16 19:25:44 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-16 19:25:44 - root - INFO - ✅ 当前是test环境
+2026-01-16 19:25:52 - root - INFO - ✅ 日志系统初始化完成 - 级别: INFO
+2026-01-16 19:25:52 - root - INFO - 📁 日志文件: ./logs/pgm_automation.log
+2026-01-16 19:25:52 - root - INFO - ✅ 当前是test环境

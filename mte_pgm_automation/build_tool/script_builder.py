@@ -41,12 +41,10 @@ class ScriptBuilder:
                 'utils/db_connection.py'
             ],
             '04_alarm_check.py': [
-                'core/tat_calculator.py',
-                'core/email_sender.py',
-                'database/repositories.py',
                 'utils/config_loader.py',
                 'utils/logger.py',
-                'utils/db_connection.py'
+                'database/db_manager.py',
+                'database/models.py'
             ],
             '05_monitor_lot.py': [
                 'core/yield_monitor.py',
