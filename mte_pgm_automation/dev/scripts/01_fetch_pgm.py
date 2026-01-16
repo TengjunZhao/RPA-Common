@@ -82,11 +82,11 @@ def main():
             if not db.record_exists('pgm_oms_history', exists_condition, exists_params):
                 try:
                     result = db.insert_record('pgm_oms_history', pgm_oms_history)
-                    logger.info(f"Inserted PGM record with draft_id: {pgm_oms_history['draft_id']}")
+                    logger.info(f"✅ Inserted PGM record with draft_id: {pgm_oms_history['draft_id']}")
                 except Exception as e:
-                    logger.info(f"Failed to insert PGM record with draft_id {pgm_oms_history['draft_id']}: {str(e)}")
+                    logger.info(f"❌ Failed to insert PGM record with draft_id {pgm_oms_history['draft_id']}: {str(e)}")
             else:
-                logger.info(f"PGM record with draft_id {pgm_oms_history['draft_id']} and work_type_desc {pgm_oms_history['work_type_desc']} already exists, skipping.")
+                logger.debug(f"ℹ️ PGM record with draft_id {pgm_oms_history['draft_id']} and work_type_desc {pgm_oms_history['work_type_desc']} already exists, skipping.")
 
             # 初步更新pgm_main,新增填写基本信息
             pgm_main = get_table_schema('pgm_main').copy()
@@ -105,12 +105,12 @@ def main():
             if not db.record_exists('pgm_main', exists_condition, exists_params):
                 try:
                     result = db.insert_record('pgm_main', pgm_main)
-                    logger.info(f"Inserted PGM record with draft_id: {pgm_main['draft_id']}")
+                    logger.info(f"✅ Inserted PGM record with draft_id: {pgm_main['draft_id']}")
                 except Exception as e:
-                    logger.info(f"Failed to insert PGM record with draft_id {pgm_main['draft_id']}: {str(e)}")
+                    logger.info(f"❌ Failed to insert PGM record with draft_id {pgm_main['draft_id']}: {str(e)}")
             else:
-                logger.info(
-                    f"PGM record with draft_id {pgm_main['draft_id']} already exists, skipping.")
+                logger.debug(
+                    f"ℹ️ PGM record with draft_id {pgm_main['draft_id']} already exists, skipping.")
             # 细致更新pgm_main字段
             # step1时更新create_time, sk_user, pgm_type
             step = pgm_oms_history['work_type_no']
@@ -147,7 +147,7 @@ def main():
                     result = db.update_records('pgm_main', update_pgm_main,
                                               'draft_id = :draft_id',
                                               {'draft_id': pgm_main['draft_id']})
-                    logger.info(f"Updated PGM record with draft_id: {pgm_main['draft_id']}")
+                    logger.info(f"✅ Updated PGM record with draft_id: {pgm_main['draft_id']}")
                 except Exception as e:
                     print()
 
@@ -158,7 +158,8 @@ def main():
             download_dict = {
                 'processId': pgm.get('process_id'),
                 'processType': pgm.get('pgm_type'),
-                'workSequence': '1'
+                'workSequence': '1',
+                'draftId': pgm.get('draft_id')
             }
             # 文件存放文件夹
             # 获取PGM日期，创建当前日期的文件夹“YYYYMMDD”
@@ -172,11 +173,30 @@ def main():
                 os.makedirs(folderPath)
             pgm_detial = oms_client.download_pgm(download_dict, save_dir=folderPath)
             fileList = pgm_detial.get('file_info')
-
+            # 判断文件是否存在，存在则变更数据库状态，以及path
+            for file in fileList:
+                if os.path.exists(os.path.join(folderPath, file.get('file_name'))):
+                    try:
+                        result = db.update_records('pgm_main', {'status': 1, 'apply_path': folderPath}, 'draft_id = :draft_id',
+                                                   {'draft_id': pgm.get('draft_id')})
+                        logger.info(f"✅ Updated PGM record with draft_id: {pgm.get('draft_id')}")
+                    except Exception as e:
+                        logger.info(f"❌ Failed to update PGM record with draft_id {pgm.get('draft_id')}: {str(e)}")
 
     # step5 保存hess
             hess_list = pgm_detial.get('pgm_records')
-            # print(hess_list)
+            if pgm.get('pgm_type') == 'ET':
+                # 为hess_list额外添加"draft_seq"字段，从1开始自增
+                for i, hess in enumerate(hess_list):
+                    hess['draft_seq'] = i + 1
+            # 区分ET/AT将hess_list写入对应的数据表
+            if pgm.get('pgm_type') == 'ET':
+                # 清除数据表中相同draft_id的数据
+                db.delete_records('pgm_et_hess', 'draft_id = :draft_id', {'draft_id': pgm.get('draft_id')})
+                db.batch_insert('pgm_et_hess', hess_list)
+            elif pgm.get('pgm_type') == 'AT':
+                db.delete_records('pgm_at_hess', 'draft_id = :draft_id', {'draft_id': pgm.get('draft_id')})
+                db.batch_insert('pgm_at_hess', hess_list)
 
 if __name__ == '__main__':
     main()

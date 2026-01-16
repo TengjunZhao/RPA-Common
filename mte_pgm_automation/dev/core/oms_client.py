@@ -740,7 +740,8 @@ class OMSClient:
     def download_pgm(self, pgm, save_dir: str = None):
         pgm_type = self._determine_pgm_type(pgm)
         process_id = pgm.get('processId')
-        self.logger.info(f"📊 开始下载PGM: {pgm_type} {process_id}")
+        draft_id = pgm.get('draftId')
+        self.logger.info(f"📊 开始下载PGM: {pgm_type} draft_id= {draft_id}, process_id= {process_id}")
         work_squence = pgm.get('workSequence')
         detail = self._get_pgm_detial(pgm_type, process_id, work_squence)
         file_info_list = detail.get('file_info')
