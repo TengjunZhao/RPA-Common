@@ -27,6 +27,7 @@ class ConfigLoader:
         """获取默认配置文件路径"""
         # 优先检查当前目录
         current_dir = Path.cwd()
+        current_dir = Path("//172.27.154.57/Python/RPA Common/mte_pgm_automation/prod")
 
         # 检查可能的配置文件位置
         possible_paths = [
@@ -54,7 +55,7 @@ class ConfigLoader:
             配置字典
         """
         try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
+            with open(self.config_path, 'r', encoding='utf-8-sig') as f:
                 self._config = json.load(f)
 
             # 设置环境
