@@ -189,12 +189,12 @@ class ConfigLoader:
 
         return logging_config
 
-    def get_rpa_settings(self) -> Dict[str, Any]:
-        """获取RPA设置"""
+    def get_alarm_settings(self) -> Dict[str, Any]:
+        """获取ALARM设置"""
         if self._config is None:
             self.load_config()
 
-        return self._config.get('rpa_settings', {})
+        return self._config.get('tat_thresholds', {})
 
     def get_hess_settings(self) -> Dict[str, Any]:
         """获取HESS设置"""

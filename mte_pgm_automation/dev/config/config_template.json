@@ -132,15 +132,22 @@
       }
     },
     "recipients": {
-      "tat_alarm": ["team.lead@company.com", "pgm.engineer@company.com"],
-      "system_error": ["system.admin@company.com"],
-      "daily_report": ["manager@company.com"]
-    },
-    "tat_thresholds": {
-      "notice_hours": 24,
-      "warning_hours": 48,
-      "alarm_hours": 72
+      "tat_alarm": [
+        "team.lead@company.com",
+        "pgm.engineer@company.com"
+      ],
+      "system_error": [
+        "system.admin@company.com"
+      ],
+      "daily_report": [
+        "manager@company.com"
+      ]
     }
+  },
+  "tat_thresholds": {
+    "notice_hours": 24,
+    "warning_hours": 48,
+    "alarm_hours": 72
   },
   "logging": {
     "level": "INFO",
