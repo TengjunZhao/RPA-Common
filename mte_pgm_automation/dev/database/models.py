@@ -5,16 +5,25 @@ from typing import Dict, Any
 
 # pgm_main 表结构定义
 pgm_main_schema = {
-    'draft_id': '',
-    'process_id': '',
-    'pgm_type': '',
-    'status': '',
-    'pgm_name': '',
-    'tat': '',
-    'create_time': '',
-    'current_step': '',
-    'sk_user': '',
-    'hitech_user': '',
+    'draft_id': '',  # varchar(50), NOT NULL, PRI 主键
+    'process_id': '',  # varchar(50)
+    'pgm_type': '',  # varchar(5), MUL 普通索引
+    'status': 'NEW',  # varchar(5), MUL 普通索引, DEFAULT 默认值 NEW
+    'pgm_name': '',  # varchar(50)
+    'tat': 0.0,  # decimal(10,2) 小数类型
+    'create_time': '',  # datetime
+    'current_step': 0,  # tinyint(4) 整数类型
+    'sk_user': '',  # varchar(15)
+    'hitech_user': '',  # varchar(15)
+    'apply_path': '',  # varchar(255) 补充缺失字段
+    'verify_path': '',  # varchar(255) 补充缺失字段
+    'alarm': 0,  # tinyint(5) 补充缺失字段
+    'monitor': 0,  # tinyint(4) 补充缺失字段
+    'monitor_lot': '',  # varchar(15) 补充缺失字段
+    'monitor_in': 0,  # int(4) 补充缺失字段
+    'monitor_out': 0,  # int(4) 补充缺失字段
+    'monitor_yield': 0.0,  # decimal(10,2) 补充缺失字段，小数类型
+    'current_step_time': ''  # datetime 补充缺失字段
 }
 
 # pgm_oms_history 表结构定义

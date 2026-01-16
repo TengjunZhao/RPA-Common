@@ -115,10 +115,10 @@ def main():
             # step1时更新create_time, sk_user, pgm_type
             step = pgm_oms_history['work_type_no']
             user = pgm_oms_history['user_name']
+            # 创建时间格式'%Y-%m-%d %H:%M:%S'
+            create_time = pgm_oms_history['work_start_tm']
             update_pgm_main = set()
             if step == '1':
-                # 创建时间格式'%Y-%m-%d %H:%M:%S'
-                create_time = pgm_oms_history['work_start_tm']
                 #work_type_desc中有E/T则为ET， AT则为AT
                 pgm_type = 'AT' if 'AT' in pgm_oms_history['process_type_desc'] else 'ET'
                 update_pgm_main = {
@@ -126,18 +126,21 @@ def main():
                     'create_time': create_time,
                     'sk_user': user,
                     'pgm_type': pgm_type,
+                    'current_step_time': create_time,
                     'status': '0'
                 }
             # step2时更新hitech_user
             elif step == '2':
                 update_pgm_main = {
                     'current_step': step,
+                    'current_step_time': create_time,
                     'hitech_user': user
                 }
             # 其他情况更新current_step
             else:
                 update_pgm_main = {
-                    'current_step': step
+                    'current_step': step,
+                    'current_step_time': create_time,
                 }
             # 查询pgm_main中该draft_id中 current_step最大的记录, current_step<=step时才更新
             max_step_record_result = db.get_max_value_by_condition_with_params('pgm_main','current_step','draft_id = :draft_id',{'draft_id': pgm_main['draft_id']})
