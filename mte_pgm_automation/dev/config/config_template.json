@@ -93,7 +93,7 @@
     },
     "production": {
       "local_verify": "\\\\172.27.7.188\\Mod_TestE\\23. PGM Automation",
-      "local_apply": "待确认的生产环境路径",
+      "local_apply": "\\\\172.27.7.188\\Mod_TestE\\23. PGM Automation\\apply",
       "temp_dir": "C:/Temp/PGM_Automation"
     }
   },

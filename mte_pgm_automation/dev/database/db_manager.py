@@ -312,8 +312,3 @@ class DBManager:
         self.close()
 
 
-# 测试代码
-if __name__ == "__main__":
-    with DBManager() as db:
-        res = db.get_max_value("pgm_main", "created_at")
-        print(res)

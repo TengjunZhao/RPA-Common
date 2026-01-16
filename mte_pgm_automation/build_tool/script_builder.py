@@ -21,7 +21,7 @@ class ScriptBuilder:
                 'utils/config_loader.py',
                 'utils/logger.py',
                 'database/db_manager.py',
-                'database/model.py'
+                'database/models.py'
             ],
             '02_verify_pgm.py': [
                 'core/file_processor.py',
