@@ -93,10 +93,9 @@ def main():
             pgm_main.update({
                 'draft_id': pgm.get('draftId'),
                 'process_id': pgm.get('processId'),
-                'pgm_type': '',
-                'status': '',
                 'pgm_name': pgm.get('processName'),
-                'tat': '',
+                'create_time': pgm.get('work_start_tm'),
+                'current_step_time': pgm.get('work_start_tm')
             })
             exists_condition = "draft_id = :draft_id"
             exists_params = {
@@ -104,7 +103,7 @@ def main():
             }
             if not db.record_exists('pgm_main', exists_condition, exists_params):
                 try:
-                    result = db.insert_record('pgm_main', pgm_main)
+                    result = db.insert_record('pgm_main', pgm_main_first)
                     logger.info(f"✅ Inserted PGM record with draft_id: {pgm_main['draft_id']}")
                 except Exception as e:
                     logger.info(f"❌ Failed to insert PGM record with draft_id {pgm_main['draft_id']}: {str(e)}")
