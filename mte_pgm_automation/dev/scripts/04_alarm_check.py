@@ -25,12 +25,24 @@ def main():
 
     # pgm_main表中查询current_step<4的记录，计算TAT并判断Alarm标志
     with DBManager() as db:
-        # 获取PGM_main表中current_step<4的的记录
-        pgm_main_records = db.select_records('PGM_main', condition='current_step < :step', params={'step': 4})
+        # 获取PGM_main表中current_step<4且tat=0的记录
+        pgm_main_records = db.select_records('PGM_main', condition='current_step < :step OR tat = :tat_value', params={'step': 4, 'tat_value': 0})
         for pgm in pgm_main_records:
             create_time = pgm.get('create_time')
-            # 计算当前时间与create_time的差值，以小时计算，精确到小数点后2位
-            tat = round((datetime.now() - create_time).total_seconds() / 3600, 2)
+            current_step = pgm.get('current_step')
+            # 如果current_step<4，用当前时间-create_time；如果current_step=4，用current_step_time-create_time
+            if current_step < 4:
+                tat = round((datetime.now() - create_time).total_seconds() / 3600, 2)
+            elif current_step == 4:
+                current_step_time = pgm.get('current_step_time')
+                if current_step_time:
+                    tat = round((current_step_time - create_time).total_seconds() / 3600, 2)
+                else:
+                    # 如果current_step_time为空，则使用当前时间计算
+                    tat = round((datetime.now() - create_time).total_seconds() / 3600, 2)
+            else:
+                # 其他情况也使用当前时间计算
+                tat = round((datetime.now() - create_time).total_seconds() / 3600, 2)
             logger.info(f"✅ PGM {pgm.get('draft_id')} 创建时间：{create_time}，已运行时间：{tat}小时")
             # 与config对比是否满足报警条件
             alarm = 3 if tat >= alarm_conditions.get('alarm_hours', 72) else \

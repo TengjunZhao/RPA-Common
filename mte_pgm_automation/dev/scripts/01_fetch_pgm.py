@@ -41,8 +41,14 @@ def main():
         pgm_list = oms_client.get_pgm_distribution_status()
 
     # Step3 生成PGM记录并写入数据库
+    out_pgm_list = ['6504051','6413048','6375049','6329047']
     with DBManager() as db:
         for pgm in pgm_list:
+            # 如果PGM的draft_id在out_pgm_list中，则跳过
+            if pgm.get('draftId') in out_pgm_list:
+                logger.info(f"⚠️ PGM {pgm.get('draftId')} is in out_pgm_list, skipping.")
+                continue
+
             # 插入pgm_oms_history
             pgm_oms_history = get_table_schema('pgm_oms_history').copy()
             
@@ -103,7 +109,7 @@ def main():
             }
             if not db.record_exists('pgm_main', exists_condition, exists_params):
                 try:
-                    result = db.insert_record('pgm_main', pgm_main_first)
+                    result = db.insert_record('pgm_main', pgm_main)
                     logger.info(f"✅ Inserted PGM record with draft_id: {pgm_main['draft_id']}")
                 except Exception as e:
                     logger.info(f"❌ Failed to insert PGM record with draft_id {pgm_main['draft_id']}: {str(e)}")
@@ -198,7 +204,10 @@ def main():
                 db.batch_insert('pgm_et_hess', hess_list)
             elif pgm.get('pgm_type') == 'AT':
                 db.delete_records('pgm_at_hess', 'draft_id = :draft_id', {'draft_id': pgm.get('draft_id')})
-                db.batch_insert('pgm_at_hess', hess_list)
+                try:
+                    db.batch_insert('pgm_at_hess', hess_list)
+                except Exception as e:
+                    logger.info(f"❌ Failed to insert PGM record with draft_id {pgm.get('draft_id')}: {str(e)}")
 
 if __name__ == '__main__':
     main()
