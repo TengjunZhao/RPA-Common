@@ -84,6 +84,14 @@ def import_data(db_config, df):
     connection = pymysql.connect(**db_config)
     with connection:
         with connection.cursor() as cursor:
+            # 获取数据库最大begin_at日期
+            max_data = cursor.execute("SELECT MAX(begin_at) FROM db_rpa_run_status;")
+            max_date = cursor.fetchone()[0]
+            
+            # 如果数据库中没有数据，设置为最小日期
+            if max_date is None:
+                max_date = datetime.min
+
             # 注意表名和数据库名：modulemte.db_rpa_run_status
             sql = """
             INSERT INTO db_rpa_run_status (
@@ -105,6 +113,13 @@ def import_data(db_config, df):
             try:
                 for record in records:
                     # 主键之一 name 不能为空，若为空则跳过（避免插入无效记录）
+                    begin_at = record[3]
+                    # 跳过 begin_at 为空的记录
+                    if begin_at is None or pd.isna(begin_at):
+                        continue
+                    # 只导入比数据库最大日期更新的数据
+                    if begin_at <= max_date:
+                        continue
                     if record[1] is not None and str(record[1]).strip() != '':
                         cursor.execute(sql, record)
                 connection.commit()
@@ -134,7 +149,7 @@ def main(mode):
             'charset': 'utf8mb4',
             'port': 3306,
         }
-        sourceDir = r'\\172.27.7.188\Mod_TestE\27.RPA operation diagnosis system\业务日志.xlsx'
+        sourceDir = r'\\172.27.7.188\Mod_TestE\27. RPA operation diagnosis system\业务日志.xlsx'
 
     df = read_xls(sourceDir)
     import_data(db_config, df)
