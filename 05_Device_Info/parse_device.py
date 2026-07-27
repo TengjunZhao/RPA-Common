@@ -170,9 +170,9 @@ def main(mode: str)->None:
             "user": "remoteuser",
             "passwd": "password",
         }
-        path = r"\\172.277.188\Mod_TestE\05.Device value Check\device.txt"
+        path = r"\\172.277.188\Mod_TestE\05. Device value Check\device.txt"
         # 指定log文件路径
-        log_file = r"\\172.277.188\Mod_TestE\05.Device value Check\device.log"
+        log_file = r"\\172.277.188\Mod_TestE\05. Device value Check\device.log"
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename=log_file, encoding="utf-8")
 
     # 2. 解析device info文件
