@@ -8,21 +8,21 @@ def read_xls(path):
     # 尝试读取Excel文件
     try:
         # 跳过文件中的非数据行，这需要您根据实际文件调整skiprows的值
-        df = pd.read_excel(path, skiprows=12)  # 示例中跳过前12行
+        df = pd.read_excel(path, skiprows=2)  # 读取所有列，后续通过known_columns筛选
     except Exception as e:
         print(f"读取Excel文件时发生错误: {e}")
         exit()
     known_columns = [
-        'FAB','Oper','Oper Desc', 'Grade','DataGbn', 'Owner','ProdType', 'Module Type',
+        'Fab','Oper','Oper Desc', 'Grade','DataGbn', 'Owner','ProdType', 'Module Type',
         'Module Density','PKG Density',	'Tech',	'Low Yield','Low Yield Reverse', 'GRT Low Yield',
         'GRT Low Yield Reverse','Ext. Low Yield', 'Ext. Low Yield Reverse','Class Code','Min Qty', 'Flash Code',
-        'Controller Type', 'History Code', 'GEN', 'No of Die', 'Update User', '   Update Time   '
+        'Controller Type', 'History Code', 'GEN', 'No of Die', 'Update User', 'Update Time'
     ]
     # 从df_corrected中选择这些列，忽略不存在的列
     df = df.loc[:, df.columns.isin(known_columns)]
     # 定义替换规则
     replacements = [
-        ('FAB', 'fab'),
+        ('Fab', 'fab'),
         ('Oper', 'oper'),
         ('Oper Desc', 'oper_desc'),
         ('Grade', 'grade'),
@@ -47,7 +47,7 @@ def read_xls(path):
         ('GEN', 'gen'),
         ('No of Die', 'no_of_die'),
         ('Update User', 'update_user'),
-        ('   Update Time   ', 'updatetime')
+        ('Update Time', 'updatetime')
         # 可以继续添加其他替换规则
     ]
     # 应用替换规则到列名
